@@ -1,57 +1,119 @@
 <template>
-    <v-container class="login-container" fluid>
-        <v-row class="d-flex align-center justify-center">
-            <v-col cols="12" md="8" lg="6">
-                <v-card elevation="8" class="rounded-xl pa-8 d-flex">
-                    <!-- 왼쪽: 이미지 -->
-                    <v-col cols="6" class="pa-0 d-none d-md-flex align-center justify-center">
-                        <v-img
-                        src="@/assets/login-illustration.svg"
-                        contain
-                        max-width="300"
-                        alt="Login Illustration"
-                        ></v-img>
-                    </v-col>
+  <div class="login-wrapper">
+    <!-- 왼쪽 이미지 -->
+    <div class="left-section">
+      <!-- 갤러리아 사진 첨부? -->
+    </div>
 
-                    <!-- 오른쪽: 로그인 폼 -->
-                    <v-col cols="12" md="6">
-                        <h2 class="text-h5 font-weight-bold mb-6 text-center">LIA 로그인</h2>
+    <!-- 오른쪽 로그인 -->
+    <div class="right-section">
+      <div class="login-box">
+        <h2>로그인</h2>
 
-                        <v-text-field
-                        v-model="email"
-                        label="이메일"
-                        variant="outlined"
-                        prepend-inner-icon="mdi-email-outline"
-                        class="mb-4"
-                        />
+        <div class="input-group">
+          <input type="id" placeholder="아이디" />
+        </div>
 
-                        <v-text-field
-                        v-model="password"
-                        label="비밀번호"
-                        type="password"
-                        variant="outlined"
-                        prepend-inner-icon="mdi-lock-outline"
-                        class="mb-6"
-                        />
+        <div class="input-group">
+          <input type="password" placeholder="비밀번호" />
+        </div>
 
-                        <v-btn block color="orange" size="large" @click="login">로그인</v-btn>
+        <div class="options">
+          <label><input type="checkbox" /> 아이디 저장</label>
+          <label><input type="checkbox" /> 자동 로그인</label>
+        </div>
 
-                        <div class="text-center mt-4">
-                        <RouterLink to="/signup" class="text-grey">회원가입</RouterLink>
-                        </div>
-                    </v-col>
-                </v-card>
-            </v-col>
-        </v-row>
-    </v-container>
+        <button class="login-btn">로그인</button>
+      </div>
+    </div>
+  </div>
 </template>
 
-<script setup>
-
-</script>
-
 <style scoped>
-.login-container {
-    min-height: 100vh;
+.login-wrapper {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+}
+
+/* 왼쪽 절반 이미지 */
+.left-section {
+  width: 50%;
+  height: 100%;
+}
+
+.left-section img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 오른쪽 절반 */
+.right-section {
+  width: 50%;
+  height: 100%;
+  display: flex;
+  justify-content: center; /* 수평 중앙 */
+  align-items: center;     /* 수직 중앙 */
+  box-sizing: border-box;
+  padding-right: 20vw;
+}
+
+/* 로그인 폼 */
+.login-box {
+  width: 380px;
+  padding: 40px;
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.login-box h2 {
+  font-size: 24px;
+  font-weight: bold;
+  color: #222;
+  margin-bottom: 30px;
+}
+
+.input-group {
+  margin-bottom: 18px;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 12px 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 15px;
+  outline: none;
+}
+
+.input-group input:focus {
+  border-color: #ff7f00;
+}
+
+.options {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: #555;
+  margin: 15px 0 25px;
+}
+
+.login-btn {
+  width: 100%;
+  padding: 12px;
+  background-color: #ff7f00;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.login-btn:hover {
+  background-color: #e96c00;
 }
 </style>

@@ -1,16 +1,17 @@
 <template>
-    <v-app-bar app flat color="white" height="64" class="px-8" >
+    <v-app-bar app fixed flat color="white" height="64" class="px-8" >
         <router-link to="/home" class="text-decoration-none mr-6">
             <v-toolbar-title class="font-weight-bold text-orange text-h5">
-                RIA
+                Galleria
             </v-toolbar-title>
         </router-link>
 
         <v-btn text to="/calendar">캘린더</v-btn>
         <v-btn text to="/project">프로젝트</v-btn>
         <v-btn text to="/floor">배치도</v-btn>
+        <v-btn text to="/vipmember">VIP 회원</v-btn>
 
-        <v-menu>
+        <!-- <v-menu>
             <template #activator="{ props }">
                 <v-btn text v-bind="props">
                 회원 <v-icon>mdi-menu-down</v-icon>
@@ -20,7 +21,7 @@
                 <v-list-item to="/generalmember">일반 회원</v-list-item>
                 <v-list-item to="/vipmember">VIP 회원</v-list-item>
             </v-list>
-        </v-menu>
+        </v-menu> -->
 
         <v-menu>
             <template #activator="{ props }">

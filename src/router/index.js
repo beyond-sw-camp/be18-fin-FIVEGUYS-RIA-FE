@@ -13,41 +13,30 @@ import EstimatePage from '@/modules/sales/views/EstimatePage.vue'
 import ContractPage from '@/modules/sales/views/ContractPage.vue'
 import RevenuePage from '@/modules/sales/views/RevenuePage.vue'
 import GeneralMemberPage from '@/modules/member/views/GeneralMemberPage.vue'
-import AuthLayout from '@/layouts/AuthLayout.vue'
-import DefaultLayout from '@/layouts/DefaultLayout.vue'
 import FileStoragePage from '@/modules/file/views/FileStoragePage.vue'
+
+const routes = [
+  { path: '/', redirect: '/home' },
+  { path: '/login', name: 'Login', component: LoginPage },
+  { path: '/home', name: 'Home', component: HomePage },
+  { path: '/calendar', name: 'Calendar', component: CalendarPage },
+  { path: '/project', name: 'Project', component: ProjectPage },
+  { path: '/floor', name: 'Floor', component: FloorPage },
+  { path: '/generalmember', name: 'GeneralMember', component: GeneralMemberPage },
+  { path: '/vipmember', name: 'VipMember', component: VipMemberPage },
+  { path: '/potentialclient', name: 'PotentialClient', component: PotentialClientPage },
+  { path: '/client', name: 'Client', component: ClientPage },
+  { path: '/clientcompany', name: 'ClientCompany', component: ClientCompanyPage },
+  { path: '/proposal', name: 'Proposal', component: ProposalPage },
+  { path: '/estimate', name: 'Estimate', component: EstimatePage },
+  { path: '/contract', name: 'Contract', component: ContractPage },
+  { path: '/revenue', name: 'Revenue', component: RevenuePage },
+  { path: '/filestorage', name: 'FileStorage', component: FileStoragePage }
+]
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
-  routes: [
-    {
-      path: '/login',
-      component: AuthLayout,
-      children: [
-        { path: '', name: 'login', component: LoginPage }
-      ]
-    },
-    {
-      path: '/',
-      component: DefaultLayout,
-      children: [
-        { path: '/home', name: 'Home', component: HomePage},
-        { path: '/calendar', name: 'Calendar', component: CalendarPage },
-        { path: '/project', name: 'Project', component: ProjectPage },
-        { path: '/floor', name: 'Floor', component: FloorPage },
-        { path: '/generalmember', name: 'GeneralMember', component: GeneralMemberPage },
-        { path: '/vipmember', name: 'VipMember', component: VipMemberPage },
-        { path: '/potentialclient', name: 'PotentialClient', component: PotentialClientPage },
-        { path: '/client', name: 'Client', component: ClientPage },
-        { path: '/clientcompany', name: 'ClientCompany', component: ClientCompanyPage },
-        { path: '/proposal', name: 'Proposal', component: ProposalPage },
-        { path: '/estimate', name: 'Estimate', component: EstimatePage },
-        { path: '/contract', name: 'Contract', component: ContractPage },
-        { path: '/revenue', name: 'Revenue', component: RevenuePage },
-        { path: '/filestorage', name: 'FileStorage', component: FileStoragePage }
-      ]
-    }
-  ],
+  routes
 })
 
 export default router
