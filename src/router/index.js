@@ -10,6 +10,7 @@ import VipMemberListPage from '@/modules/member/views/VipMemberListPage.vue'
 import PotentialClientPage from '@/modules/client/views/PotentialClientPage.vue'
 import ClientPage from '@/modules/client/views/ClientPage.vue'
 import ClientCompanyPage from '@/modules/client/views/ClientCompanyPage.vue'
+import ClientCompanyDetailPage from '@/modules/client/views/ClientCompanyDetailPage.vue'
 import ProposalPage from '@/modules/sales/views/ProposalPage.vue'
 import EstimatePage from '@/modules/sales/views/EstimatePage.vue'
 import ContractPage from '@/modules/sales/views/ContractPage.vue'
@@ -35,6 +36,7 @@ const routes = [
   { path: '/potentialclient', name: 'PotentialClient', component: PotentialClientPage },
   { path: '/client', name: 'Client', component: ClientPage },
   { path: '/clientcompany', name: 'ClientCompany', component: ClientCompanyPage },
+  { path: '/clientcompany/:id', name: 'ClientCompanyDetail', component: ClientCompanyDetailPage, props: true},
   { path: '/proposal', name: 'Proposal', component: ProposalPage },
   { path: '/estimate', name: 'Estimate', component: EstimatePage },
   { path: '/contract', name: 'Contract', component: ContractPage },

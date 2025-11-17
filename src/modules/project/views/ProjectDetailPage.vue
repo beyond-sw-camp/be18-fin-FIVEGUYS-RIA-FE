@@ -33,7 +33,7 @@
     <v-row dense>
       <!-- 좌측 입력폼 -->
       <v-col cols="12" md="6">
-        <v-card class="pa-6 mb-4 apple-card" elevation="2">
+        <v-card class="pa-6 mb-4 project-card" elevation="2">
           <v-card-title class="text-h6 mb-4">프로젝트 정보</v-card-title>
           <v-card-text>
             <v-row dense>
@@ -83,7 +83,7 @@
       <!-- 우측 카드 영역 -->
       <v-col cols="12" md="6">
         <div class="cards-container">
-          <v-card v-for="(card, index) in cards" :key="index" class="mb-4 apple-card" elevation="2">
+          <v-card v-for="(card, index) in cards" :key="index" class="mb-4 project-card" elevation="2">
             <v-card-title>{{ card.title }}</v-card-title>
             <v-card-text>
               <div v-if="card.items && card.items.length">
@@ -166,14 +166,12 @@ const cards = reactive([
   margin-bottom: 4px;
 }
 
-/* Apple 스타일 카드 */
-.apple-card {
+.project-card {
   border-radius: 16px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.08);
   background-color: #fff;
 }
 
-/* 전체 폭 파이프라인 */
 .pipeline-full {
   display: flex;
   align-items: center;
@@ -199,6 +197,5 @@ const cards = reactive([
 .pipeline-line.completed { background-color: orange; }
 .progress-text { position: absolute; right: 0; bottom: -20px; font-size: 0.75rem; color: #888; }
 
-/* 읽기 전용 필드 */
 .readonly-field input { background-color: #eee !important; color: #555 !important; }
 </style>

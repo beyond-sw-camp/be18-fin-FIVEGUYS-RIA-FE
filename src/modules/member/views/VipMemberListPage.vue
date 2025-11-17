@@ -31,7 +31,7 @@
     <div class="d-flex align-center justify-space-between mb-4">
       <v-text-field
         v-model="search"
-        placeholder="검색 (이름, 연락처)"
+        placeholder="검색 (이름, 연락처, 담당자)"
         density="compact"
         variant="outlined"
         hide-details
@@ -108,7 +108,7 @@ const vipList = reactive([
 // 검색 + 등급 필터 적용
 const filteredVipList = computed(() => {
   return vipList.filter(vip => {
-    const matchesSearch = vip.name.includes(search.value) || vip.phone.includes(search.value);
+    const matchesSearch = vip.name.includes(search.value) || vip.phone.includes(search.value) || vip.salesPerson.includes(search.value);
     const matchesGrade = selectedGrade.value === "전체 등급" ? true : vip.grade === selectedGrade.value;
     return matchesSearch && matchesGrade;
   });

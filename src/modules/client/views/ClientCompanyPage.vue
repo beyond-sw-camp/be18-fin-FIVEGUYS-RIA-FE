@@ -14,15 +14,36 @@
                 density="comfortable"
                 class="mb-4 sidebar-input"
             />
-            <div class="status-label mb-2">사업 유형</div>
-            <v-checkbox
-                v-for="(option, index) in options"
-                :key="index"
-                v-model="option.value"
-                :label="option.label"
-                class="my-0 sidebar-checkbox"
-                density="compact"
-            />
+            <!-- 필터 -->
+            <v-select
+                v-model="category"
+                :items="['뷰티', '서비스', '패션']"
+                label="카테고리"
+                variant="outlined"
+                hide-details
+                density="comfortable"
+                class="mb-6 sidebar-input"
+            ></v-select>
+
+            <v-select
+                v-model="contractStatus"
+                :items="['활성', '종료']"
+                label="계약 상태"
+                variant="outlined"
+                hide-details
+                density="comfortable"
+                class="mb-6 sidebar-input"
+            ></v-select>
+
+            <v-select
+                v-model="floor"
+                :items="['B1', '1F', '2F']"
+                label="층"
+                variant="outlined"
+                hide-details
+                density="comfortable"
+                class="mb-6 sidebar-input"
+            ></v-select>
             </v-card>
         </v-col>
 
@@ -39,33 +60,33 @@
             <!-- 고객사 카드 목록 -->
             <v-row dense>
             <v-col
-                v-for="(customer, index) in potentialCustomers"
+                v-for="(client, index) in clients"
                 :key="index"
                 cols="12"
                 sm="6"
-                md="4"
+                md="3"
             >
-                <v-card outlined class="pa-4 customer-card">
-                <v-card-title class="customer-title text-center">{{ customer.company }}</v-card-title>
+                <v-card outlined class="pa-4 client-card" @click="goToClientCompanyDetail(client.id)">
+                <v-card-title class="client-title text-center">{{ client.company }}</v-card-title>
                 <v-divider class="my-2" />
                 <v-card-text class="pa-0">
                     <v-row dense class="mb-1">
                     <v-col cols="5" class="label">산업 유형</v-col>
-                    <v-col cols="7">{{ customer.industry }}</v-col>
+                    <v-col cols="7">{{ client.industry }}</v-col>
                     </v-row>
                     <v-row dense class="mb-1">
                     <v-col cols="5" class="label">담당자</v-col>
-                    <v-col cols="7">{{ customer.owner }}</v-col>
+                    <v-col cols="7">{{ client.owner }}</v-col>
                     </v-row>
                     <v-row dense class="mb-1">
                     <v-col cols="5" class="label">층 수</v-col>
-                    <v-col cols="7">{{ customer.floor }}</v-col>
+                    <v-col cols="7">{{ client.floor }}</v-col>
                     </v-row>
                     <v-row dense>
                     <v-col cols="5" class="label">계약 상태</v-col>
                     <v-col cols="7">
-                        <span :class="customer.status === '활성' ? 'status-active' : 'status-ended'">
-                        {{ customer.status }}
+                        <span :class="client.status === '활성' ? 'status-active' : 'status-ended'">
+                        {{ client.status }}
                         </span>
                     </v-col>
                     </v-row>
@@ -122,7 +143,7 @@
 
                 <v-card-actions class="justify-end modal-actions">
                 <v-btn text color="grey darken-1" class="cancel-btn" @click="showModal = false">취소</v-btn>
-                <v-btn color="orange darken-2" class="white--text add-btn" @click="addCustomer">추가</v-btn>
+                <v-btn color="orange darken-2" class="white--text add-btn" @click="addClient">추가</v-btn>
                 </v-card-actions>
 
             </v-card>
@@ -132,27 +153,29 @@
 
 <script setup>
 import { reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
 
 const search = reactive('')
-const options = reactive([
-    { label: '패션', value: false },
-    { label: '뷰티', value: false },
-    { label: 'F&B', value: false },
-    { label: '라이프 스타일', value: false }
-])
 
-const potentialCustomers = reactive([
-    { company: '디올', industry: '패션', owner: '김민수', floor: 3, status: '활성' },
-    { company: '에르메스', industry: '럭셔리', owner: '박영희', floor: 2, status: '종료' },
-    { company: '샤넬', industry: '패션', owner: '이영희', floor: 4, status: '활성' }
+const category = ref('')
+const contractStatus = ref('')
+const floor = ref('')
+
+const clients = reactive([
+    { id: 1, company: '디올', industry: '패션', owner: '김민수', floor: '1F', status: '활성' },
+    { id: 2, company: '에르메스', industry: '럭셔리', owner: '박영희', floor: '1F', status: '종료' },
+    { id: 3, company: '샤넬', industry: '패션', owner: '이영희', floor: '2F', status: '활성' }
 ])
 
 const showModal = ref(false)
-const menu = ref(false) // 달력 메뉴 상태
+const menu = ref(false)
 const form = reactive({ company: '', owner: '', phone: '', email: '', lastMeeting: '' })
 
-const addCustomer = () => {
-    potentialCustomers.push({
+const addClient = () => {
+    clients.push({
+        id: clients.length + 1,
         company: form.company,
         owner: form.owner,
         phone: form.phone,
@@ -165,10 +188,17 @@ const addCustomer = () => {
     showModal.value = false
     Object.keys(form).forEach(k => form[k] = '')
 }
+
+const goToClientCompanyDetail = (id) => {
+    router.push({
+        name: 'ClientCompanyDetail',
+        params: { id }
+    })
+}
 </script>
 
 <style scoped>
-/* ==================== 사이드바 ==================== */
+/* 사이드바 */
 .sidebar-card {
     border-radius: 16px;
     box-shadow: 0 6px 18px rgba(0,0,0,0.08);
@@ -176,51 +206,59 @@ const addCustomer = () => {
     height: 100%;
     transition: all 0.2s ease-in-out;
 }
-.sidebar-card:hover { box-shadow: 0 10px 28px rgba(0,0,0,0.12); }
+.sidebar-card:hover {
+    box-shadow: 0 10px 28px rgba(0,0,0,0.12);
+}
 
-.status-label { font-weight: 600; color: #555; font-size: 14px; margin-bottom: 8px; }
-.sidebar-input { background-color: #fff; border-radius: 8px; }
-.sidebar-checkbox { margin:0 !important; padding:0 !important; min-height:18px !important; font-size:0.7rem !important; }
-.sidebar-checkbox :deep(.v-input--selection-controls__ripple) { width:14px !important; height:14px !important; }
-.sidebar-checkbox :deep(.v-label) { font-size:0.7rem !important; line-height:14px !important; padding-left:4px !important; }
+.sidebar-input {
+    background-color: #fff;
+    border-radius: 8px;
+}
 
-/* ==================== 고객사 카드 ==================== */
-.customer-card {
-    transition: box-shadow 0.3s, transform 0.2s;
-    font-size: 0.9rem;
+/* 고객사 카드 → client-card */
+.client-card {
+    background-color: #fff;
+    border: 1px solid #eee;
     border-radius: 12px;
     padding: 16px;
+    font-size: 0.9rem;
+    transition: box-shadow 0.3s, transform 0.2s;
 }
-.customer-card:hover { box-shadow: 0 8px 28px rgba(0,0,0,0.12); transform: translateY(-2px); }
-.customer-title { font-size: 1.2rem; font-weight:700; margin-bottom:0; }
-.label { font-weight:500; color:#888; }
-.status-active { color:green; font-weight:600; }
-.status-ended { color:red; font-weight:600; }
+.client-card:hover {
+    box-shadow: 0 8px 28px rgba(0,0,0,0.12);
+    transform: translateY(-2px);
+}
 
-/* ==================== 모달 ==================== */
+.client-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 0;
+}
+
+.label {
+    font-weight: 500;
+    color: #888;
+}
+
+.status-active {
+    color: green;
+    font-weight: 600;
+}
+.status-ended {
+    color: red;
+    font-weight: 600;
+}
+
+/* 모달 */
 .modal-card {
     border-radius: 20px;
     box-shadow: 0 12px 28px rgba(0,0,0,0.15);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
-.modal-title-container {
-    display:flex; flex-direction:column; align-items:center; text-align:center; margin-bottom:24px;
-}
-.modal-title { font-size:1.6rem; font-weight:700; color:#111; }
-.modal-subtitle { font-size:0.85rem; color:#888; margin-top:4px; }
-
-/* 모달 input 배경 흰색 적용 */
-:deep(.modal-input) :deep(.v-field),
-:deep(.modal-input) :deep(.v-field__control) {
+:deep(.modal-input .v-field),
+:deep(.modal-input .v-field__control) {
     background-color: #ffffff !important;
     border-radius: 12px;
     box-shadow: inset 0 1px 3px rgba(0,0,0,0.08);
 }
-
-.modal-actions { margin-top:12px; }
-.cancel-btn { font-weight:500; transition:0.2s; }
-.cancel-btn:hover { background-color:#f0f0f0; border-radius:12px; }
-.add-btn { font-weight:600; transition:0.2s; }
-.add-btn:hover { box-shadow:0 4px 12px rgba(251,140,0,0.4); transform:translateY(-2px); }
 </style>
