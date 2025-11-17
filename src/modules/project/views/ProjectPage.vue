@@ -1,161 +1,283 @@
 <template>
-    <div class="full-height w-100 page-wrapper">
-        <!-- 좌측 사이드바 -->
-        <div class="sidebar">
-        <div class="card pa-4">
-            <!-- 검색 -->
-            <input
+  <v-container fluid class="pa-0 full-height">
+    <v-row no-gutters class="full-height">
+
+      <!-- 좌측 사이드바 -->
+      <v-col cols="12" md="2" class="pa-4 sidebar">
+        <v-card class="pa-6 sidebar-card" flat>
+
+          <!-- 검색 -->
+          <v-text-field
             v-model="search"
-            type="text"
-            placeholder="검색"
-            class="text-field"
-            />
+            append-inner-icon="mdi-magnify"
+            label="검색"
+            variant="outlined"
+            hide-details
+            density="comfortable"
+            class="mb-4 sidebar-input"
+          ></v-text-field>
 
-            <!-- 정렬 -->
-            <select v-model="sort" class="select-field mt-4">
-            <option>이름순</option>
-            <option>날짜순</option>
-            <option>생성순</option>
-            </select>
+          <!-- 정렬 -->
+          <v-select
+            v-model="sort"
+            :items="['최신순', '오래된순']"
+            label="정렬"
+            variant="outlined"
+            hide-details
+            density="comfortable"
+            class="mb-4 sidebar-input"
+          ></v-select>
 
-            <!-- 필터 -->
-            <select v-model="filter" class="select-field mt-4">
-            <option>모든 프로젝트</option>
-            <option>내 프로젝트</option>
-            <option>완료된 프로젝트</option>
-            </select>
-        </div>
+          <!-- 필터 -->
+          <v-select
+            v-model="filter"
+            :items="['모든 프로젝트', '내 프로젝트', '완료된 프로젝트']"
+            label="필터"
+            variant="outlined"
+            hide-details
+            density="comfortable"
+            class="mb-6 sidebar-input"
+          ></v-select>
+
+          <div class="status-label mb-2">진행 상태</div>
+
+          <!-- 옵션 체크박스 -->
+          <v-checkbox
+            v-for="(option, index) in options"
+            :key="index"
+            v-model="option.value"
+            :label="option.label"
+            class="my-0 sidebar-checkbox"
+            density="compact"
+          ></v-checkbox>
+        </v-card>
+      </v-col>
+
+      <!-- 메인 컨텐츠 -->
+      <v-col cols="12" md="10" class="pa-6 main-content">
+        <div class="d-flex justify-end mb-4">
+          <v-btn color="orange darken-2" class="white--text" elevation="4" rounded>
+            새 프로젝트
+          </v-btn>
         </div>
 
-        <!-- 메인 컨텐츠 -->
-        <div class="main-content">
-        <!-- 상단 버튼 -->
-        <div class="top-bar">
-            <button class="btn-primary">새 프로젝트</button>
-        </div>
+        <v-row dense>
+          <v-col v-for="(project, index) in projects" :key="index" cols="12" sm="6" md="4">
+            <v-card outlined class="pa-4 project-card" @click="goToDetail(project.id)">
+              <!-- 상단: 진행 상태 + 프로젝트 제목 + 진행도 -->
+              <v-card-title class="d-flex justify-space-between align-start status-row">
+                <div class="d-flex flex-column align-start">
+                  <span class="status-text">[{{ project.status }}]</span>
+                  <span class="project-title mt-1">{{ project.title }}</span>
+                </div>
+                <span class="progress-text">진행률: {{ project.progress }}%</span>
+              </v-card-title>
 
-        <!-- 프로젝트 카드 목록 -->
-        <div class="card-grid">
-            <div
-            class="card-item"
-            v-for="(project, i) in projects"
-            :key="i"
-            >
-            <div class="card">
-                <div class="card-title">{{ project.title }}</div>
-                <div class="card-subtitle">{{ project.owner }}</div>
-                <div class="card-text">{{ project.desc }}</div>
-            </div>
-            </div>
-        </div>
-        </div>
-    </div>
+              <!-- 파이프라인 -->
+              <v-card-text class="pa-0 pipeline-section">
+                <div class="pipeline-container">
+                  <template v-for="(step, i) in project.pipeline" :key="i">
+                    <v-chip
+                      :color="step.completed ? 'orange darken-2' : 'grey lighten-2'"
+                      small
+                      class="pa-1 text-center"
+                    >
+                      {{ step.name }}
+                    </v-chip>
+                    <div
+                      v-if="i < project.pipeline.length - 1"
+                      class="pipeline-line flex-grow-1"
+                      :style="{ backgroundColor: project.pipeline[i + 1].completed ? '#fb8c00' : '#ccc' }"
+                    ></div>
+                  </template>
+                </div>
+
+                <v-divider class="my-2"></v-divider>
+
+                <div class="d-flex justify-space-between align-center info-row">
+                  <div class="d-flex align-center">
+                    <span class="owner-text">담당자: {{ project.owner }}</span>
+                  </div>
+                  <div class="period-text">{{ project.period }}</div>
+                </div>
+              </v-card-text>
+            </v-card>
+          </v-col>
+        </v-row>
+      </v-col>
+
+    </v-row>
+  </v-container>
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { reactive } from 'vue'
+import { useRouter } from 'vuetify/lib/composables/router'
 
-const search = ref("");
-const sort = ref("이름순");
-const filter = ref("모든 프로젝트");
+const search = reactive('')
+const sort = reactive('최신순')
+const filter = reactive('모든 프로젝트')
 
-const projects = ref([
-  { title: "프로젝트 A", owner: "김민수", desc: "첫 번째 프로젝트" },
-  { title: "프로젝트 B", owner: "홍길동", desc: "두 번째 프로젝트" },
-  { title: "프로젝트 C", owner: "이영희", desc: "세 번째 프로젝트" },
-  { title: "프로젝트 D", owner: "박철수", desc: "네 번째 프로젝트" },
-]);
+const router = useRouter()
+
+const goToDetail = (id) => {
+  router.push(`/project/${id}`);
+}
+
+const options = reactive([
+  { label: '제안 수신', value: false },
+  { label: '내부 검토', value: false },
+  { label: '제안 작성', value: false },
+  { label: '협상 시작', value: false },
+  { label: '계약 성공', value: false }
+])
+
+const projects = reactive([
+  {
+    id: 1,
+    title: '디올 신규 영입 협상',
+    owner: '김민수',
+    status: '진행중',
+    progress: 60,
+    period: '2025-11-01 ~ 2025-12-15',
+    pipeline: [
+      { name: '제안 수신', completed: true },
+      { name: '내부 검토', completed: true },
+      { name: '제안 작성', completed: true },
+      { name: '협상 시작', completed: false },
+      { name: '계약 성공', completed: false }
+    ]
+  },
+  {
+    id: 2,
+    title: '폼페이 전시회 재계약',
+    owner: '홍길동',
+    status: '진행중',
+    progress: 80,
+    period: '2025-10-20 ~ 2025-12-01',
+    pipeline: [
+      { name: '제안 수신', completed: true },
+      { name: '내부 검토', completed: true },
+      { name: '제안 작성', completed: true },
+      { name: '협상 시작', completed: true },
+      { name: '계약 성공', completed: false }
+    ]
+  }
+])
 </script>
 
 <style scoped>
-.page-wrapper {
-  display: flex;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-}
-
 /* ==================== 사이드바 ==================== */
-.sidebar {
-  width: 25%; /* md=3 비율 */
-  min-width: 200px;
-  padding: 16px;
-  border-right: 1px solid #ddd;
-  box-sizing: border-box;
-}
-
-.card {
-  padding: 16px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  background: #fff;
-}
-
-.text-field,
-.select-field {
-  width: 100%;
-  padding: 8px 12px;
-  margin-top: 8px;
-  box-sizing: border-box;
-  border-radius: 4px;
-  border: 1px solid #ccc;
-}
-
-.mt-4 {
-  margin-top: 16px;
-}
-
-/* ==================== 메인 컨텐츠 ==================== */
-.main-content {
-  width: 75%; /* md=9 비율 */
+.sidebar-card {
+  border-radius: 16px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
   padding: 24px;
-  display: flex;
-  flex-direction: column;
   height: 100%;
-  box-sizing: border-box;
+  transition: all 0.2s ease-in-out;
 }
 
-.top-bar {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 16px;
+.sidebar-card:hover {
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.12);
 }
 
-.btn-primary {
-  padding: 8px 16px;
-  background-color: #1976d2;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
+.sidebar-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #ff7f00;
+  letter-spacing: 0.5px;
 }
 
-.btn-primary:hover {
-  background-color: #1565c0;
+.status-label {
+  font-weight: 600;
+  color: #555;
+  font-size: 14px;
+  margin-bottom: 8px;
 }
 
-/* ==================== 카드 그리드 ==================== */
-.card-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  flex: 1;
-  overflow-y: auto; /* 카드 많으면 스크롤 */
-}
-
-.card-item {
-  width: calc(33.333% - 10.66px); /* 3열 배치, gap 고려 */
-  min-width: 200px;
-}
-
-.card-item .card {
-  padding: 16px;
-  border: 1px solid #ddd;
+.sidebar-input {
+  background-color: #fff;
   border-radius: 8px;
-  transition: box-shadow 0.2s;
 }
 
-.card-item .card:hover {
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+.sidebar-checkbox {
+  margin: 0 !important;               /* 외부 여백 제거 */
+  padding: 0 !important;              /* 내부 여백 제거 */
+  min-height: 18px !important;        /* 컨테이너 높이 축소 */
+  font-size: 0.7rem !important;       /* 글자 크기 축소 */
+}
+
+.sidebar-checkbox .v-input--selection-controls__ripple {
+  width: 14px !important;             /* 체크박스 아이콘 크기 */
+  height: 14px !important;
+}
+
+.sidebar-checkbox .v-label {
+  font-size: 0.7rem !important;       /* 글자 크기 축소 */
+  line-height: 14px !important;       /* 체크박스와 라벨 정렬 */
+  padding-left: 4px !important;       /* 체크박스와 글자 간격 */
+}
+
+/* ==================== 프로젝트 카드 ==================== */
+.project-card {
+  transition: box-shadow 0.3s, transform 0.2s;
+  font-size: 0.85rem;
+  border-radius: 12px;
+}
+
+.project-card:hover {
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+.status-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-left: 4px;
+}
+
+.status-text {
+  font-size: 0.75rem;
+  color: #888;
+}
+
+.project-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.progress-text {
+  font-size: 0.75rem;
+  color: #000;
+}
+
+.pipeline-container {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pipeline-line {
+  height: 2px;
+  border-radius: 2px;
+  flex-grow: 1;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.7rem;
+  margin-top: 2px;
+}
+
+.owner-text {
+  font-size: 0.7rem;
+}
+
+.period-text {
+  font-size: 0.7rem;
+  color: #555;
 }
 </style>

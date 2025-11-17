@@ -1,18 +1,26 @@
 <template>
   <v-app>
-    <HeaderComponent />
+    <HeaderComponent v-if="!hideHeader"/>
 
     <v-main>
       <router-view />
     </v-main>
 
-    <FooterComponent />
+    <FooterComponent v-if="!hideFooter"/>
   </v-app>
 </template>
 
 <script setup>
-import HeaderComponent from '@/components/common/HeaderComponent.vue';
-import FooterComponent from '@/components/common/FooterComponent.vue';
+  import { computed } from 'vue'
+  import { useRoute } from 'vue-router';
+  import HeaderComponent from '@/components/common/HeaderComponent.vue';
+  import FooterComponent from '@/components/common/FooterComponent.vue';
+
+  const route = useRoute();
+
+  const hideHeader = computed(() => !!route.meta?.hideHeader);
+  const hideFooter = computed(() => !!route.meta?.hideFooter);
+
 </script>
 
 <style>
@@ -20,7 +28,7 @@ import FooterComponent from '@/components/common/FooterComponent.vue';
   width: 100% !important;
   max-width: 100% !important;
   height: 100% !important;
-  margin: 0 !important;
+  margin: 0 !important; 
   padding: 0 !important;
 }
 
@@ -68,7 +76,7 @@ import FooterComponent from '@/components/common/FooterComponent.vue';
   padding: 0 !important;
 }
 
-.v-row {
+/* .v-row {
   width: 100vw !important;
   max-width: 100vw !important;
   min-width: 0 !important;
@@ -76,5 +84,5 @@ import FooterComponent from '@/components/common/FooterComponent.vue';
 
 .v-col {
   min-width: 0 !important;
-}
+} */
 </style>

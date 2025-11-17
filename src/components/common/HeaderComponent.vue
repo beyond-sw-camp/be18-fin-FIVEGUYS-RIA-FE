@@ -31,7 +31,7 @@
             </template>
             <v-list>
                 <v-list-item to="/potentialclient">잠재 고객</v-list-item>
-                <v-list-item to="/client">고객</v-list-item>
+                <!-- <v-list-item to="/client">고객</v-list-item> -->
                 <v-list-item to="/clientcompany">고객사</v-list-item>
             </v-list>
         </v-menu>
