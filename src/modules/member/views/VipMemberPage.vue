@@ -170,8 +170,12 @@
             <v-col cols="3">{{ store.vipSales.toLocaleString() }}원</v-col>
             <v-col cols="3">{{ store.totalSales.toLocaleString() }}원</v-col>
             <v-col cols="1" class="text-right">
-              <span :class="store.momChange >= 0 ? 'up' : 'down'">
-                {{ store.momChange >= 0 ? '+' : '' }}{{ store.momChange }}%
+              <span :style="{
+                  color: store.momChange > 0 ? '#28a745' : store.momChange < 0 ? '#dc3545' : '#1c1c1e',
+                  fontWeight: 600
+                }"
+              >
+                {{ store.momChange > 0 ? '+' : '' }}{{ store.momChange }}%
               </span>
             </v-col>
           </v-row>
@@ -230,6 +234,12 @@ const storeVipSales = reactive([
   { name: '구찌', rate: 28, vipSales: 2800000, totalSales: 10000000, momChange: -1 },
   { name: '프라다', rate: 25, vipSales: 2500000, totalSales: 10000000, momChange: 0 },
 ])
+
+const getMomChangeClass = (value) => {
+  if (value > 0) return 'mom-up'
+  if (value < 0) return 'mom-down'
+  return 'mom-zero'
+}
 
 const goToVipList = () => {
   router.push({ name: 'VipMemberList' })

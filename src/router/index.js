@@ -3,6 +3,7 @@ import LoginPage from '@/views/LoginPage.vue'
 import HomePage from '@/views/HomePage.vue'
 import CalendarPage from '@/modules/calendar/views/CalendarPage.vue'
 import ProjectPage from '@/modules/project/views/ProjectPage.vue'
+import CreateProjectPage from '@/modules/project/views/CreateProjectPage.vue'
 import ProjectDetailPage from '@/modules/project/views/ProjectDetailPage.vue'
 import FloorPage from '@/modules/storemap/views/StoreMapPage.vue'
 import VipMemberPage from '@/modules/member/views/VipMemberPage.vue'
@@ -28,6 +29,7 @@ const routes = [
   { path: '/home', name: 'Home', component: HomePage },
   { path: '/calendar', name: 'Calendar', component: CalendarPage },
   { path: '/project', name: 'Project', component: ProjectPage },
+  { path: '/project/createproject', name: 'CreateProject', component: CreateProjectPage },
   { path: '/project/:id', name: 'ProjectDetail', component: ProjectDetailPage },
   { path: '/floor', name: 'Floor', component: FloorPage },
   // { path: '/generalmember', name: 'GeneralMember', component: GeneralMemberPage },

@@ -56,7 +56,7 @@
       <!-- 메인 컨텐츠 -->
       <v-col cols="12" md="10" class="pa-6 main-content">
         <div class="d-flex justify-end mb-4">
-          <v-btn color="orange darken-2" class="white--text" elevation="4" rounded>
+          <v-btn color="orange darken-2" class="white--text" elevation="4" rounded @click="goCreateProject">
             새 프로젝트
           </v-btn>
         </div>
@@ -120,10 +120,6 @@ const filter = reactive('모든 프로젝트')
 
 const router = useRouter()
 
-const goToDetail = (id) => {
-  router.push(`/project/${id}`);
-}
-
 const options = reactive([
   { label: '제안 수신', value: false },
   { label: '내부 검토', value: false },
@@ -164,6 +160,14 @@ const projects = reactive([
     ]
   }
 ])
+
+const goToDetail = (id) => {
+  router.push(`/project/${id}`);
+}
+
+const goCreateProject = () => {
+  router.push({ name: 'CreateProject' })
+}
 </script>
 
 <style scoped>
