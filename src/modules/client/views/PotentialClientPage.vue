@@ -16,17 +16,18 @@
                 class="mb-4 sidebar-input"
             />
 
-            <div class="status-label mb-2">카테고리</div>
-
             <!-- 옵션 체크박스 -->
-            <v-checkbox
-                v-for="(option, index) in options"
-                :key="index"
-                v-model="option.value"
-                :label="option.label"
-                class="my-0 sidebar-checkbox"
-                density="compact"
-            />
+            <div class="sidebar-checkbox-group mt-4">카테고리
+                <v-checkbox
+                    v-for="sidebar in sidebares"
+                    :key="sidebar.value"
+                    v-model="sidebar.checked"
+                    :label="sidebar.label"
+                    hide-details
+                    dense
+                    class="sidebar-checkbox"
+                ></v-checkbox>
+            </div>
             </v-card>
         </v-col>
 
@@ -142,7 +143,7 @@ import { reactive, ref } from 'vue'
 
 const search = reactive('')
 
-const options = reactive([
+const sidebares = reactive([
     { label: '패션', value: false },
     { label: '뷰티', value: false },
     { label: 'F&B', value: false },
@@ -201,18 +202,6 @@ const addCustomer = () => {
     color: #555;
     font-size: 14px;
     margin-bottom: 8px;
-}
-
-.sidebar-input {
-    background-color: #fff;
-    border-radius: 8px;
-}
-
-.sidebar-checkbox {
-    margin: 0 !important;
-    padding: 0 !important;
-    min-height: 18px !important;
-    font-size: 0.7rem !important;
 }
 
 
@@ -291,5 +280,41 @@ const addCustomer = () => {
 .add-btn:hover {
     box-shadow: 0 4px 12px rgba(251,140,0,0.4);
     transform: translateY(-2px);
+}
+
+/* 상태 체크박스 디자인 */
+.sidebar-checkbox .v-input--selection-controls__ripple {
+  display: none; /* 기본 ripple 제거 */
+}
+
+.sidebar-checkbox .v-input--selection-controls__input {
+    min-width: 28px;
+    min-height: 28px;
+}
+
+.sidebar-checkbox .v-label {
+    font-size: 0.75rem;
+    color: #1c1c1e;
+    font-weight: 500;
+}
+
+.sidebar-checkbox {
+    background-color: #ffffff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
+.sidebar-checkbox:hover {
+    background-color: #f9f9f9;
+    border-color: rgba(0,0,0,0.2);
+}
+
+.sidebar-checkbox-group {
+    font-weight: 600;
+    color: #555;
+    font-size: 14px;
+    margin-bottom: 8px;
 }
 </style>

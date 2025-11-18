@@ -51,7 +51,9 @@
                 class="flex-grow-1 mr-2"
                 ></v-text-field>
                 <v-btn small outlined @click="showFavoritesOnly = !showFavoritesOnly">
-                즐겨찾는 고객
+                    <v-icon :color="showFavoritesOnly ? '#FFD60A' : '#8e8e93'">
+                        {{ showFavoritesOnly ? 'mdi-star' : 'mdi-star-outline' }}
+                    </v-icon>
                 </v-btn>
             </div>
 

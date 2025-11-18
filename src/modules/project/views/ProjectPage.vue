@@ -39,17 +39,19 @@
             class="mb-6 sidebar-input"
           ></v-select>
 
-          <div class="status-label mb-2">진행 상태</div>
 
-          <!-- 옵션 체크박스 -->
-          <v-checkbox
-            v-for="(option, index) in options"
-            :key="index"
-            v-model="option.value"
-            :label="option.label"
-            class="my-0 sidebar-checkbox"
-            density="compact"
-          ></v-checkbox>
+          <!-- 상태 체크박스 그룹 -->
+            <div class="sidebar-checkbox-group mt-4">진행 상태
+                <v-checkbox
+                    v-for="sidebar in sidebares"
+                    :key="sidebar.value"
+                    v-model="sidebar.checked"
+                    :label="sidebar.label"
+                    hide-details
+                    dense
+                    class="sidebar-checkbox"
+                ></v-checkbox>
+                </div>
         </v-card>
       </v-col>
 
@@ -120,7 +122,7 @@ const filter = reactive('모든 프로젝트')
 
 const router = useRouter()
 
-const options = reactive([
+const sidebares = reactive([
   { label: '제안 수신', value: false },
   { label: '내부 검토', value: false },
   { label: '제안 작성', value: false },
@@ -198,27 +200,32 @@ const goCreateProject = () => {
   margin-bottom: 8px;
 }
 
-.sidebar-input {
-  background-color: #fff;
-  border-radius: 8px;
-}
-
-.sidebar-checkbox {
-  margin: 0 !important;               /* 외부 여백 제거 */
-  padding: 0 !important;              /* 내부 여백 제거 */
-  min-height: 18px !important;        /* 컨테이너 높이 축소 */
-  font-size: 0.7rem !important;       /* 글자 크기 축소 */
-}
-
 .sidebar-checkbox .v-input--selection-controls__ripple {
-  width: 14px !important;             /* 체크박스 아이콘 크기 */
-  height: 14px !important;
+  display: none; /* 기본 ripple 제거 */
+}
+
+.sidebar-checkbox .v-input--selection-controls__input {
+    min-width: 28px;
+    min-height: 28px;
 }
 
 .sidebar-checkbox .v-label {
-  font-size: 0.7rem !important;       /* 글자 크기 축소 */
-  line-height: 14px !important;       /* 체크박스와 라벨 정렬 */
-  padding-left: 4px !important;       /* 체크박스와 글자 간격 */
+    font-size: 0.75rem;
+    color: #1c1c1e;
+    font-weight: 500;
+}
+
+.sidebar-checkbox {
+    background-color: #ffffff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
+.sidebar-checkbox:hover {
+    background-color: #f9f9f9;
+    border-color: rgba(0,0,0,0.2);
 }
 
 /* ==================== 프로젝트 카드 ==================== */
@@ -283,5 +290,48 @@ const goCreateProject = () => {
 .period-text {
   font-size: 0.7rem;
   color: #555;
+}
+
+.sidebar-checkbox-group {
+    font-weight: 600;
+    color: #555;
+    font-size: 14px;
+    margin-bottom: 8px;
+}
+
+/* 상태 체크박스 디자인 */
+.sidebar-checkbox .v-input--selection-controls__ripple {
+  display: none; /* 기본 ripple 제거 */
+}
+
+.sidebar-checkbox .v-input--selection-controls__input {
+    min-width: 28px;
+    min-height: 28px;
+}
+
+.sidebar-checkbox .v-label {
+    font-size: 0.75rem;
+    color: #1c1c1e;
+    font-weight: 500;
+}
+
+.sidebar-checkbox {
+    background-color: #ffffff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
+.sidebar-checkbox:hover {
+    background-color: #f9f9f9;
+    border-color: rgba(0,0,0,0.2);
+}
+
+.sidebar-checkbox-group {
+    font-weight: 600;
+    color: #555;
+    font-size: 14px;
+    margin-bottom: 8px;
 }
 </style>

@@ -53,6 +53,21 @@
           />
         </v-col>
 
+        <!-- 유형 -->
+        <v-col cols="12" md="6">
+          <div class="input-label">유형</div>
+          <v-select
+            v-model="form.salesType"
+            :items="typeList"
+            placeholder="판매 유형을 선택하세요"
+            variant="outlined"
+            class="input-field"
+            hide-details
+            dense
+            solo
+          />
+        </v-col>
+
         <!-- 날짜: 시작일 -->
         <v-col cols="12" md="3">
           <div class="input-label">시작일</div>
@@ -248,11 +263,13 @@ const managerSearch = ref("");
 // 임시 데이터 (API 연동 시 대체 가능)
 const clientList = ["삼성전자", "LG CNS", "카카오", "네이버", "현대자동차"];
 const managerList = ["김영업", "박관리", "최영업", "장팀장", "이사원"];
+const typeList = ["임대", "팝업 스토어", "전시회", "기타"];
 
 const form = reactive({
   projectName: "",
   clientCompany: "",
   salesManager: "",
+  salesType: "",
   startDate: null,
   endDate: null,
   expectedRevenue: null,
@@ -311,6 +328,7 @@ const formattedProfit = computed(() => {
 const saveProject = () => {
   console.log("저장할 데이터:", form);
 };
+
 </script>
 
 <style scoped>
