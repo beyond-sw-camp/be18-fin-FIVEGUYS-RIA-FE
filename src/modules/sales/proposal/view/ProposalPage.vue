@@ -47,7 +47,7 @@
         <!-- 메인 컨텐츠 -->
         <v-col cols="12" md="10" class="pa-6 main-content">
             <div class="d-flex justify-end mb-4">
-            <v-btn color="#ff9500" class="white--text" rounded elevation="4" @click="showModal = true">
+            <v-btn color="#ff9500" class="white--text" rounded elevation="4" @click="goToCreateProposal()">
                 새 제안 추가
             </v-btn>
             </div>
@@ -123,14 +123,10 @@ const categoryFilter = ref('');
 const showFavoritesOnly = ref(false);
 
 const proposals = reactive([
-    { id: 1, projectName: '프로젝트 A', clientCompany: '삼성전자', clientOwner: '김영업', salesManager: '박팀장', startDate: '2025-11-01', endDate: '2025-11-30', sidebar: 'Draft', category: '서비스', isFavorite: false },
-    { id: 2, projectName: '프로젝트 B', clientCompany: 'LG CNS', clientOwner: '이영희', salesManager: '최팀장', startDate: '2025-12-01', endDate: '2025-12-31', sidebar: 'Submitted', category: '패션', isFavorite: true },
-    { id: 3, projectName: '프로젝트 C', clientCompany: '카카오', clientOwner: '홍길동', salesManager: '이팀장', startDate: '2025-11-05', endDate: '2025-12-05', sidebar: 'Completed', category: '뷰티', isFavorite: false }
+    { id: 1, projectName: '제안 A', clientCompany: '삼성전자', clientOwner: '김영업', salesManager: '박팀장', startDate: '2025-11-01', endDate: '2025-11-30', sidebar: 'Draft', category: '서비스', isFavorite: false },
+    { id: 2, projectName: '제안 B', clientCompany: 'LG CNS', clientOwner: '이영희', salesManager: '최팀장', startDate: '2025-12-01', endDate: '2025-12-31', sidebar: 'Submitted', category: '패션', isFavorite: true },
+    { id: 3, projectName: '제안 C', clientCompany: '카카오', clientOwner: '홍길동', salesManager: '이팀장', startDate: '2025-11-05', endDate: '2025-12-05', sidebar: 'Completed', category: '뷰티', isFavorite: false }
 ]);
-
-const goToProposalDetail = (id) => {
-    router.push({ name: 'ProposalDetail', params: { id } });
-};  
 
 const toggleFavorite = (proposal) => {
     proposal.isFavorite = !proposal.isFavorite;
@@ -162,6 +158,14 @@ const filteredProposals = computed(() => {
         return matchesSearch && matchessidebar && matchesCategory && matchesFavorite;
     });
 });
+
+const goToProposalDetail = (id) => {
+    router.push({ name: 'ProposalDetail', params: { id } });
+};
+
+const goToCreateProposal = () => {
+    router.push({ name: 'CreateProposal',});
+}
 </script>
 
 <style scoped>

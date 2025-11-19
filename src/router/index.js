@@ -13,6 +13,8 @@ import ClientPage from '@/modules/client/views/ClientPage.vue'
 import ClientCompanyPage from '@/modules/client/views/ClientCompanyPage.vue'
 import ClientCompanyDetailPage from '@/modules/client/views/ClientCompanyDetailPage.vue'
 import ProposalPage from '@/modules/sales/proposal/view/ProposalPage.vue'
+import CreateProposalPage from '@/modules/sales/proposal/view/CreateProposalPage.vue'
+import ProposalDetailPage from '@/modules/sales/proposal/view/ProposalDetailPage.vue'
 import EstimatePage from '@/modules/sales/estimate/view/EstimatePage.vue'
 import ContractPage from '@/modules/sales/contract/view/ContractPage.vue'
 import RevenuePage from '@/modules/sales/revenue/view/RevenuePage.vue'
@@ -40,6 +42,8 @@ const routes = [
   { path: '/clientcompany', name: 'ClientCompany', component: ClientCompanyPage },
   { path: '/clientcompany/:id', name: 'ClientCompanyDetail', component: ClientCompanyDetailPage, props: true},
   { path: '/proposal', name: 'Proposal', component: ProposalPage },
+  { path: '/proposal/createproposal', name: 'CreateProposal', component: CreateProposalPage},
+  { path: '/proposal/:id', name: 'ProposalDetail', component: ProposalDetailPage, props: true },
   { path: '/estimate', name: 'Estimate', component: EstimatePage },
   { path: '/contract', name: 'Contract', component: ContractPage },
   { path: '/revenue', name: 'Revenue', component: RevenuePage },
