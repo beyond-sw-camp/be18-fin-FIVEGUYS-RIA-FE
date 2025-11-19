@@ -263,7 +263,7 @@ const managerSearch = ref("");
 // 임시 데이터 (API 연동 시 대체 가능)
 const clientList = ["삼성전자", "LG CNS", "카카오", "네이버", "현대자동차"];
 const managerList = ["김영업", "박관리", "최영업", "장팀장", "이사원"];
-const typeList = ["임대", "팝업 스토어", "전시회", "기타"];
+const typeList = ["임대", "재계약", "팝업 스토어", "전시회", "기타"];
 
 const form = reactive({
   projectName: "",

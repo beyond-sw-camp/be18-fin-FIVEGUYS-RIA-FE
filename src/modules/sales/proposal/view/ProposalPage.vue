@@ -98,7 +98,10 @@
 
                 <v-card-text class="pa-0 d-flex justify-space-between align-center">
                     <span :class="['sidebar-text', sidebarClass(proposal.sidebar)]">{{ proposal.sidebar }}</span>
-                    <span class="period-text">기간: {{ proposal.startDate }} ~ {{ proposal.endDate }}</span>
+                    <span class="period-text d-flex flex-column">
+                        <span>요청일: {{ proposal.startDate }}</span>
+                        <span>제출일: {{ proposal.endDate }}</span>
+                    </span>
                 </v-card-text>
 
                 </v-card>

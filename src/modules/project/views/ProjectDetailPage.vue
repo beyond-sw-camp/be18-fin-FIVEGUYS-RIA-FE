@@ -107,10 +107,6 @@
 
 <script setup>
 import { reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
-
-const router = useRouter()
-const goBack = () => router.back()
 
 const startMenu = ref(false)
 const endMenu = ref(false)
