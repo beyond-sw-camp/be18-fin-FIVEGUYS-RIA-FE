@@ -2,79 +2,61 @@
     <v-container fluid class="pa-0 full-height">
         <v-row no-gutters class="full-height">
 
-        <!-- 좌측 사이드바 -->
-        <v-col cols="12" md="2" class="pa-4 sidebar">
-            <v-card class="pa-6 sidebar-card" flat>
-            <!-- 검색 -->
-            <v-text-field
-                v-model="search"
-                append-inner-icon="mdi-magnify"
-                label="검색"
-                variant="outlined"
-                hide-details
-                density="comfortable"
-                class="mb-4 sidebar-input"
-            />
+            <!-- 좌측 사이드바 -->
+            <v-col cols="12" md="2" class="pa-4 sidebar">
+                <v-card class="pa-6 sidebar-card" flat>
+                    <!-- 검색 -->
+                    <v-text-field v-model="search" append-inner-icon="mdi-magnify" label="검색" variant="outlined"
+                        hide-details density="comfortable" class="mb-4 sidebar-input" />
 
-            <!-- 옵션 체크박스 -->
-            <div class="sidebar-checkbox-group mt-4">카테고리
-                <v-checkbox
-                    v-for="sidebar in sidebares"
-                    :key="sidebar.value"
-                    v-model="sidebar.checked"
-                    :label="sidebar.label"
-                    hide-details
-                    dense
-                    class="sidebar-checkbox"
-                ></v-checkbox>
-            </div>
-            </v-card>
-        </v-col>
-
-        <!-- 메인 컨텐츠 -->
-        <v-col cols="12" md="10" class="pa-6 main-content">
-
-            <!-- 잠재 고객 추가 버튼 -->
-            <div class="d-flex justify-end mb-4">
-            <v-btn color="orange darken-2" class="white--text" elevation="4" rounded @click="showModal = true">
-                잠재 고객 추가
-            </v-btn>
-            </div>
-
-            <!-- 잠재 고객 카드 -->
-            <v-row dense>
-            <v-col
-                v-for="(customer, index) in potentialCustomers"
-                :key="index"
-                cols="12"
-                sm="6"
-                md="3"
-            >
-                <v-card outlined class="pa-4 customer-card">
-                <v-card-title class="customer-title text-center">{{ customer.company }}</v-card-title>
-                <v-divider class="my-2" />
-                <v-card-text class="pa-0">
-                    <v-row dense class="mb-1">
-                    <v-col cols="5" class="label">담당자</v-col>
-                    <v-col cols="7">{{ customer.owner }}</v-col>
-                    </v-row>
-                    <v-row dense class="mb-1">
-                    <v-col cols="5" class="label">연락처</v-col>
-                    <v-col cols="7">{{ customer.phone }}</v-col>
-                    </v-row>
-                    <v-row dense class="mb-1">
-                    <v-col cols="5" class="label">이메일</v-col>
-                    <v-col cols="7">{{ customer.email }}</v-col>
-                    </v-row>
-                    <v-row dense>
-                    <v-col cols="5" class="label">최근 미팅일</v-col>
-                    <v-col cols="7">{{ customer.lastMeeting }}</v-col>
-                    </v-row>
-                </v-card-text>
+                    <!-- 카테고리 셀렉트 (client 등록과 동일 스타일) -->
+                    <v-select v-model="selectedCategory" :items="categoryItems" item-title="title" item-value="value"
+                        label="카테고리" variant="outlined" density="comfortable" class="sidebar-input" clearable
+                        @update:modelValue="fetchLeadCompanies" />
                 </v-card>
             </v-col>
-            </v-row>
-        </v-col>
+
+            <!-- 메인 컨텐츠 -->
+            <v-col cols="12" md="10" class="pa-6 main-content">
+
+                <!-- 잠재 고객 추가 버튼 -->
+                <div class="d-flex justify-end mb-4">
+                    <v-btn color="orange darken-2" class="white--text" elevation="4" rounded @click="showModal = true">
+                        잠재 고객 추가
+                    </v-btn>
+                </div>
+
+                <!-- 잠재 고객 카드 -->
+                <v-row dense>
+                    <v-col v-for="(customer, index) in potentialCustomers" :key="customer.id || index" cols="12" sm="6"
+                        md="3">
+                        <v-card outlined class="pa-4 customer-card" @click="goToCompanyDetail(customer)">
+                            <v-card-title class="customer-title text-center">
+                                {{ customer.company }}
+                            </v-card-title>
+                            <v-divider class="my-2" />
+                            <v-card-text class="pa-0">
+                                <v-row dense class="mb-1">
+                                    <v-col cols="5" class="label">담당자</v-col>
+                                    <v-col cols="7">{{ customer.owner }}</v-col>
+                                </v-row>
+                                <v-row dense class="mb-1">
+                                    <v-col cols="5" class="label">연락처</v-col>
+                                    <v-col cols="7">{{ customer.phone }}</v-col>
+                                </v-row>
+                                <v-row dense class="mb-1">
+                                    <v-col cols="5" class="label">이메일</v-col>
+                                    <v-col cols="7">{{ customer.email }}</v-col>
+                                </v-row>
+                                <v-row dense>
+                                    <v-col cols="5" class="label">최근 미팅일</v-col>
+                                    <v-col cols="7">{{ customer.lastMeeting }}</v-col>
+                                </v-row>
+                            </v-card-text>
+                        </v-card>
+                    </v-col>
+                </v-row>
+            </v-col>
         </v-row>
 
         <!-- ==================== 잠재 고객 추가 모달 ==================== -->
@@ -83,54 +65,40 @@
 
                 <!-- 타이틀 + 설명 -->
                 <v-card-title class="text-center modal-title-container">
-                <div class="modal-title">잠재 고객 추가</div>
-                <div class="modal-subtitle">새로운 잠재 고객 정보를 입력해주세요.</div>
+                    <div class="modal-title">잠재 고객 추가</div>
+                    <div class="modal-subtitle">새로운 잠재 고객 정보를 입력해주세요.</div>
                 </v-card-title>
 
                 <v-card-text>
-                <v-text-field v-model="form.company" label="고객사명" variant="outlined" class="modal-input"/>
-                <v-text-field v-model="form.owner" label="담당자명" variant="outlined" class="modal-input"/>
-                <v-text-field v-model="form.phone" label="연락처" variant="outlined" class="modal-input"/>
-                <v-text-field v-model="form.email" label="이메일" variant="outlined" class="modal-input"/>
+                    <!-- 백엔드 DTO랑 1:1 매칭 -->
+                    <v-text-field v-model="form.companyName" label="고객사명" variant="outlined" class="modal-input" />
 
-                <!-- 달력 입력 필드 -->
-                <v-menu
-                    v-model="menu"
-                    :close-on-content-click="false"
-                    transition="scale-transition"
-                    offset-y
-                    min-width="auto"
-                >
-                    <template #activator="{ props }">
-                    <v-text-field
-                        v-model="form.lastMeeting"
-                        label="최근 미팅일"
-                        readonly
-                        v-bind="props"
-                        variant="outlined"
-                        class="modal-input"
-                    ></v-text-field>
-                    </template>
-                    <v-date-picker
-                    v-model="form.lastMeeting"
-                    no-title
-                    scrollable
-                    @input="menu = false"
-                    ></v-date-picker>
-                </v-menu>
-                <!--  사업 유형 -->
-                <v-select
-                    v-model="form.category"
-                    :items="['패션','뷰티','F&B','라이프 스타일']"
-                    label="카테고리"
-                    variant="outlined"
-                    class="modal-input"
-                />
+                    <v-select v-model="form.category" :items="categoryItems" item-title="title" item-value="value"
+                        label="카테고리" variant="outlined" class="modal-input" />
+
+                    <v-text-field v-model="form.businessNumber" label="사업자번호" placeholder="555-22-14444"
+                        variant="outlined" class="modal-input" />
+
+                    <v-text-field v-model="form.phone" label="연락처" placeholder="031-123-9999" variant="outlined"
+                        class="modal-input" />
+
+                    <v-text-field v-model="form.fax" label="팩스" placeholder="031-111-2222" variant="outlined"
+                        class="modal-input" />
+
+                    <v-text-field v-model="form.website" label="웹사이트" placeholder="https://example.co.kr"
+                        variant="outlined" class="modal-input" />
+
+                    <v-text-field v-model="form.zipCode" label="우편번호" placeholder="13529" variant="outlined"
+                        class="modal-input" />
+
+                    <v-text-field v-model="form.address" label="주소" placeholder="서울시 ..." variant="outlined"
+                        class="modal-input" />
                 </v-card-text>
 
+
                 <v-card-actions class="justify-end modal-actions">
-                <v-btn text color="grey darken-1" class="cancel-btn" @click="showModal = false">취소</v-btn>
-                <v-btn color="orange darken-2" class="white--text add-btn" @click="addCustomer">추가</v-btn>
+                    <v-btn text color="grey darken-1" class="cancel-btn" @click="showModal = false">취소</v-btn>
+                    <v-btn color="orange darken-2" class="white--text add-btn" @click="addCustomer">추가</v-btn>
                 </v-card-actions>
 
             </v-card>
@@ -139,62 +107,151 @@
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue'
+import { reactive, ref, onMounted, computed, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import { registerLeadCompany, getLeadCompanies } from '@/apis/company'
 
-const search = reactive('')
+const router = useRouter()
 
-const sidebares = reactive([
-    { label: '패션', value: false },
-    { label: '뷰티', value: false },
-    { label: 'F&B', value: false },
-    { label: '라이프 스타일', value: false }
-])
 
-const potentialCustomers = reactive([
-    { company: '디올', owner: '김민수', phone: '010-1234-5678', email: 'kim@dior.com', lastMeeting: '2025-11-10' },
-    { company: '에르메스', owner: '박영희', phone: '010-2345-6789', email: 'park@hermes.com', lastMeeting: '2025-11-08' },
-    { company: '샤넬', owner: '이영희', phone: '010-3456-7890', email: 'lee@chanel.com', lastMeeting: '2025-11-05' }
-])
+const goToCompanyDetail = (customer) => {
+    // id 없으면 이동 못 함 → 경고 찍고 끝
+    if (!customer.id) {
+        console.warn('고객사 id 없음, 이동 불가', customer)
+        return
+    }
 
+    router.push({
+        name: 'ClientCompanyDetail',   // 라우터에 정의된 name
+        params: { id: customer.id }    // /clientcompany/:id
+    })
+}
+
+// 검색
+const search = ref('')
+
+// 카테고리 필터 (v-select)
+const selectedCategory = ref(null)
+
+// 서버에서 가져올 잠재 고객사 목록
+const leadCompanies = ref([])
+
+// 화면에서 쓰는 alias
+const potentialCustomers = leadCompanies
+
+// 모달
 const showModal = ref(false)
 const menu = ref(false)
 
+// 폼 (백엔드 DTO와 1:1 매칭)
 const form = reactive({
-    company: '',
-    owner: '',
+    companyName: '',
+    category: '',
+    businessNumber: '',
     phone: '',
-    email: '',
-    businessType: '',
-    lastMeeting: ''
+    fax: '',
+    website: '',
+    zipCode: '',
+    address: '',
 })
 
-const addCustomer = () => {
-    potentialCustomers.push({
-        company: form.company,
-        owner: form.owner,
-        phone: form.phone,
-        email: form.email,
-        businessType: form.businessType,
-        lastMeeting: form.lastMeeting
-    })
-    
-    showModal.value = false
-    
-    Object.keys(form).forEach(k => form[k] = '')
+// 카테고리 (client 등록 때 쓰던 동일 구성)
+const categoryItems = [
+    { title: '패션', value: 'FASHION' },
+    { title: '뷰티', value: 'BEAUTY' },
+    { title: '식음료', value: 'FOOD' },
+    { title: '리빙/라이프스타일', value: 'LIFESTYLE' },
+    { title: '가전/디지털', value: 'ELECTRONICS' },
+    { title: '잡화/액세서리', value: 'ACCESSORY' },
+    { title: '스포츠/아웃도어', value: 'SPORTS' },
+    { title: '서비스/기타', value: 'SERVICE' }
+]
+
+// ==========================
+//   잠재 고객사 목록 조회
+// ==========================
+const fetchLeadCompanies = async () => {
+    try {
+        const params = {
+            keyword: search.value || null,
+            category: null,
+            page: 1,
+            size: 20
+        }
+
+        const { data } = await getLeadCompanies(params)
+
+        leadCompanies.value = data.data.map(item => ({
+            id: item.clientCompanyId,          // ★ 여기
+            company: item.companyName,
+            owner: '-',                        // 아직 없다면 임시값
+            phone: item.phone,
+            email: item.website ?? '-',
+            lastMeeting: '-'                   // 프론트 전용
+        }))
+    } catch (e) {
+        console.error('잠재 고객사 목록 조회 실패', e)
+    }
 }
+
+
+// ==========================
+//      잠재 고객사 등록
+// ==========================
+const addCustomer = async () => {
+    try {
+        const payload = {
+            companyName: form.companyName,
+            category: form.category,
+            businessNumber: form.businessNumber,
+            phone: form.phone,
+            fax: form.fax,
+            website: form.website,
+            zipCode: form.zipCode,
+            address: form.address
+        }
+
+        await registerLeadCompany(payload)
+
+        // 등록 후 다시 불러오기
+        await fetchLeadCompanies()
+
+        showModal.value = false
+        Object.keys(form).forEach(k => (form[k] = ''))
+    } catch (e) {
+        console.error('잠재 고객사 등록 실패', e)
+    }
+}
+
+// mount 시 최초 1회 조회
+onMounted(() => {
+    fetchLeadCompanies()
+})
+
+// 검색 입력 시 자동 갱신
+watch(search, () => {
+    fetchLeadCompanies()
+})
+
+// 카테고리 변경 시 자동 갱신
+watch(selectedCategory, () => {
+    fetchLeadCompanies()
+})
 </script>
 
+
 <style scoped>
-   /* 사이드바 */
+/* 사이드바 */
 .sidebar-card {
     border-radius: 16px;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
     padding: 24px;
     height: 100%;
     transition: all 0.2s ease-in-out;
 }
+
 .sidebar-card:hover {
-    box-shadow: 0 10px 28px rgba(0,0,0,0.12);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.12);
 }
 
 .status-label {
@@ -205,7 +262,7 @@ const addCustomer = () => {
 }
 
 
-   /* 잠재 고객 카드 */
+/* 잠재 고객 카드 */
 .customer-card {
     transition: box-shadow 0.3s, transform 0.2s;
     font-size: 0.9rem;
@@ -216,7 +273,7 @@ const addCustomer = () => {
 }
 
 .customer-card:hover {
-    box-shadow: 0 8px 28px rgba(0,0,0,0.12);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.12);
     transform: translateY(-2px);
 }
 
@@ -232,10 +289,10 @@ const addCustomer = () => {
 }
 
 
-   /* 모달 카드 */
+/* 모달 카드 */
 .modal-card {
     border-radius: 20px;
-    box-shadow: 0 12px 28px rgba(0,0,0,0.15);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
 }
 
 .modal-title-container {
@@ -259,15 +316,15 @@ const addCustomer = () => {
 }
 
 
-   /* 모달 input 스타일 */
+/* 모달 input 스타일 */
 :deep(.modal-input) .v-field__control {
     background-color: #ffffff !important;
     border-radius: 12px;
-    box-shadow: inset 0 1px 3px rgba(0,0,0,0.08);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 
-   /* 모달 버튼 */
+/* 모달 버튼 */
 .modal-actions {
     margin-top: 12px;
 }
@@ -278,13 +335,14 @@ const addCustomer = () => {
 }
 
 .add-btn:hover {
-    box-shadow: 0 4px 12px rgba(251,140,0,0.4);
+    box-shadow: 0 4px 12px rgba(251, 140, 0, 0.4);
     transform: translateY(-2px);
 }
 
 /* 상태 체크박스 디자인 */
 .sidebar-checkbox .v-input--selection-controls__ripple {
-  display: none; /* 기본 ripple 제거 */
+    display: none;
+    /* 기본 ripple 제거 */
 }
 
 .sidebar-checkbox .v-input--selection-controls__input {
@@ -308,7 +366,7 @@ const addCustomer = () => {
 
 .sidebar-checkbox:hover {
     background-color: #f9f9f9;
-    border-color: rgba(0,0,0,0.2);
+    border-color: rgba(0, 0, 0, 0.2);
 }
 
 .sidebar-checkbox-group {

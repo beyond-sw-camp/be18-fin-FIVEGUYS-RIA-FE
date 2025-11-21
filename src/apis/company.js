@@ -18,3 +18,10 @@ export const getClientCompanyDetail = (id) => {
 export const getClientsByCompany = (clientCompanyId, params) => {
   return api.get(`/api/companies/${clientCompanyId}/clients`, { params });
 };
+
+export const registerLeadCompany = (data) => {
+  return api.post("/api/companies/leads", data);
+};
+
+export const getLeadCompanies = (params) =>
+  api.get("/api/companies/leads", { params });

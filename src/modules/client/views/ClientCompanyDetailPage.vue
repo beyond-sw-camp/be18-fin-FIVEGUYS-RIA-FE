@@ -18,10 +18,10 @@
                             <template v-for="(value, key) in clientCompany" :key="key">
                                 <v-list-item
                                     v-if="!['id', 'name', 'category', 'type', 'createdAt', 'updatedAt'].includes(key)">
-                                    <v-list-item-content>
-                                        <div class="label">{{ formatCompanyLabel(key) }}</div>
-                                        <div class="info-text">{{ value }}</div>
-                                    </v-list-item-content>
+                                    <v-list-item>
+                                        <v-list-item-title>{{ value }}</v-list-item-title>
+                                        <v-list-item-subtitle>{{ formatCompanyLabel(key) }}</v-list-item-subtitle>
+                                    </v-list-item>
                                 </v-list-item>
                             </template>
 
