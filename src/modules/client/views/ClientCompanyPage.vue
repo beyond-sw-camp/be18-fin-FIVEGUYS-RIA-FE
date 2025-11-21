@@ -8,8 +8,8 @@
                     <v-text-field v-model="search" append-inner-icon="mdi-magnify" label="검색" variant="outlined"
                         hide-details density="comfortable" class="mb-4 sidebar-input" />
                     <!-- 필터 -->
-                    <v-select v-model="category" :items="['뷰티', '서비스', '패션']" label="카테고리" variant="outlined"
-                        hide-details density="comfortable" class="mb-6 sidebar-input"></v-select>
+                    <v-select v-model="category" :items="categoryItems" item-title="title" item-value="value"
+                        label="카테고리" variant="outlined" hide-details density="comfortable" class="mb-6 sidebar-input" />
 
                     <v-select v-model="contractStatus" :items="['활성', '종료']" label="계약 상태" variant="outlined"
                         hide-details density="comfortable" class="mb-6 sidebar-input"></v-select>
@@ -37,8 +37,8 @@
                             <v-divider class="my-2" />
                             <v-card-text class="pa-0">
                                 <v-row dense class="mb-1">
-                                    <v-col cols="5" class="label">산업 유형</v-col>
-                                    <v-col cols="7">{{ client.industry }}</v-col>
+                                    <v-col cols="5" class="label">카테고리</v-col>
+                                    <v-col cols="7">{{ client.categoryLabel }}</v-col>
                                 </v-row>
                                 <v-row dense class="mb-1">
                                     <v-col cols="5" class="label">담당자</v-col>
@@ -127,26 +127,39 @@
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue'
+import { reactive, ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { registerCustomer } from '@/apis/company'
+import { registerCustomer, getCustomerCompanies } from '@/apis/company'
 
 const router = useRouter()
 
-const search = reactive('')
-
+// 검색 / 필터
+const search = ref('')
 const category = ref('')
+const categoryItems = [
+    { title: '패션', value: 'FASHION' },
+    { title: '뷰티', value: 'BEAUTY' },
+    { title: '식음료', value: 'FOOD' },
+    { title: '리빙/라이프스타일', value: 'LIFESTYLE' },
+    { title: '가전/디지털', value: 'ELECTRONICS' },
+    { title: '잡화/액세서리', value: 'ACCESSORY' },
+    { title: '스포츠/아웃도어', value: 'SPORTS' },
+    { title: '서비스/기타', value: 'SERVICE' }
+]
 const contractStatus = ref('')
 const floor = ref('')
 
-const clients = reactive([
-    { id: 1, company: '디올', industry: '패션', owner: '김민수', floor: '1F', status: '활성' },
-    { id: 2, company: '에르메스', industry: '럭셔리', owner: '박영희', floor: '1F', status: '종료' },
-    { id: 3, company: '샤넬', industry: '패션', owner: '이영희', floor: '2F', status: '활성' }
-])
+// DB에서 받아온 고객사 목록
+const clients = ref([])
 
+// 페이지 (백엔드 DTO 기준)
+const page = ref(1)
+const size = ref(20)
+const totalCount = ref(0)
+
+// 모달 / 폼
 const showModal = ref(false)
-const menu = ref(false)
+
 const form = reactive({
     companyName: '',
     category: null,
@@ -157,7 +170,77 @@ const form = reactive({
     fax: '',
     zipCode: ''
 })
+const toKoreanCategory = (value) => {
+    switch (value) {
+        case 'FASHION': return '패션'
+        case 'BEAUTY': return '뷰티'
+        case 'FOOD': return '식음료'
+        case 'LIFESTYLE': return '리빙/라이프스타일'
+        case 'ELECTRONICS': return '가전/디지털'
+        case 'ACCESSORY': return '잡화/액세서리'
+        case 'SPORTS': return '스포츠/아웃도어'
+        case 'SERVICE': return '서비스/기타'
+        default: return value
+    }
+}
 
+
+// 고객사 목록 조회 (GET /api/companies/clients)
+const fetchClients = async () => {
+    try {
+        const params = {
+            keyword: search.value || null,
+            category: category.value || null,   // ENUM 그대로 전달
+            page: page.value,
+            size: size.value
+        }
+
+        const { data } = await getCustomerCompanies(params)
+
+        // 백엔드 DTO:
+        // ClientCompanyListPageResponseDto {
+        //   long totalCount;
+        //   int page;
+        //   int size;
+        //   List<ClientCompanyListResponseDto> data;
+        // }
+        // ClientCompanyListResponseDto {
+        //   Long clientCompanyId;
+        //   String companyName;
+        //   String category;
+        //   LocalDateTime createdAt;
+        // }
+
+        clients.value = data.data.map((c) => ({
+            id: c.clientCompanyId,
+            company: c.companyName,
+            category: c.category,                         // ENUM
+            categoryLabel: toKoreanCategory(c.category), // 카드에서 쓰는 한글
+            owner: '-',
+            floor: '-',
+            status: '-'
+        }))
+
+
+        totalCount.value = data.totalCount
+        page.value = data.page
+        size.value = data.size
+    } catch (e) {
+        console.error('고객사 목록 조회 실패', e)
+    }
+}
+
+// 최초 진입 시 목록 조회
+onMounted(() => {
+    fetchClients()
+})
+watch(category, () => {
+    page.value = 1
+    fetchClients()
+})
+
+
+// 고객사 등록
 const addClient = async () => {
     try {
         const payload = {
@@ -171,17 +254,16 @@ const addClient = async () => {
             zipCode: form.zipCode
         }
 
-        await registerCustomer(payload)   // 백엔드로 실제 저장 요청
+        await registerCustomer(payload)
 
-        // 모달 닫기
         showModal.value = false
 
-        // 폼 초기화
         Object.keys(form).forEach((k) => {
             form[k] = ''
         })
 
-        // 필요하면 여기서 clients 배열 갱신 로직 추가
+        // 등록 후 목록 재조회
+        await fetchClients()
     } catch (e) {
         console.error('고객사 등록 실패', e)
     }
@@ -194,6 +276,7 @@ const goToClientCompanyDetail = (id) => {
     })
 }
 </script>
+
 
 <style scoped>
 /* 사이드바 */
