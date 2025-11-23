@@ -16,15 +16,13 @@
                     <div class="scroll-area">
                         <v-list dense>
                             <template v-for="(value, key) in clientCompany" :key="key">
-                                <v-list-item
-                                    v-if="!['id', 'name', 'category', 'type', 'createdAt', 'updatedAt'].includes(key)">
+                                <v-list-item v-if="shouldShowCompanyField(key)">
                                     <v-list-item>
                                         <v-list-item-title>{{ value }}</v-list-item-title>
                                         <v-list-item-subtitle>{{ formatCompanyLabel(key) }}</v-list-item-subtitle>
                                     </v-list-item>
                                 </v-list-item>
                             </template>
-
                         </v-list>
                     </div>
                 </v-card>
@@ -171,8 +169,8 @@
         <v-dialog v-model="showModal" max-width="500">
             <v-card class="pa-6 modal-card">
                 <v-card-title class="modal-title-container">
-                    <div class="modal-title">잠재 고객 추가</div>
-                    <div class="modal-subtitle">새로운 잠재 고객 정보를 입력해주세요.</div>
+                    <div class="modal-title">고객 추가</div>
+                    <div class="modal-subtitle">고객 정보를 입력해주세요.</div>
                 </v-card-title>
 
                 <v-card-text>
@@ -182,10 +180,9 @@
                     <v-text-field v-model="form.department" label="부서" variant="outlined" class="modal-input" />
                     <v-text-field v-model="form.position" label="직책" variant="outlined" class="modal-input" />
                     <v-text-field v-model="form.phone" label="휴대폰" variant="outlined" class="modal-input" />
-                    <v-text-field v-model="form.owner" label="담당자" variant="outlined" class="modal-input" />
                     <v-text-field v-model="form.email" label="이메일" variant="outlined" class="modal-input" />
+                    <v-text-field v-model="form.note" label="메모" variant="outlined" class="modal-input" />
                 </v-card-text>
-
                 <v-card-actions class="modal-actions justify-end">
                     <v-btn text color="grey darken-1" class="cancel-btn" @click="showModal = false">취소</v-btn>
                     <v-btn color="orange darken-2" class="white--text add-btn" @click="submitClient">추가</v-btn>
@@ -198,8 +195,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { getClientCompanyDetail } from '@/apis/company'
-import { getClientsByCompany } from '@/apis/company'
+import { getClientCompanyDetail, getClientsByCompany, registerClient } from '@/apis/company'
 
 const route = useRoute()
 
@@ -318,8 +314,10 @@ const form = reactive({
     position: '',
     phone: '',
     owner: '',
-    email: ''
-});
+    email: '',
+    note: ''          // ★ 백엔드 DTO의 note
+})
+
 
 const openModal = () => {
     form.clientCompany = clientCompany.name;
@@ -350,25 +348,53 @@ const toggleFavorite = (customer) => {
     customer.favorite = !customer.favorite;
 };
 
-const submitClient = () => {
-    const newId = customers.value.length + 1;
+const submitClient = async () => {
+    try {
+        const companyId = route.params.id
 
-    customers.value.push({
-        id: newId,
-        name: form.name || `고객 ${newId}`,
-        clientCompany: form.clientCompany,
-        owner: form.owner,
-        department: form.department,
-        position: form.position,
-        email: form.email,
-        phone: form.phone,
-        favorite: false
-    });
+        const payload = {
+            name: form.name,
+            position: form.position,
+            email: form.email,
+            phone: form.phone,
+            note: form.note || ''
+        }
 
-    // 폼 초기화
-    Object.assign(form, { name: '', department: '', position: '', phone: '', owner: '', email: '' });
-    showModal.value = false;
-};
+        // POST /api/companies/{clientCompanyId}/clients
+        const { data } = await registerClient(companyId, payload)
+
+        // 응답 DTO를 화면용 객체로 변환해서 목록에 추가
+        customers.value.push({
+            id: data.clientId,
+            clientId: data.clientId,
+            clientCompanyId: data.clientCompanyId,
+            name: data.name,
+            position: data.position,
+            email: data.email,
+            phone: data.phone,
+            type: data.type,
+            createdAt: data.createdAt,
+            favorite: false
+        })
+
+        // 폼 초기화
+        Object.assign(form, {
+            name: '',
+            clientCompany: clientCompany.name,
+            department: '',
+            position: '',
+            phone: '',
+            owner: '',
+            email: '',
+            note: ''
+        })
+
+        showModal.value = false
+    } catch (e) {
+        console.error('고객 담당자 등록 실패', e)
+    }
+}
+
 
 const formatCompanyLabel = (key) => {
     const map = {
@@ -393,6 +419,29 @@ const formatCompanyLabel = (key) => {
     return map[key] || key;
 };
 
+const hiddenCommonKeys = ['id', 'name', 'category', 'type', 'createdAt', 'updatedAt']
+
+const leaseOnlyKeys = [
+    'tenantName',
+    'area',
+    'openingDate',
+    'contractPeriod',
+    'totalRent',
+    'commissionRate',
+    'avgSales'
+]
+
+// LEAD면 임대 관련 필드 숨김
+const shouldShowCompanyField = (key) => {
+    if (hiddenCommonKeys.includes(key)) return false
+
+    // type 이 LEAD 일 때는 임대 필드들 가린다
+    if (clientCompany.type === 'LEAD' && leaseOnlyKeys.includes(key)) {
+        return false
+    }
+
+    return true
+}
 
 const formatCustomerLabel = (key) => {
     const map = {

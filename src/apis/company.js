@@ -25,3 +25,7 @@ export const registerLeadCompany = (data) => {
 
 export const getLeadCompanies = (params) =>
   api.get("/api/companies/leads", { params });
+
+export const registerClient = (clientCompanyId, payload) => {
+  return api.post(`/api/companies/${clientCompanyId}/clients`, payload);
+};
