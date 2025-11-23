@@ -6,7 +6,6 @@ export const registerCustomer = (data) => {
 };
 
 // 고객사 목록 조회
-// params: { keyword, category, page, size }
 export const getCustomerCompanies = (params) => {
   return api.get("/api/companies/clients", { params });
 };
@@ -28,4 +27,14 @@ export const getLeadCompanies = (params) =>
 
 export const registerClient = (clientCompanyId, payload) => {
   return api.post(`/api/companies/${clientCompanyId}/clients`, payload);
+};
+
+export const getSimpleClientCompanies = (params = {}) => {
+  return api.get("/api/companies/simple", { params });
+};
+
+export const getSimpleClientsByCompany = (clientCompanyId, params = {}) => {
+  return api.get(`/api/companies/${clientCompanyId}/clients/simple`, {
+    params,
+  });
 };

@@ -109,7 +109,7 @@
 <script setup>
 import { reactive, ref, onMounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { registerLeadCompany, getLeadCompanies } from '@/apis/company'
+import { registerLeadCompany, getLeadCompanies } from '@/apis/client'
 
 const router = useRouter()
 

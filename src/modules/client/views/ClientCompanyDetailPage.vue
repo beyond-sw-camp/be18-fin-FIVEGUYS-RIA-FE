@@ -195,7 +195,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { getClientCompanyDetail, getClientsByCompany, registerClient } from '@/apis/company'
+import { getClientCompanyDetail, getClientsByCompany, registerClient } from '@/apis/client'
 
 const route = useRoute()
 
