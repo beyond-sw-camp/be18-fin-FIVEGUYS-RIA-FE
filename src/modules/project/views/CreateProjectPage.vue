@@ -554,3 +554,99 @@ const confirmManagerSelect = () => {
   background: #fff3e0;
 }
 </style>
+
+<!-- <style scoped>
+/* 전체 페이지 */
+.page-wrapper {
+  background: #fafafa;
+  min-height: 100vh;
+}
+
+/* 타이틀: 카드와 같은 폭에 정렬 */
+.page-title {
+  max-width: 1120px;
+  margin: 24px auto 12px;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #111;
+}
+
+/* 카드: 폭·패딩 축소 */
+.project-card {
+  max-width: 1120px;
+  margin: 0 auto 32px;
+  border-radius: 16px;
+  background: #fff;
+  border: 1px solid #e7e7e7;
+  padding: 20px 24px 24px;
+}
+
+/* 섹션 타이틀 */
+.section-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 16px;
+}
+
+/* 라벨 */
+.input-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #222;
+  margin-bottom: 3px;
+}
+
+/* 컬럼 세로 간격 줄이기 */
+.project-card :deep(.v-col) {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+/* 입력 필드 공통 크기 축소 */
+.input-field {
+  border-radius: 8px !important;
+  font-size: 0.9rem;
+}
+
+/* Vuetify 필드 높이/패딩 압축 */
+.input-field :deep(.v-field) {
+  min-height: 36px;
+}
+
+.input-field :deep(.v-field__input) {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+/* textarea 높이 줄이기 (비고) */
+:deep(textarea) {
+  min-height: 56px;
+}
+
+/* 자동 계산된 결과 강조 */
+.result-field {
+  background: #fdf7ed !important;
+  font-weight: 600;
+}
+
+/* 모달 타이틀 */
+.dialog-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.dialog-item {
+  padding: 8px 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.dialog-item:hover {
+  background: #fff3e0;
+}
+
+.selected-item {
+  background: #fff3e0;
+}
+</style> -->
