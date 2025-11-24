@@ -14,3 +14,6 @@ export const updateProjectManager = (projectId, newManagerId) => {
     newManagerId, // 백엔드 DTO 필드명에 맞춰라
   });
 };
+
+export const getProjectDetail = (projectId) =>
+  apiClient.get(`/api/projects/${projectId}`);

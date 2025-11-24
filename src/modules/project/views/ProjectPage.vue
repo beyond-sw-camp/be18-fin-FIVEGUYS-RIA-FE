@@ -91,12 +91,17 @@ const sort = ref('최신순')
 const filter = ref('모든 프로젝트')
 
 const sidebares = reactive([
-  { label: '제안 수신', value: 'RECEIVED', checked: false },
-  { label: '내부 검토', value: 'REVIEW', checked: false },
-  { label: '제안 작성', value: 'WRITING', checked: false },
-  { label: '협상 시작', value: 'NEGOTIATION', checked: false },
-  { label: '계약 성공', value: 'SUCCESS', checked: false },
+  { label: '제안수신', value: '제안수신', checked: false },
+  { label: '내부검토', value: '내부검토', checked: false },
+  { label: '견적', value: '견적', checked: false },
+  { label: '협상', value: '협상', checked: false },
+  { label: '계약성공', value: '계약성공', checked: false },
 ])
+
+const checkedSidebarValues = computed(() =>
+  sidebares.filter(s => s.checked).map(s => s.value)
+)
+
 
 // 서버에서 받은 원본 데이터
 const rawProjects = ref([])
@@ -126,10 +131,10 @@ const formatPeriod = (startDay, endDay) => {
   return `${startDay} ~ ${endDay}`
 }
 
-// 진행률 계산
+// 진행률 계산 (pipelineInfo.progressRate 사용)
 const calcProgress = (project) => {
-  if (project.pipelineInfo && project.pipelineInfo.progressPercent != null) {
-    return Math.round(project.pipelineInfo.progressPercent)
+  if (project.pipelineInfo && project.pipelineInfo.progressRate != null) {
+    return Math.round(project.pipelineInfo.progressRate)
   }
 
   const total = project.stageList ? project.stageList.length : 0
@@ -145,16 +150,18 @@ const mapToCard = (p) => {
     id: p.projectId,
     title: p.title,
     owner: p.salesManagerName,
-    status: translateStatus(p.status),
+    status: translateStatus(p.status),   // ACTIVE → 한글 변환 (원하면 사용)
+    statusCode: p.status,                // 원본 상태코드
+    currentStage: p.pipelineInfo?.currentStage || null,  // ★ 여기
     progress: calcProgress(p),
     period: formatPeriod(p.startDay, p.endDay),
     pipeline: (p.stageList || []).map((s) => ({
-      // stage 이름 필드가 다르면 여기 수정
-      name: s.stageName || s.name,
+      name: s.stageName,
       completed: s.completed === true,
     })),
   }
 }
+
 
 // 정렬 적용
 const sortedCards = computed(() => {
@@ -167,8 +174,17 @@ const sortedCards = computed(() => {
   return [...mapped].reverse()
 })
 
-// 템플릿에서 사용하는 최종 projects
-const projects = computed(() => sortedCards.value)
+// 정렬 + 사이드바(파이프라인 단계) 필터 적용
+const projects = computed(() => {
+  const base = sortedCards.value
+  const selected = checkedSidebarValues.value
+
+  if (!selected.length) return base
+
+  // currentStage 가 선택된 단계(제안수신/내부검토/...) 중 하나인 것만 노출
+  return base.filter(p => selected.includes(p.currentStage))
+})
+
 
 // UI 상태 → 쿼리 파라미터 변환
 const buildQueryParams = () => {

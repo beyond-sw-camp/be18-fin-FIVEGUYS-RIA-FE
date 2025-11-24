@@ -5,11 +5,7 @@
     <v-row class="align-center justify-space-between mb-6">
       <v-col cols="auto">
         <h2 class="project-title">{{ project.name }}</h2>
-        <v-chip
-          :color="project.status === '진행중' ? 'orange darken-2' : 'grey'"
-          size="small"
-          class="mr-2 white--text"
-        >
+        <v-chip :color="project.status === '진행중' ? 'orange darken-2' : 'grey'" size="small" class="mr-2 white--text">
           {{ project.status }}
         </v-chip>
       </v-col>
@@ -23,7 +19,8 @@
             <div class="pipeline-step" :class="step.completed ? 'completed' : 'pending'">
               {{ step.name }}
             </div>
-            <div v-if="i < project.pipeline.length -1" class="pipeline-line" :class="project.pipeline[i+1].completed ? 'completed' : 'pending'"></div>
+            <div v-if="i < project.pipeline.length - 1" class="pipeline-line"
+              :class="project.pipeline[i + 1].completed ? 'completed' : 'pending'"></div>
           </template>
           <div class="progress-text">{{ project.progress }}%</div>
         </div>
@@ -38,9 +35,12 @@
           <v-card-text>
             <v-row dense>
               <!-- 읽기 전용 필드 -->
-              <v-col cols="6"><v-text-field v-model="project.id" label="프로젝트 ID" readonly class="readonly-field"></v-text-field></v-col>
-              <v-col cols="6"><v-text-field v-model="project.createdAt" label="생성일" readonly class="readonly-field"></v-text-field></v-col>
-              <v-col cols="6"><v-text-field v-model="project.updatedAt" label="수정일" readonly class="readonly-field"></v-text-field></v-col>
+              <v-col cols="6"><v-text-field v-model="project.id" label="프로젝트 ID" readonly
+                  class="readonly-field"></v-text-field></v-col>
+              <!-- <v-col cols="6"><v-text-field v-model="project.createdAt" label="생성일" readonly
+                  class="readonly-field"></v-text-field></v-col>
+              <v-col cols="6"><v-text-field v-model="project.updatedAt" label="수정일" readonly
+                  class="readonly-field"></v-text-field></v-col> -->
 
               <!-- 입력 가능 필드 -->
               <v-col cols="6"><v-text-field v-model="project.name" label="프로젝트 명" /></v-col>
@@ -53,19 +53,21 @@
 
               <!-- 시작일/종료일 -->
               <v-col cols="6">
-                <v-menu v-model="startMenu" :close-on-content-click="false" transition="scale-transition" offset-y min-width="auto">
+                <v-menu v-model="startMenu" :close-on-content-click="false" transition="scale-transition" offset-y
+                  min-width="auto">
                   <template #activator="{ props }">
                     <v-text-field v-model="project.startDate" label="시작일" readonly v-bind="props"></v-text-field>
                   </template>
-                  <v-date-picker v-model="project.startDate" @input="startMenu=false"></v-date-picker>
+                  <v-date-picker v-model="project.startDate" @input="startMenu = false"></v-date-picker>
                 </v-menu>
               </v-col>
               <v-col cols="6">
-                <v-menu v-model="endMenu" :close-on-content-click="false" transition="scale-transition" offset-y min-width="auto">
+                <v-menu v-model="endMenu" :close-on-content-click="false" transition="scale-transition" offset-y
+                  min-width="auto">
                   <template #activator="{ props }">
                     <v-text-field v-model="project.endDate" label="종료일" readonly v-bind="props"></v-text-field>
                   </template>
-                  <v-date-picker v-model="project.endDate" @input="endMenu=false"></v-date-picker>
+                  <v-date-picker v-model="project.endDate" @input="endMenu = false"></v-date-picker>
                 </v-menu>
               </v-col>
 
@@ -106,47 +108,118 @@
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue'
+import { reactive, ref, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
+import { getProjectDetail } from '@/apis/project'
+
+const route = useRoute()
 
 const startMenu = ref(false)
 const endMenu = ref(false)
 
+// 화면용 프로젝트 모델
 const project = reactive({
-  id: 'PRJ-001',
-  createdAt: '2025-11-01',
-  updatedAt: '2025-11-05',
-  name: '디올 신규 영입 협상',
-  customerCompany: '디올',
-  customer: '김철수',
+  id: null,
+  name: '',
+  customerCompany: '',
+  customer: '',
   description: '',
-  salesPerson: '김민수',
-  type: 'POPUP',
-  status: '진행중',
-  startDate: '2025-11-01',
-  endDate: '2025-12-15',
-  estimatedRevenue: '',
-  estimatedMargin: '',
-  estimatedProfit: '',
-  progress: 60,
-  pipeline: [
-    { name: '제안 수신', completed: true },
-    { name: '내부 검토', completed: true },
-    { name: '제안 작성', completed: true },
-    { name: '협상 시작', completed: false },
-    { name: '계약 성공', completed: false }
-  ]
+  salesPerson: '',
+  type: '',          // POPUP → 팝업 스토어 등으로 바꾸고 싶으면 아래 mapType에서 처리
+  status: '',        // 한글 상태명 (진행중/계약 성공 등)
+  statusCode: '',    // 백엔드 enum 그대로 (ACTIVE/SUCCESS/FAIL ...)
+  startDate: null,   // '2025-11-01'
+  endDate: null,
+  estimatedRevenue: null,
+  estimatedMargin: null,
+  estimatedProfit: null,
+  progress: 0,
+  pipeline: [],      // [{ name, completed }]
 })
 
-// 우측 카드 예시
-const cards = reactive([
-  { title: '잠재 고객 등록', content: '잠재 고객 정보를 입력했습니다.' },
-  { title: '제안', items: [{ name: '제안서 A', date: '2025-11-02' }, { name: '제안서 B', date: '2025-11-05' }] },
-  { title: '견적', items: [{ name: '견적서 1', date: '2025-11-03' }] },
-  { title: '계약', items: [{ name: '계약서 1', date: '2025-11-06' }] },
-  { title: '정식 고객 등록', content: '계약 완료 후 정식 고객으로 등록됨' },
-  { title: '매출', content: '첫 매출 발생: 50,000,000원' }
-])
+// 우측 카드: 제안 목록 등
+const cards = ref([])
+
+// 상태 코드 → 한글
+const translateStatus = (status) => {
+  switch (status) {
+    case 'ACTIVE':
+      return '진행중'
+    case 'SUCCESS':
+      return '계약 성공'
+    case 'FAIL':
+      return '실패'
+    default:
+      return status
+  }
+}
+
+// 타입 코드 → 한글
+const translateType = (type) => {
+  switch (type) {
+    case 'POPUP':
+      return '팝업 스토어'
+    case 'EXHIBITION':
+      return '전시회'
+    case 'RENTAL':
+      return '임대'
+    default:
+      return type
+  }
+}
+
+// DTO → 화면 모델 매핑
+const applyDetailDto = (dto) => {
+  project.id = dto.projectId
+  project.name = dto.title
+  project.customerCompany = dto.clientCompanyName
+  project.customer = dto.clientName
+  project.description = dto.description || ''
+  project.salesPerson = dto.salesManagerName
+  project.type = translateType(dto.type)
+  project.statusCode = dto.status
+  project.status = translateStatus(dto.status)
+  project.startDate = dto.startDay        // '2025-11-01'
+  project.endDate = dto.endDay
+  project.estimatedRevenue = dto.expectedRevenue
+  project.estimatedMargin = dto.expectedMarginRate
+  project.estimatedProfit =
+    dto.expectedRevenue && dto.expectedMarginRate
+      ? Math.round(dto.expectedRevenue * dto.expectedMarginRate / 100)
+      : null
+  project.progress = dto.pipelineInfo?.progressRate ?? 0
+
+  project.pipeline = (dto.stageList || []).map(s => ({
+    name: s.stageName,
+    completed: s.completed === true,
+  }))
+
+  // 우측 카드: 제안 목록 한 카드로 구성 (원하면 더 쪼개라)
+  cards.value = [
+    {
+      title: '제안 목록',
+      items: (dto.proposals || []).map(p => ({
+        name: `${p.title} (${p.writerName})`,
+        date: p.submitDate || p.requestDate || '',
+      })),
+    },
+  ]
+}
+
+// 초기 로딩
+onMounted(async () => {
+  const projectId = route.params.projectId || route.params.id
+
+  if (!projectId) {
+    console.error('projectId 없음', route.params)
+    return
+  }
+
+  const res = await getProjectDetail(projectId)
+  applyDetailDto(res.data)
+})
 </script>
+
 
 <style scoped>
 .detail-container {
@@ -164,7 +237,7 @@ const cards = reactive([
 
 .project-card {
   border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   background-color: #fff;
 }
 
@@ -175,14 +248,24 @@ const cards = reactive([
   position: relative;
   margin-bottom: 24px;
 }
+
 .pipeline-step {
   padding: 8px 14px;
   border-radius: 6px;
   font-size: 0.9rem;
   text-align: center;
 }
-.pipeline-step.completed { background-color: orange; color: white; }
-.pipeline-step.pending { background-color: #eee; color: #555; }
+
+.pipeline-step.completed {
+  background-color: orange;
+  color: white;
+}
+
+.pipeline-step.pending {
+  background-color: #eee;
+  color: #555;
+}
+
 .pipeline-line {
   flex-grow: 1;
   height: 2px;
@@ -190,8 +273,21 @@ const cards = reactive([
   border-radius: 2px;
   background-color: #ccc;
 }
-.pipeline-line.completed { background-color: orange; }
-.progress-text { position: absolute; right: 0; bottom: -20px; font-size: 0.75rem; color: #888; }
 
-.readonly-field input { background-color: #eee !important; color: #555 !important; }
+.pipeline-line.completed {
+  background-color: orange;
+}
+
+.progress-text {
+  position: absolute;
+  right: 0;
+  bottom: -20px;
+  font-size: 0.75rem;
+  color: #888;
+}
+
+.readonly-field input {
+  background-color: #eee !important;
+  color: #555 !important;
+}
 </style>

@@ -47,14 +47,17 @@
         </v-col>
 
         <!-- 날짜: 시작일 -->
+        <!-- 날짜: 시작일 -->
         <v-col cols="12" md="3">
           <div class="input-label">시작일</div>
           <v-menu v-model="startMenu" :close-on-content-click="false" offset-y>
             <template #activator="{ props }">
-              <v-text-field v-model="form.startDate" placeholder="시작일" variant="outlined" hide-details v-bind="props"
-                class="input-field" readonly />
+              <!-- v-model 제거, :model-value로 표시용 문자열만 바인딩 -->
+              <v-text-field :model-value="formattedStartDate" placeholder="시작일" variant="outlined" hide-details
+                v-bind="props" class="input-field" readonly />
             </template>
 
+            <!-- 여기는 그대로 Date 객체 바인딩 -->
             <v-date-picker v-model="form.startDate" @update:model-value="startMenu = false" />
           </v-menu>
         </v-col>
@@ -64,8 +67,8 @@
           <div class="input-label">종료일</div>
           <v-menu v-model="endMenu" :close-on-content-click="false" offset-y>
             <template #activator="{ props }">
-              <v-text-field v-model="form.endDate" placeholder="종료일" variant="outlined" hide-details class="input-field"
-                v-bind="props" readonly />
+              <v-text-field :model-value="formattedEndDate" placeholder="종료일" variant="outlined" hide-details
+                class="input-field" v-bind="props" readonly />
             </template>
 
             <v-date-picker v-model="form.endDate" @update:model-value="endMenu = false" />
@@ -441,6 +444,20 @@ const formattedProfit = computed(() => {
 
   return profit.toLocaleString() + " 원";
 });
+
+// 날짜 → 'YYYY-MM-DD' 문자열
+const toDateString = (date) => {
+  if (!date) return "";
+  const d = new Date(date);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
+
+const formattedStartDate = computed(() => toDateString(form.startDate));
+const formattedEndDate = computed(() => toDateString(form.endDate));
+
 
 // 저장
 const saveProject = async () => {
