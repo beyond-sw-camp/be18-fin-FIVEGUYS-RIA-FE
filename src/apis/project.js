@@ -17,3 +17,7 @@ export const updateProjectManager = (projectId, newManagerId) => {
 
 export const getProjectDetail = (projectId) =>
   apiClient.get(`/api/projects/${projectId}`);
+
+export const updateProject = (projectId, payload) => {
+  return apiClient.patch(`/api/projects/${projectId}`, payload);
+};

@@ -254,10 +254,12 @@ const selectedManagerId = ref(null);
 
 
 const loadManagers = async () => {
-  const res = await getUserList();
-  // 응답: [{ userId, name }, ...]
-  managerList.value = res.data || [];
-};
+  const res = await getUserList()
+  // 응답 예: [{ userId, name, roleName }, ...] 라고 가정
+  managerList.value = (res.data || []).filter(
+    (u) => u.roleName !== 'ROLE_ADMIN'
+  )
+}
 const typeList = ["팝업 스토어", "전시회", "임대"];
 
 const form = reactive({
