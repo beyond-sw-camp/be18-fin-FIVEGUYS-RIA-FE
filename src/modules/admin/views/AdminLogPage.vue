@@ -1,13 +1,5 @@
 <template>
   <div class="admin-log-page">
-    <!-- 상단 타이틀 -->
-    <header class="page-header">
-      <h1 class="page-title">로그 관리</h1>
-      <p class="page-desc">
-        시스템 내 관리자 및 사용자 활동 로그를 조회하고 필터링 할 수 있습니다.
-      </p>
-    </header>
-
     <section class="logs-section">
       <v-card class="logs-card" elevation="0">
         <!-- 🔷 필터 영역 -->
