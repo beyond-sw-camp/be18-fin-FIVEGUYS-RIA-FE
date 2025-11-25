@@ -98,8 +98,7 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from "vue";
-import api from "@/api/Axios";
-
+import api from "@/apis/http";
 /* ---------------------------
  * 상태 / 상수
  * ------------------------- */

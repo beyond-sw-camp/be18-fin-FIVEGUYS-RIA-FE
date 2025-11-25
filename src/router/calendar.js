@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // 🔥 Controller Base URL 맞춤
-const API_URL = "http://localhost:8088/api/calendars";
+const API_URL = "http://localhost:8080/api/calendars";
 
 export const CalendarAPI = {
   /**
@@ -48,7 +48,7 @@ export const CalendarAPI = {
    */
   async removeUser(email) {
     const res = await axios.delete(`${API_URL}/users`, {
-      params: { email }
+      params: { email },
     });
     return res.data;
   },
@@ -59,5 +59,5 @@ export const CalendarAPI = {
   async getUsers() {
     const res = await axios.get(`${API_URL}/users`);
     return res.data;
-  }
+  },
 };

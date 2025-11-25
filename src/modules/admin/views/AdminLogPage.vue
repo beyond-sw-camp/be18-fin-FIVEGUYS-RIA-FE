@@ -209,8 +209,7 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from "vue";
-import api from "@/api/Axios";
-
+import api from "@/apis/http";
 /* ---------- 필터 상태 ---------- */
 const startDate = ref("");
 const endDate = ref("");

@@ -1,3 +1,4 @@
+// src/router/index.js
 import { createRouter, createWebHistory } from "vue-router";
 
 import AdminDangerPage from "@/modules/admin/views/AdminDangerPage.vue";
@@ -13,7 +14,6 @@ import ContractPage from "@/modules/sales/contract/view/ContractPage.vue";
 import CreateProjectPage from "@/modules/project/views/CreateProjectPage.vue";
 import CreateProposalPage from "@/modules/sales/proposal/view/CreateProposalPage.vue";
 import EstimatePage from "@/modules/sales/estimate/view/EstimatePage.vue";
-// import GeneralMemberPage from '@/modules/member/views/GeneralMemberPage.vue'
 import FileStoragePage from "@/modules/file/views/FileStoragePage.vue";
 import FloorPage from "@/modules/storemap/views/StoreMapPage.vue";
 import HomePage from "@/views/HomePage.vue";
@@ -26,6 +26,7 @@ import ProposalPage from "@/modules/sales/proposal/view/ProposalPage.vue";
 import RevenuePage from "@/modules/sales/revenue/view/RevenuePage.vue";
 import VipMemberListPage from "@/modules/member/views/VipMemberListPage.vue";
 import VipMemberPage from "@/modules/member/views/VipMemberPage.vue";
+import { useAuthStore } from "@/stores/auth";
 
 const routes = [
   {
@@ -45,7 +46,6 @@ const routes = [
   },
   { path: "/project/:id", name: "ProjectDetail", component: ProjectDetailPage },
   { path: "/floor", name: "Floor", component: FloorPage },
-  // { path: '/generalmember', name: 'GeneralMember', component: GeneralMemberPage },
   { path: "/vipmember", name: "VipMember", component: VipMemberPage },
   {
     path: "/vipmemberlist",
@@ -86,12 +86,13 @@ const routes = [
   { path: "/revenue", name: "Revenue", component: RevenuePage },
   { path: "/filestorage", name: "FileStorage", component: FileStoragePage },
 
+  // 관리자 도메인은 /admin 밑으로 묶어두는 버전 (깔끔)
   {
-    path: "/admin/users",
+    path: "/admin",
     component: AdminLayout,
     children: [
       {
-        path: "",
+        path: "users",
         name: "AdminUsers",
         component: AdminPage,
         meta: {
@@ -100,14 +101,8 @@ const routes = [
           hideFooter: true,
         },
       },
-    ],
-  },
-  {
-    path: "/admin/roles",
-    component: AdminLayout,
-    children: [
       {
-        path: "",
+        path: "roles",
         name: "AdminRoles",
         component: AdminRolePage,
         meta: {
@@ -116,14 +111,8 @@ const routes = [
           hideFooter: true,
         },
       },
-    ],
-  },
-  {
-    path: "/admin/logs",
-    component: AdminLayout,
-    children: [
       {
-        path: "",
+        path: "logs",
         name: "AdminLogs",
         component: AdminLogPage,
         meta: {
@@ -132,14 +121,8 @@ const routes = [
           hideFooter: true,
         },
       },
-    ],
-  },
-  {
-    path: "/admin/danger",
-    component: AdminLayout,
-    children: [
       {
-        path: "",
+        path: "danger",
         name: "AdminDanger",
         component: AdminDangerPage,
         meta: {
@@ -148,6 +131,10 @@ const routes = [
           hideFooter: true,
         },
       },
+      {
+        path: "",
+        redirect: { name: "AdminUsers" }, // /admin -> /admin/users
+      },
     ],
   },
 ];
@@ -155,6 +142,17 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes,
+});
+
+router.beforeEach((to, from, next) => {
+  const authStore = useAuthStore();
+
+  if (to.name?.toString().startsWith("Admin")) {
+    if (authStore.role !== "ROLE_ADMIN") {
+      return next({ name: "Home" });
+    }
+  }
+  next();
 });
 
 export default router;
