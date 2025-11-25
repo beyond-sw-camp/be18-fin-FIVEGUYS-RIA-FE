@@ -1,6 +1,9 @@
 <template>
   <v-container fluid class="pa-6 page-wrapper">
 
+    <v-snackbar v-model="snackbar" :color="snackbarColor" timeout="2500">
+      {{ snackbarMessage }}
+    </v-snackbar>
     <!-- 페이지 타이틀 -->
     <div class="page-title mb-6">프로젝트 생성</div>
 
@@ -172,7 +175,6 @@
 
 
     <!-- 영업 관리자 선택 모달 -->
-    <!-- 영업 관리자 선택 모달 -->
     <v-dialog v-model="managerDialog" width="500">
       <v-card class="pa-4">
         <div class="dialog-title mb-4">영업 관리자 선택</div>
@@ -214,6 +216,27 @@ import {
 import { getMyProfile, getUserList } from "@/apis/user";
 
 const router = useRouter();
+
+const snackbar = ref(false)
+const snackbarMessage = ref('')
+const snackbarColor = ref('red')
+
+const showError = (err, fallbackMessage = '요청 처리 중 오류가 발생했습니다.') => {
+  const msg =
+    err?.response?.data?.message ||
+    err?.response?.data?.errorMessage ||
+    fallbackMessage
+
+  snackbarMessage.value = msg
+  snackbarColor.value = 'red'
+  snackbar.value = true
+}
+
+const showSuccess = (msg = '프로젝트가 생성되었습니다.') => {
+  snackbarMessage.value = msg
+  snackbarColor.value = 'green'
+  snackbar.value = true
+}
 
 const startMenu = ref(false);
 const endMenu = ref(false);
@@ -448,6 +471,7 @@ const formattedProfit = computed(() => {
 });
 
 // 날짜 → 'YYYY-MM-DD' 문자열
+// 날짜 → 'YYYY-MM-DD' 문자열 (표시용)
 const toDateString = (date) => {
   if (!date) return "";
   const d = new Date(date);
@@ -460,7 +484,18 @@ const toDateString = (date) => {
 const formattedStartDate = computed(() => toDateString(form.startDate));
 const formattedEndDate = computed(() => toDateString(form.endDate));
 
+// 백엔드로 보낼 LocalDate 문자열
+const toLocalDateString = (date) => {
+  if (!date) return null;
+  const d = new Date(date);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
 
+
+// 저장
 // 저장
 const saveProject = async () => {
   const payload = {
@@ -470,19 +505,26 @@ const saveProject = async () => {
     salesManagerId: form.salesManagerId,
     type: mapSalesTypeToEnum(form.salesType),
     description: form.description || "",
-    startDay: form.startDate,
-    endDay: form.endDate,
+    startDay: toLocalDateString(form.startDate),
+    endDay: toLocalDateString(form.endDate),
     expectedRevenue: form.expectedRevenue,
     expectedMarginRate: form.expectedMarginRate,
   };
 
-  const res = await createProject(payload);
+  try {
+    const res = await createProject(payload);
+    const createdId = res.data.projectId;
 
-  const createdId = res.data.projectId;
-  if (createdId) {
-    router.push(`/project/${createdId}`);
+    showSuccess('프로젝트가 생성되었습니다.');
+
+    if (createdId) {
+      router.push(`/project/${createdId}`);
+    }
+  } catch (err) {
+    showError(err, '프로젝트를 생성할 수 없습니다.');
   }
 };
+
 
 const selectClientPerson = (p) => {
   form.client = p.name;

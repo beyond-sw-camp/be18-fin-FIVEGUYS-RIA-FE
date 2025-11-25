@@ -11,7 +11,7 @@ export const createProject = (payload) => {
 
 export const updateProjectManager = (projectId, newManagerId) => {
   return apiClient.patch(`/api/projects/${projectId}/salesManager`, {
-    newManagerId, // 백엔드 DTO 필드명에 맞춰라
+    newManagerId,
   });
 };
 
@@ -20,4 +20,18 @@ export const getProjectDetail = (projectId) =>
 
 export const updateProject = (projectId, payload) => {
   return apiClient.patch(`/api/projects/${projectId}`, payload);
+};
+
+export const getProjectTitles = (keyword) => {
+  return apiClient.get("/api/projects/titles", {
+    params: {
+      keyword: keyword || undefined,
+    },
+  });
+};
+export const getProjectMeta = (projectId) => {
+  return apiClient.get(`/api/projects/titles/${projectId}`);
+};
+export const deleteProject = (projectId) => {
+  return apiClient.delete(`/api/projects/${projectId}`);
 };
