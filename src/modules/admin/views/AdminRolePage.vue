@@ -99,6 +99,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from "vue";
 import api from "@/apis/http";
+
 /* ---------------------------
  * 상태 / 상수
  * ------------------------- */
@@ -118,92 +119,40 @@ const roleOptions = [
   { label: "사원", value: 3 },
 ];
 
-// user.id → roleId 매핑 (v-model용)
-const userRoleMap = ref({});
-
-// 사용자 목록 & 페이지네이션
+// 사용자 목록 & 페이지네이션(프론트)
 const users = ref([]);
 const page = ref(1);
 const pageSize = 10;
-const totalPages = ref(1);
-
-// 임시 토큰 (지금처럼 Postman에서 받아서 쓰는 용도)
-const TEST_TOKEN =
-  "eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJkMDliY2RhMy03MWY0LTQyZDktOTA3My0yZWQwNzVkMjVhZGEiLCJjYXRlZ29yeSI6ImFjY2VzcyIsImVtcGxveWVlTm8iOiJBMDAxIiwicm9sZSI6IlJPTEVfQURNSU4iLCJkZXBhcnRtZW50IjoiQURNSU4iLCJpYXQiOjE3NjM5NjkzNjksImV4cCI6MTc2Mzk3MTE2OX0.UphVQvbmFqktBa2DbTeqNNX9cu_JhiqRLSeDLAVs6p0";
-
-/* ---------------------------
- * 유틸 함수
- * ------------------------- */
-
-// API 응답을 userRoleMap에 반영
-const syncUserRoleMap = () => {
-  const map = {};
-  users.value.forEach((u) => {
-    map[u.id] = u.roleId ?? null;
-  });
-  userRoleMap.value = map;
-};
 
 /* ---------------------------
  * API 호출
  * ------------------------- */
-
-// 사용자 목록 조회
+// 모든 사용자 한 번에 많이 가져오기 (백엔드 페이지네이션 무시)
 const fetchUsers = async () => {
   try {
     const res = await api.get("/api/admin/users", {
-      headers: {
-        Authorization: `Bearer ${TEST_TOKEN}`,
-      },
       params: {
-        page: page.value - 1, // Spring Pageable은 0부터 시작
-        size: pageSize,
+        page: 0, // 첫 페이지
+        size: 1000, // 충분히 크게 (유저 수보다 크도록)
       },
     });
 
     const data = res.data;
     users.value = Array.isArray(data.content) ? data.content : [];
-    totalPages.value = data.totalPages ?? 1;
-
-    syncUserRoleMap();
   } catch (error) {
     console.error("사용자 목록 조회 실패:", error);
     users.value = [];
-    totalPages.value = 1;
-    alert("사용자 목록 조회 중 오류가 발생했습니다.");
   }
 };
 
-// 권한 변경 API (엔드포인트는 필요에 따라 맞춰 써)
-const updateUserRole = async (userId, newRoleId) => {
-  // 예시: PATCH /api/admin/users/{userId}/role  body: { roleId: ... }
-  await api.patch(
-    `/api/admin/users/${userId}/role`,
-    { roleId: newRoleId },
-    {
-      headers: {
-        Authorization: `Bearer ${TEST_TOKEN}`,
-      },
-    }
-  );
-};
-
 /* ---------------------------
- * 이벤트 핸들러
+ * 권한 변경
  * ------------------------- */
-
 const changeUserRole = async (user, newRoleId) => {
   try {
-    await api.patch(
-      `/api/admin/users/${user.id}/changes`,
-      { roleId: newRoleId },
-      {
-        headers: {
-          Authorization: `Bearer ${TEST_TOKEN}`,
-        },
-      }
-    );
-
+    await api.patch(`/api/admin/users/${user.id}/changes`, {
+      roleId: newRoleId,
+    });
     alert("권한이 변경되었습니다.");
     await fetchUsers(); // 목록 새로고침
   } catch (e) {
@@ -213,9 +162,8 @@ const changeUserRole = async (user, newRoleId) => {
 };
 
 /* ---------------------------
- * computed
+ * 필터 + 프론트 페이지네이션
  * ------------------------- */
-
 const filteredUsers = computed(() => {
   return users.value.filter((user) => {
     const matchSearch =
@@ -231,16 +179,19 @@ const filteredUsers = computed(() => {
   });
 });
 
-// 백엔드에서 페이지네이션 해오고 있으니,
-// 여기서는 해당 페이지 전체를 그대로 사용 (필터만 프론트에서)
-const pagedUsers = computed(() => filteredUsers.value);
+const totalPages = computed(() => {
+  const len = filteredUsers.value.length;
+  return len === 0 ? 1 : Math.ceil(len / pageSize);
+});
 
-/* ---------------------------
- * 라이프사이클
- * ------------------------- */
+const pagedUsers = computed(() => {
+  const start = (page.value - 1) * pageSize;
+  return filteredUsers.value.slice(start, start + pageSize);
+});
 
-watch(page, () => {
-  fetchUsers();
+// 검색어나 필터가 바뀌면 1페이지로 리셋
+watch([searchText, selectedRoleFilter], () => {
+  page.value = 1;
 });
 
 onMounted(() => {

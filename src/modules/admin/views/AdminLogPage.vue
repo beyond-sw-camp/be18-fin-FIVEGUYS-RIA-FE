@@ -210,6 +210,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from "vue";
 import api from "@/apis/http";
+
 /* ---------- 필터 상태 ---------- */
 const startDate = ref("");
 const endDate = ref("");
@@ -221,10 +222,8 @@ const keyword = ref("");
 const logs = ref([]);
 const page = ref(1);
 const size = ref(10);
-const totalPages = ref(1);
-const totalElements = ref(0);
 
-/* ---------- 셀렉트 옵션 ---------- */
+/* ---------- 사용자 옵션 ---------- */
 const userOptions = ref([{ label: "모든 사용자", value: "ALL" }]);
 
 const actionOptions = [
@@ -236,15 +235,8 @@ const actionOptions = [
   { label: "권한 설정 변경", value: "ROLE_CHANGE" },
 ];
 
-/* 임시 토큰 */
-const TEST_TOKEN =
-  "eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiIwMTljNWVmZS1iYTI2LTQ3NTYtYjQ0Yy0zZTA0YjU3ZjhmNGYiLCJjYXRlZ29yeSI6ImFjY2VzcyIsImVtcGxveWVlTm8iOiJBMDAxIiwicm9sZSI6IlJPTEVfQURNSU4iLCJkZXBhcnRtZW50IjoiQURNSU4iLCJpYXQiOjE3NjM5Njc5ODksImV4cCI6MTc2Mzk2OTc4OX0.EM8IYJm-cpvT02LNGb1FML_s3YjuKn2WMrlokgF_spw";
-
 /* ---------- 상태 표시 ---------- */
-const getLogStatus = (log) => {
-  // 백엔드 필드명이 바뀌어도 여기만 맞춰주면 됨
-  return log.status ?? log.state ?? log.result ?? null;
-};
+const getLogStatus = (log) => log.status ?? log.state ?? log.result ?? null;
 
 const getStatusLabel = (status) => {
   if (status === "SUCCESS") return "성공";
@@ -258,44 +250,32 @@ const getStatusColor = (status) => {
   return "grey";
 };
 
-/* ---------- 포맷터 ---------- */
+/* ---------- 날짜/리소스 포맷 ---------- */
 const formatDateTime = (iso) => {
   if (!iso) return "-";
-  const d = new Date(iso);
-  return d.toLocaleString("ko-KR");
+  return new Date(iso).toLocaleString("ko-KR");
 };
 
-const formatResource = (resource) => {
-  if (!resource) return "-";
-  // 줄바꿈/여러 공백을 한 칸으로
-  return resource.replace(/\s+/g, " ");
-};
+const formatResource = (resource) => resource?.replace(/\s+/g, " ") ?? "-";
 
-/* ---------- API ---------- */
+/* ---------- API 호출 ---------- */
+// ✔ 인터셉터가 자동으로 JWT 붙여줌 → headers 필요 없음
 const fetchLogs = async () => {
   try {
     const res = await api.get("/api/admin/logs", {
-      headers: { Authorization: `Bearer ${TEST_TOKEN}` },
-      params: {
-        page: page.value - 1,
-        size: size.value,
-        // TODO: 날짜/사용자/작업/키워드 filter 백엔드 연동 시 여기 params에 추가
-      },
+      params: { page: 0, size: 1000 },
     });
 
-    const data = res.data;
-    logs.value = data.content ?? [];
-    totalPages.value = data.totalPages ?? 1;
-    totalElements.value = data.totalElements ?? logs.value.length;
+    logs.value = Array.isArray(res.data.content) ? res.data.content : [];
   } catch (err) {
     console.error("로그 조회 실패:", err);
+    logs.value = [];
   }
 };
 
 const fetchUsersForFilter = async () => {
   try {
     const res = await api.get("/api/admin/users", {
-      headers: { Authorization: `Bearer ${TEST_TOKEN}` },
       params: { page: 0, size: 1000 },
     });
 
@@ -304,7 +284,7 @@ const fetchUsersForFilter = async () => {
       { label: "모든 사용자", value: "ALL" },
       ...list.map((u) => ({
         label: `${u.name} (${u.employeeNo})`,
-        value: u.id,
+        value: u.employeeNo,
       })),
     ];
   } catch (err) {
@@ -312,38 +292,70 @@ const fetchUsersForFilter = async () => {
   }
 };
 
-/* ---------- computed ---------- */
-const pagedLogs = computed(() => logs.value);
+/* ---------- 필터링 로직 ---------- */
+const filteredLogs = computed(() =>
+  logs.value.filter((log) => {
+    const createdDate = log.createdAt ? log.createdAt.slice(0, 10) : null;
 
-/* ---------- 필터/페이지 이벤트 ---------- */
-const applyFilter = async () => {
-  page.value = 1;
-  await fetchLogs();
-};
+    // 날짜 필터
+    if (startDate.value && createdDate < startDate.value) return false;
+    if (endDate.value && createdDate > endDate.value) return false;
 
-const resetFilter = async () => {
+    // 사용자 필터
+    const empNo = log.employeeNo ?? null;
+    if (
+      selectedUser.value !== "ALL" &&
+      String(empNo) !== String(selectedUser.value)
+    )
+      return false;
+
+    // 키워드 필터
+    const kw = keyword.value.trim();
+    if (kw) {
+      const target = `${log.logName ?? ""} ${log.resource ?? ""} ${
+        log.userName ?? ""
+      } ${log.employeeNo ?? ""}`;
+      if (!target.includes(kw)) return false;
+    }
+
+    return true;
+  })
+);
+
+/* ---------- 페이지 보정 ---------- */
+const totalPages = computed(() => {
+  const count = filteredLogs.value.length;
+  return count === 0 ? 1 : Math.ceil(count / size.value);
+});
+
+watch(filteredLogs, () => {
+  if (page.value > totalPages.value) page.value = totalPages.value;
+});
+
+/* ---------- 페이지네이션 ---------- */
+const pagedLogs = computed(() => {
+  const start = (page.value - 1) * size.value;
+  return filteredLogs.value.slice(start, start + size.value);
+});
+
+const totalElements = computed(() => filteredLogs.value.length);
+
+/* ---------- 필터 이벤트 ---------- */
+const applyFilter = () => (page.value = 1);
+
+const resetFilter = () => {
   startDate.value = "";
   endDate.value = "";
   selectedUser.value = "ALL";
   selectedAction.value = "ALL";
   keyword.value = "";
   page.value = 1;
-  await fetchLogs();
 };
 
-const goFirst = () => {
-  page.value = 1;
-};
+const goFirst = () => (page.value = 1);
+const goLast = () => (page.value = totalPages.value);
 
-const goLast = () => {
-  page.value = totalPages.value;
-};
-
-/* ---------- 라이프사이클 ---------- */
-watch(page, () => {
-  fetchLogs();
-});
-
+/* ---------- 초기 로딩 ---------- */
 onMounted(async () => {
   await Promise.all([fetchUsersForFilter(), fetchLogs()]);
 });
