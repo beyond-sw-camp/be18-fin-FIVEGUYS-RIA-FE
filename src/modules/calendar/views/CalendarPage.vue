@@ -162,7 +162,7 @@
 </template>
 
 <script>
-import { CalendarAPI } from "@/router/calendar.js";
+import { CalendarAPI } from "@/apis/calendar.js";
 
 function toLocalDateKey(date) {
   const y = date.getFullYear();
