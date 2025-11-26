@@ -20,7 +20,9 @@
       <v-col cols="12">
         <div class="pipeline-full">
           <template v-for="(step, i) in project.pipeline" :key="i">
-            <div class="pipeline-step" :class="step.completed ? 'completed' : 'pending'">
+            <div class="pipeline-step" :class="step.completed ? 'completed' : 'pending'"
+              @click="changePipelineStage(i + 1)">
+
               {{ step.name }}
             </div>
             <div v-if="i < project.pipeline.length - 1" class="pipeline-line"
@@ -268,6 +270,7 @@ import {
   getSimpleClientsByCompany,
 } from '@/apis/client'
 import { getUserList } from '@/apis/user'
+import { updatePipelineStage } from '@/apis/pipeline'
 
 const route = useRoute()
 const router = useRouter()
@@ -288,7 +291,9 @@ const project = reactive({
   statusCode: '',
   progress: 0,
   pipeline: [],
+  pipelineId: null,
 })
+
 const snackbar = ref(false)
 const snackbarMessage = ref('')
 const snackbarColor = ref('red')
@@ -305,6 +310,23 @@ const showError = (err, fallbackMessage = '요청 처리 중 오류가 발생했
   snackbar.value = true
 }
 
+const changePipelineStage = async (targetStageNo) => {
+  try {
+    if (!project.pipelineId) {
+      showError(null, '파이프라인 ID를 찾을 수 없습니다.')
+      return
+    }
+
+    await updatePipelineStage(project.pipelineId, { targetStageNo })
+
+    const res = await getProjectDetail(project.id)
+    applyDetailDto(res.data)
+
+    showSuccess('진행 단계가 변경되었습니다.')
+  } catch (err) {
+    showError(err, '단계를 변경할 수 없습니다.')
+  }
+}
 
 const form = reactive({
   projectName: '',
@@ -403,6 +425,7 @@ const applyDetailDto = (dto) => {
     name: s.stageName,
     completed: s.completed === true,
   }))
+  project.pipelineId = dto.pipelineInfo?.pipelineId ?? null   // ← 추가
 
   form.projectName = dto.title
   form.clientCompany = dto.clientCompanyName
@@ -429,6 +452,7 @@ const applyDetailDto = (dto) => {
     },
   ]
 }
+
 
 const loadClients = async () => {
   const params = {

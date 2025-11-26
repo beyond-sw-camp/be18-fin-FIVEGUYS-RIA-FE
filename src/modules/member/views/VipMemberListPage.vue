@@ -29,7 +29,7 @@
 
     <!-- 검색 / 필터 -->
     <div class="d-flex align-center justify-space-between mb-4">
-      <v-text-field v-model="search" placeholder="검색 (이름, 연락처, 담당자)" density="compact" variant="outlined" hide-details
+      <v-text-field v-model="search" placeholder="검색 (이름, 연락처)" density="compact" variant="outlined" hide-details
         clearable rounded="lg" style="max-width: 300px;" />
       <v-select v-model="selectedGrade" :items="gradeList" density="compact" variant="outlined" hide-details
         rounded="lg" style="max-width: 200px;" placeholder="등급별 필터" @update:model-value="onGradeChange" />
