@@ -34,6 +34,7 @@ const routes = [
   { path: '/project/createproject', name: 'CreateProject', component: CreateProjectPage },
   { path: '/project/:id', name: 'ProjectDetail', component: ProjectDetailPage },
   { path: '/floor', name: 'Floor', component: FloorPage },
+  {path: '/floor/:level',name: 'Floor',component: FloorPage,},
   // { path: '/generalmember', name: 'GeneralMember', component: GeneralMemberPage },
   { path: '/vipmember', name: 'VipMember', component: VipMemberPage },
   { path: '/vipmemberlist', name: 'VipMemberList', component: VipMemberListPage },

@@ -1,0 +1,74 @@
+[
+  {
+    "id": "area_1",
+    "name": "벨렌도르프",
+    "shape": "rect",
+    "coords": "466,336,576,567"
+  },
+  {
+    "id": "area_2",
+    "name": "예거 르쿨트르",
+    "shape": "poly",
+    "coords": "468,574,580,573,582,455,677,455,676,645,468,649,468,616"
+  },
+  {
+    "id": "area_3",
+    "name": "파텍 필립",
+    "shape": "rect",
+    "coords": "681,455,988,645"
+  },
+  {
+    "id": "area_4",
+    "name": "쇼파드",
+    "shape": "rect",
+    "coords": "1125,645,993,455"
+  },
+  {
+    "id": "area_5",
+    "name": "오메가",
+    "shape": "rect",
+    "coords": "667,28,868,180"
+  },
+  {
+    "id": "area_6",
+    "name": "브레게",
+    "shape": "rect",
+    "coords": "873,28,1078,180"
+  },
+  {
+    "id": "area_7",
+    "name": "까르띠에",
+    "shape": "rect",
+    "coords": "668,189,978,356"
+  },
+  {
+    "id": "area_8",
+    "name": "파네라이",
+    "shape": "rect",
+    "coords": "984,187,1078,354"
+  },
+  {
+    "id": "area_9",
+    "name": "랑에 운트 죄네",
+    "shape": "rect",
+    "coords": "1184,26,1358,163"
+  },
+  {
+    "id": "area_10",
+    "name": "IWC",
+    "shape": "rect",
+    "coords": "1183,168,1359,283"
+  },
+  {
+    "id": "area_11",
+    "name": "위블로",
+    "shape": "rect",
+    "coords": "1185,288,1356,393"
+  },
+  {
+    "id": "area_12",
+    "name": "모저엔씨",
+    "shape": "rect",
+    "coords": "1186,400,1359,522"
+  }
+]
