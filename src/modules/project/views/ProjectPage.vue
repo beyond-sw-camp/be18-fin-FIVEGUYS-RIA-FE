@@ -12,13 +12,13 @@
           <v-select v-model="sort" :items="['최신순', '오래된순']" label="정렬" variant="outlined" hide-details
             density="comfortable" class="mb-4 sidebar-input" />
 
-          <!-- 필터 (모든 / 내 / 완료) -->
+          <!-- 필터 -->
           <v-select v-model="filter" :items="filterItems" item-title="title" item-value="value" label="필터"
             variant="outlined" hide-details density="comfortable" class="mb-6 sidebar-input" />
 
-          <!-- 상태 체크박스 그룹 -->
+          <!-- 상태 체크박스 -->
           <div class="sidebar-checkbox-group mt-4">
-            진행 상태
+            <div style="font-weight: 600;">진행 상태</div>
             <v-checkbox v-for="sidebar in sidebares" :key="sidebar.value" v-model="sidebar.checked"
               :label="sidebar.label" hide-details dense class="sidebar-checkbox" />
           </div>
@@ -34,9 +34,8 @@
         </div>
 
         <v-row dense>
-          <v-col v-for="(project, index) in projects" :key="index" cols="12" sm="6" md="4">
+          <v-col v-for="(project, index) in projects" :key="index" cols="12" sm="6" md="4" class="project-col">
             <v-card outlined class="pa-4 project-card" @click="goToDetail(project.id)">
-              <!-- 상단: 진행 상태 + 프로젝트 제목 + 진행도 -->
               <v-card-title class="d-flex justify-space-between align-start status-row">
                 <div class="d-flex flex-column align-start">
                   <span class="status-text">[{{ project.status }}]</span>
@@ -45,7 +44,6 @@
                 <span class="progress-text">진행률: {{ project.progress }}%</span>
               </v-card-title>
 
-              <!-- 파이프라인 -->
               <v-card-text class="pa-0 pipeline-section">
                 <div class="pipeline-container">
                   <template v-for="(step, i) in project.pipeline" :key="i">
@@ -274,6 +272,12 @@ const goCreateProject = () => {
 </script>
 
 <style scoped>
+/* ==================== 카드 간격 추가 ==================== */
+.project-col {
+  margin-bottom: 20px;
+  /* ← 여기만 추가됨 */
+}
+
 /* ==================== 사이드바 ==================== */
 .sidebar-card {
   border-radius: 16px;
@@ -287,46 +291,14 @@ const goCreateProject = () => {
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.12);
 }
 
-.sidebar-title {
-  font-size: 18px;
-  font-weight: 700;
-  color: #ff7f00;
-  letter-spacing: 0.5px;
-}
-
-.status-label {
-  font-weight: 600;
-  color: #555;
-  font-size: 14px;
-  margin-bottom: 8px;
-}
-
 .sidebar-checkbox .v-input--selection-controls__ripple {
   display: none;
-}
-
-.sidebar-checkbox .v-input--selection-controls__input {
-  min-width: 28px;
-  min-height: 28px;
 }
 
 .sidebar-checkbox .v-label {
   font-size: 0.75rem;
   color: #1c1c1e;
   font-weight: 500;
-}
-
-.sidebar-checkbox {
-  background-color: #ffffff;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  transition: background-color 0.2s, border-color 0.2s;
-}
-
-.sidebar-checkbox:hover {
-  background-color: #f9f9f9;
-  border-color: rgba(0, 0, 0, 0.2);
 }
 
 /* ==================== 프로젝트 카드 ==================== */
@@ -339,13 +311,6 @@ const goCreateProject = () => {
 .project-card:hover {
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.12);
   transform: translateY(-2px);
-}
-
-.status-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  padding-left: 4px;
 }
 
 .status-text {
@@ -370,16 +335,9 @@ const goCreateProject = () => {
   gap: 4px;
 }
 
-.pipeline-line {
-  height: 2px;
-  border-radius: 2px;
-  flex-grow: 1;
-}
-
 .info-row {
   display: flex;
   justify-content: space-between;
-  align-items: center;
   font-size: 0.7rem;
   margin-top: 2px;
 }
@@ -393,10 +351,12 @@ const goCreateProject = () => {
   color: #555;
 }
 
-.sidebar-checkbox-group {
-  font-weight: 600;
-  color: #555;
-  font-size: 14px;
-  margin-bottom: 8px;
+.project-col {
+  margin-bottom: 20px;
+  /* 세로 간격 */
+  padding-left: 8px;
+  /* ← 카드 가로 간격 추가 */
+  padding-right: 8px;
+  /* ← 카드 가로 간격 추가 */
 }
 </style>

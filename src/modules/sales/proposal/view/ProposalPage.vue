@@ -1,7 +1,6 @@
 <template>
     <v-container fluid class="pa-0 full-height main-container">
         <v-row no-gutters class="full-height">
-
             <!-- 좌측 사이드바 -->
             <v-col cols="12" md="2" class="pa-4 sidebar">
                 <v-card class="sidebar-card pa-6" flat>
@@ -37,7 +36,7 @@
 
                 <v-row dense>
                     <v-col v-for="proposal in filteredProposals" :key="proposal.proposalId" cols="12" sm="6" md="3"
-                        rounded="xl">
+                        class="proposal-col">
                         <v-card outlined class="proposal-card" @click="goToProposalDetail(proposal.proposalId)"
                             elevation="2" rounded="xl">
                             <!-- 즐겨찾기 -->
@@ -113,7 +112,7 @@ const totalPages = ref(0)
 
 const loading = ref(false)
 
-// 상태 필터 (value는 BE enum 값과 동일하게)
+// 상태 필터
 const sidebares = reactive([
     { label: '작성중', value: 'DRAFT', checked: false },
     { label: '제출됨', value: 'SUBMITTED', checked: false },
@@ -121,35 +120,43 @@ const sidebares = reactive([
     { label: '취소됨', value: 'CANCELED', checked: false },
 ])
 
-// 즐겨찾기 토글
 const toggleFavorite = (proposal) => {
     proposal.isFavorite = !proposal.isFavorite
 }
 
-// 상태에 따른 클래스
 const statusClass = (status) => {
     const s = String(status || '').toUpperCase()
     switch (s) {
-        case 'DRAFT': return 'sidebar-draft'
-        case 'SUBMITTED': return 'sidebar-submitted'
-        case 'COMPLETED': return 'sidebar-completed'
-        case 'CANCELED': return 'sidebar-canceled'
-        default: return ''
+        case 'DRAFT':
+            return 'sidebar-draft'
+        case 'SUBMITTED':
+            return 'sidebar-submitted'
+        case 'COMPLETED':
+            return 'sidebar-completed'
+        case 'CANCELED':
+            return 'sidebar-canceled'
+        default:
+            return ''
     }
 }
 
 const statusLabel = (status) => {
     const s = String(status || '').toUpperCase()
     switch (s) {
-        case 'DRAFT': return '작성중'
-        case 'SUBMITTED': return '제출됨'
-        case 'COMPLETED': return '완료'
-        case 'CANCELED': return '취소됨'
-        default: return status
+        case 'DRAFT':
+            return '작성중'
+        case 'SUBMITTED':
+            return '제출됨'
+        case 'COMPLETED':
+            return '완료'
+        case 'CANCELED':
+            return '취소됨'
+        default:
+            return status
     }
 }
 
-// 목록 조회 (BE 페이지네이션 사용)
+// 목록 조회
 const fetchProposals = async (resetPage = false) => {
     if (resetPage) {
         page.value = 1
@@ -157,8 +164,6 @@ const fetchProposals = async (resetPage = false) => {
 
     loading.value = true
     try {
-
-        // 체크된 상태 계산
         const activeStatuses = sidebares
             .filter((s) => s.checked)
             .map((s) => s.value)
@@ -167,8 +172,6 @@ const fetchProposals = async (resetPage = false) => {
             keyword: search.value || undefined,
             page: page.value,
             size: size.value,
-
-            // 서버 필터: 체크된 상태가 1개일 때만 전달
             status:
                 activeStatuses.length === 1
                     ? activeStatuses[0]
@@ -191,23 +194,21 @@ const fetchProposals = async (resetPage = false) => {
     }
 }
 
-
-// 검색어 바뀌면 1페이지부터 재조회
+// 체크박스 변경 시 재조회
 watch(
-    () => sidebares.map(s => s.checked),
+    () => sidebares.map((s) => s.checked),
     () => {
         fetchProposals(true)
     },
-    { deep: true }
+    { deep: true },
 )
 
-
-// FE 필터링 (상태 / 즐겨찾기 / 검색 텍스트)
+// FE 필터링
 const filteredProposals = computed(() => {
     const searchText = (search.value || '').trim()
     const activeStatuses = sidebares
         .filter((s) => s.checked)
-        .map((s) => s.value) // ['DRAFT','SUBMITTED',...]
+        .map((s) => s.value)
 
     return proposals.value.filter((p) => {
         const matchesSearch =
@@ -217,7 +218,6 @@ const filteredProposals = computed(() => {
             p.clientName?.includes(searchText)
 
         const statusStr = String(p.status || '').toUpperCase()
-
         const matchesStatus =
             activeStatuses.length === 0 || activeStatuses.includes(statusStr)
 
@@ -228,7 +228,6 @@ const filteredProposals = computed(() => {
     })
 })
 
-// 페이지 변경 시 재조회
 const onPageChange = () => {
     fetchProposals(false)
 }
@@ -258,6 +257,13 @@ onMounted(() => {
     border: 1px solid rgba(0, 0, 0, 0.12);
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
     background-color: #ffffff;
+}
+
+/* 카드 열 간격 */
+.proposal-col {
+    padding-left: 10px;
+    padding-right: 10px;
+    margin-bottom: 18px;
 }
 
 /* 즐겨찾기 토글 버튼 */

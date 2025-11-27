@@ -493,18 +493,20 @@ onMounted(loadDetail)
     padding: 8px 14px 10px;
 }
 
+/* 위쪽 컴포넌트와 동일한 헤더 간격 */
 .section-title {
     font-size: 0.95rem;
     font-weight: 600;
     color: #1a1a1a;
-    margin-bottom: 4px;
+    margin-bottom: 12px;
 }
 
+/* 라벨 크게 */
 .input-label {
-    font-size: 0.68rem;
+    font-size: 0.9rem;
     font-weight: 600;
     color: #222;
-    margin-bottom: 1px;
+    margin-bottom: 4px;
 }
 
 .project-card :deep(.v-col) {
@@ -512,35 +514,51 @@ onMounted(loadDetail)
     padding-bottom: 1px !important;
 }
 
-/*===== 텍스트 필드 크기 최소화 =====*/
+/* 인풋 박스/텍스트 높이 + 폰트 설정 (신규 제안 생성 페이지와 동일) */
 .input-field {
     border-radius: 6px !important;
     font-size: 0.8rem;
 }
 
 .input-field :deep(.v-field) {
-    min-height: 26px !important;
+    min-height: 32px !important;
+    height: 32px !important;
 }
 
 .input-field :deep(.v-field__input) {
-    padding-top: 2px !important;
-    padding-bottom: 2px !important;
+    font-size: 0.8rem !important;
+    line-height: 1.2 !important;
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
+    min-height: 32px !important;
 }
 
-/*===== textarea 컴팩트 =====*/
+/* 아이콘 / suffix 정렬 */
+.input-field :deep(.v-field__append-inner),
+.input-field :deep(.v-field__suffix),
+.input-field :deep(.v-field__prepend-inner) {
+    font-size: 0.8rem !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    align-items: center !important;
+}
+
+/* textarea 높이 + 폰트 + resize 제거 */
 .textarea-field :deep(.v-field) {
-    min-height: 55px !important;
+    min-height: 65px !important;
 }
 
 .textarea-field :deep(.v-field__input) {
+    font-size: 0.8rem !important;
     padding-top: 14px !important;
-    padding-bottom: 4px !important;
+    padding-bottom: 6px !important;
     align-items: flex-start !important;
 }
 
 .textarea-field :deep(textarea) {
-    min-height: 40px !important;
+    min-height: 50px !important;
     line-height: 1.25 !important;
+    resize: none !important;
 }
 
 .actions-row {

@@ -38,22 +38,21 @@
           <v-card-title class="card-title">프로젝트 정보</v-card-title>
           <v-card-text>
             <v-row dense>
-              <!-- 프로젝트명 -->
-              <v-col cols="6">
+              <!-- 프로젝트명 : 한 줄 전체 -->
+              <v-col cols="12" md="12">
                 <div class="input-label">프로젝트명</div>
                 <v-text-field v-model="form.projectName" placeholder="프로젝트명을 입력하세요" variant="outlined"
                   class="input-field" hide-details />
               </v-col>
 
-              <!-- 고객사 -->
-              <v-col cols="6">
+              <!-- 고객사 + 고객사 담당자 같은 라인 -->
+              <v-col cols="12" md="6">
                 <div class="input-label">고객사</div>
                 <v-text-field v-model="form.clientCompany" placeholder="고객사를 선택하세요" variant="outlined"
                   class="input-field" hide-details readonly @click="clientDialog = true" />
               </v-col>
 
-              <!-- 고객사 담당자 -->
-              <v-col cols="6">
+              <v-col cols="12" md="6">
                 <div class="input-label">고객사 담당자</div>
                 <v-text-field v-model="form.client" placeholder="고객사 담당자를 선택하세요" variant="outlined" class="input-field"
                   hide-details readonly @click="clientPersonDialog = true" />
@@ -67,27 +66,27 @@
               </v-col>
 
               <!-- 영업 담당 -->
-              <v-col cols="6">
+              <v-col cols="12" md="6">
                 <div class="input-label">영업 담당</div>
                 <v-text-field v-model="form.salesManager" placeholder="담당 직원을 선택하세요" variant="outlined"
                   class="input-field" hide-details readonly @click="managerDialog = true" />
               </v-col>
 
               <!-- 유형 -->
-              <v-col cols="6">
+              <v-col cols="12" md="6">
                 <div class="input-label">유형</div>
                 <v-select v-model="form.salesType" :items="typeList" placeholder="판매 유형을 선택하세요" variant="outlined"
                   class="input-field" hide-details dense solo />
               </v-col>
 
               <!-- 상태 (읽기 전용) -->
-              <v-col cols="6">
+              <v-col cols="12" md="6">
                 <div class="input-label">상태</div>
                 <v-text-field :model-value="project.status" readonly class="input-field readonly-field" hide-details />
               </v-col>
 
               <!-- 시작일 -->
-              <v-col cols="6">
+              <v-col cols="12" md="6">
                 <div class="input-label">시작일</div>
                 <v-menu v-model="startMenu" :close-on-content-click="false" transition="scale-transition" offset-y
                   min-width="auto">
@@ -100,7 +99,7 @@
               </v-col>
 
               <!-- 종료일 -->
-              <v-col cols="6">
+              <v-col cols="12" md="6">
                 <div class="input-label">종료일</div>
                 <v-menu v-model="endMenu" :close-on-content-click="false" transition="scale-transition" offset-y
                   min-width="auto">
@@ -113,11 +112,10 @@
               </v-col>
 
               <!-- 예상 매출 -->
-              <v-col cols="6">
+              <v-col cols="12" md="6">
                 <div class="input-label">예상 매출액</div>
                 <v-text-field :model-value="formattedRevenue" placeholder="금액을 입력하세요" variant="outlined"
                   class="input-field suffix-input" hide-details @update:model-value="updateRevenue">
-                  <!-- 이모티콘/아이콘은 여기서 교체 -->
                   <template #append-inner>
                     <span class="suffix-text">원</span>
                   </template>
@@ -125,7 +123,7 @@
               </v-col>
 
               <!-- 마진율 -->
-              <v-col cols="6">
+              <v-col cols="12" md="6">
                 <div class="input-label">예상 마진율</div>
                 <v-text-field v-model.number="form.expectedMarginRate" placeholder="0~100" type="number"
                   variant="outlined" class="input-field suffix-input" hide-details>
@@ -136,7 +134,7 @@
               </v-col>
 
               <!-- 자동계산 예상 이익 -->
-              <v-col cols="6">
+              <v-col cols="12" md="6">
                 <div class="input-label">예상 이익</div>
                 <v-text-field :model-value="formattedProfit" readonly variant="outlined"
                   class="input-field result-field" hide-details />
@@ -154,15 +152,14 @@
         </v-card>
       </v-col>
 
-      <!-- 우측 제안/이력 카드 영역 (새 디자인) -->
+      <!-- 우측 제안/이력 카드 영역 -->
       <v-col cols="12" md="6">
         <div class="cards-container">
-          <!-- 상단 필터 영역 (완료됨 ▼ 같은 부분) -->
+          <!-- 상단 필터 영역 -->
           <v-card class="history-filter-card" elevation="0">
             <div class="history-filter-header">
               <div class="history-filter-label">이력 상태</div>
               <div class="history-filter-select">
-                <!-- 나중에 실제 v-select로 교체 가능 -->
                 <span>완료됨</span>
                 <v-icon size="16">mdi-chevron-down</v-icon>
               </div>
@@ -176,7 +173,6 @@
               <div class="history-left">
                 <div class="history-line"></div>
                 <div class="history-icon" :class="`history-icon--${item.type}`">
-                  <!-- 여기 아이콘/이모티콘 교체 -->
                   <v-icon size="18">{{ item.icon }}</v-icon>
                 </div>
               </div>
@@ -390,10 +386,6 @@ const selectedManagerId = ref(null)
 
 const typeList = ['팝업 스토어', '전시회', '임대']
 
-/**
- * 오른쪽 카드에 뿌릴 타임라인 아이템
- * type, icon 값만 바꿔서 다른 이력 타입 추가 가능
- */
 const historyItems = ref([])
 
 const translateStatus = (status) => {
@@ -470,10 +462,9 @@ const applyDetailDto = (dto) => {
       ? (dto.expectedRevenue * dto.expectedMarginRate) / 100
       : null
 
-  // 오른쪽 타임라인용 변환
   historyItems.value = (dto.proposals || []).map((p) => ({
-    type: 'proposal', // CSS에서 색상 분기용
-    icon: 'mdi-file-document-outline', // 나중에 제안/견적/계약별로 교체
+    type: 'proposal',
+    icon: 'mdi-file-document-outline',
     label: '제안',
     title: p.title,
     description: `[${dto.clientCompanyName}] / [${p.writerName}]`,
@@ -696,88 +687,87 @@ onMounted(async () => {
 
 .project-title {
   max-width: 1100px;
-  font-size: 1.2rem;
+  font-size: 1.25rem;
   font-weight: 600;
   color: #111;
-  margin: 2px auto 0;
+  margin: 4px auto 0;
 }
 
 .project-card {
   border-radius: 14px;
   background-color: #fff;
   border: 1px solid #e5e5e5;
-  padding: 8px 14px 10px;
+  padding: 10px 16px 12px;
   max-width: 1100px;
   margin: 0 auto;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
 }
 
 .card-title {
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-weight: 600;
   padding: 4px 0 2px;
+  margin-bottom: 12px;
 }
 
 .project-card :deep(.v-col) {
-  padding-top: 2px !important;
-  padding-bottom: 2px !important;
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
 }
 
 .input-label {
-  font-size: 0.68rem;
+  font-size: 0.8rem;
   font-weight: 600;
   color: #222;
-  margin-bottom: 1px;
+  margin-bottom: 4px;
 }
 
-/* 인풋 필드 높이 */
 .input-field {
   border-radius: 6px !important;
 }
 
 .input-field :deep(.v-field) {
-  --v-input-control-height: 40px !important;
-  min-height: 40px !important;
-  height: 40px !important;
+  --v-input-control-height: 45px !important;
+  min-height: 45px !important;
+  height: 45px !important;
 }
 
-/* 인풋 내부 텍스트 */
 .input-field :deep(.v-field__input),
 .input-field :deep(input),
 .input-field :deep(textarea) {
-  font-size: 0.68rem !important;
+  font-size: 0.78rem !important;
   line-height: 1.25 !important;
-  padding-top: 6px !important;
-  padding-bottom: 6px !important;
-  min-height: 40px !important;
+  padding-top: 8px !important;
+  padding-bottom: 8px !important;
+  min-height: 45px !important;
 }
 
-/* 접미사(원, %) */
 .suffix-input :deep(.v-field__append-inner) {
   padding-right: 6px;
 }
 
 .suffix-text {
-  font-size: 0.68rem;
+  font-size: 0.78rem;
   line-height: 1.1;
   display: flex;
   align-items: center;
 }
 
-/* textarea */
+/* textarea + resize none */
 .textarea-field :deep(.v-field) {
-  min-height: 75px !important;
+  min-height: 80px !important;
 }
 
 .textarea-field :deep(.v-field__input) {
-  padding-top: 14px !important;
-  padding-bottom: 8px !important;
+  padding-top: 16px !important;
+  padding-bottom: 10px !important;
   align-items: flex-start !important;
 }
 
 .textarea-field :deep(textarea) {
-  min-height: 60px !important;
+  min-height: 65px !important;
   line-height: 1.25 !important;
+  resize: none !important;
 }
 
 .readonly-field :deep(input) {
@@ -835,7 +825,7 @@ onMounted(async () => {
 }
 
 .actions-row {
-  padding-top: 4px;
+  padding-top: 6px;
 }
 
 .cards-container {
@@ -916,7 +906,6 @@ onMounted(async () => {
   background-color: #eef3ff;
 }
 
-/* 타입별 색상 예시 */
 .history-icon--proposal {
   background-color: #eef3ff;
 }
@@ -989,5 +978,3 @@ onMounted(async () => {
   background-color: #ffe0b2 !important;
 }
 </style>
-
-::contentReference[oaicite:0]{index=0}
