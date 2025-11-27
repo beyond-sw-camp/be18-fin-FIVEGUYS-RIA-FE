@@ -1,5 +1,10 @@
 <template>
   <v-container fluid class="pa-6 detail-container">
+
+    <v-snackbar v-model="snackbar" :color="snackbarColor" timeout="2500">
+      {{ snackbarMessage }}
+    </v-snackbar>
+
     <!-- 상단 제목 -->
     <v-row class="align-center justify-space-between mb-6">
       <v-col cols="auto">
@@ -15,7 +20,9 @@
       <v-col cols="12">
         <div class="pipeline-full">
           <template v-for="(step, i) in project.pipeline" :key="i">
-            <div class="pipeline-step" :class="step.completed ? 'completed' : 'pending'">
+            <div class="pipeline-step" :class="step.completed ? 'completed' : 'pending'"
+              @click="changePipelineStage(i + 1)">
+
               {{ step.name }}
             </div>
             <div v-if="i < project.pipeline.length - 1" class="pipeline-line"
@@ -136,6 +143,9 @@
             </v-row>
           </v-card-text>
           <v-card-actions class="justify-end">
+            <v-btn color="red darken-2" class="white--text mr-2" small @click="onDeleteProject">
+              삭제하기
+            </v-btn>
             <v-btn color="orange darken-2" class="white--text" small @click="saveProject">
               저장하기
             </v-btn>
@@ -248,20 +258,22 @@ import {
   watch,
   onMounted,
 } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import {
   getProjectDetail,
   updateProject,
   updateProjectManager,
+  deleteProject,
 } from '@/apis/project'
 import {
   getSimpleClientCompanies,
   getSimpleClientsByCompany,
 } from '@/apis/client'
 import { getUserList } from '@/apis/user'
+import { updatePipelineStage } from '@/apis/pipeline'
 
 const route = useRoute()
-
+const router = useRouter()
 const startMenu = ref(false)
 const endMenu = ref(false)
 
@@ -279,7 +291,42 @@ const project = reactive({
   statusCode: '',
   progress: 0,
   pipeline: [],
+  pipelineId: null,
 })
+
+const snackbar = ref(false)
+const snackbarMessage = ref('')
+const snackbarColor = ref('red')
+
+
+const showError = (err, fallbackMessage = '요청 처리 중 오류가 발생했습니다.') => {
+  const msg =
+    err?.response?.data?.message ||
+    err?.response?.data?.errorMessage ||
+    fallbackMessage
+
+  snackbarMessage.value = msg
+  snackbarColor.value = 'red'
+  snackbar.value = true
+}
+
+const changePipelineStage = async (targetStageNo) => {
+  try {
+    if (!project.pipelineId) {
+      showError(null, '파이프라인 ID를 찾을 수 없습니다.')
+      return
+    }
+
+    await updatePipelineStage(project.pipelineId, { targetStageNo })
+
+    const res = await getProjectDetail(project.id)
+    applyDetailDto(res.data)
+
+    showSuccess('진행 단계가 변경되었습니다.')
+  } catch (err) {
+    showError(err, '단계를 변경할 수 없습니다.')
+  }
+}
 
 const form = reactive({
   projectName: '',
@@ -297,6 +344,13 @@ const form = reactive({
   expectedProfit: null,
   description: '',
 })
+
+const showSuccess = (msg = '저장이 완료되었습니다.') => {
+  snackbarMessage.value = msg
+  snackbarColor.value = 'green'
+  snackbar.value = true
+}
+
 
 const cards = ref([])
 
@@ -371,6 +425,7 @@ const applyDetailDto = (dto) => {
     name: s.stageName,
     completed: s.completed === true,
   }))
+  project.pipelineId = dto.pipelineInfo?.pipelineId ?? null   // ← 추가
 
   form.projectName = dto.title
   form.clientCompany = dto.clientCompanyName
@@ -397,6 +452,7 @@ const applyDetailDto = (dto) => {
     },
   ]
 }
+
 
 const loadClients = async () => {
   const params = {
@@ -511,18 +567,43 @@ const confirmManagerSelect = async () => {
   )
   if (!selected) return
 
-  await updateProjectManager(project.id, selected.userId)
+  try {
+    await updateProjectManager(project.id, selected.userId)
 
-  form.salesManagerId = selected.userId
-  form.salesManager = selected.name
+    form.salesManagerId = selected.userId
+    form.salesManager = selected.name
+    managerDialog.value = false
 
-  managerDialog.value = false
+    showSuccess('담당자가 변경되었습니다.')
+  } catch (err) {
+    showError(err, '담당자를 변경할 수 없습니다.')
+  }
 }
+
+
+
 
 const formattedRevenue = computed(() => {
   if (!form.expectedRevenue) return ''
   return Number(form.expectedRevenue).toLocaleString()
 })
+
+const onDeleteProject = async () => {
+  if (!project.id) return
+
+  const ok = window.confirm('프로젝트를 삭제하시겠습니까?')
+  if (!ok) return
+
+  try {
+    await deleteProject(project.id)
+
+    showSuccess('프로젝트가 삭제되었습니다.')
+    router.push('/project')   // 프로젝트 목록 URL에 맞게 필요하면 수정
+  } catch (err) {
+    showError(err, '프로젝트를 삭제할 수 없습니다.')
+  }
+}
+
 
 const updateRevenue = (val) => {
   const numeric = Number((val || '').replace(/[^0-9]/g, ''))
@@ -556,16 +637,22 @@ const saveProject = async () => {
     expectedRevenue: form.expectedRevenue,
     expectedMarginRate: form.expectedMarginRate,
     startDay: toLocalDateString(form.startDate),
-    endDay: toLocalDateString(form.endDate)
-    // clientCompanyId / clientId / salesManagerId 는
-    // 현재 백엔드 ProjectUpdateRequestDto 에 없으면 보내지 마라
+    endDay: toLocalDateString(form.endDate),
   }
 
-  await updateProject(project.id, payload)
+  try {
+    await updateProject(project.id, payload)
 
-  const res = await getProjectDetail(project.id)
-  applyDetailDto(res.data)
+    const res = await getProjectDetail(project.id)
+    applyDetailDto(res.data)
+
+    showSuccess('프로젝트 저장이 완료되었습니다.')
+  } catch (err) {
+    showError(err, '프로젝트를 저장할 수 없습니다.')
+  }
 }
+
+
 
 onMounted(async () => {
   const projectId = route.params.projectId || route.params.id

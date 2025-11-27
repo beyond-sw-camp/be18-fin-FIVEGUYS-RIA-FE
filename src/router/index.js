@@ -27,6 +27,7 @@ import RevenuePage from "@/modules/sales/revenue/view/RevenuePage.vue";
 import VipMemberListPage from "@/modules/member/views/VipMemberListPage.vue";
 import VipMemberPage from "@/modules/member/views/VipMemberPage.vue";
 import { useAuthStore } from "@/stores/auth";
+import MyPage from "@/modules/user/MyPage.vue"; // ← 추가
 
 const routes = [
   {
@@ -36,6 +37,7 @@ const routes = [
     meta: { hideHeader: true, hideFooter: true },
   },
   { path: "/", redirect: "/home" },
+  { path: "/mypage", name: "MyPage", component: MyPage },
   { path: "/home", name: "Home", component: HomePage },
   { path: "/calendar", name: "Calendar", component: CalendarPage },
   { path: "/project", name: "Project", component: ProjectPage },
