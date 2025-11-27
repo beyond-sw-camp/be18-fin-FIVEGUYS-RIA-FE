@@ -58,7 +58,7 @@
         >
           <div class="date-number">{{ date.day }}</div>
 
-          <!-- 여러 메모 표시 (⭐ 여기 필터 적용됨) -->
+          <!-- 여러 메모 표시 ( 여기 필터 적용됨) -->
           <div
             v-for="memo in filteredByUser(getMemosByDate(date.date))"
             :key="memo.id"
@@ -72,7 +72,7 @@
       </div>
     </div>
 
-    <!-- ⭐ 우측: 사용자 리스트 드래그 패널 -->
+    <!-- 우측: 사용자 리스트 드래그 패널 -->
     <div
       class="user-drawer"
       :style="{ right: userDrawerOpen ? '0px' : '-220px' }"
@@ -91,7 +91,7 @@
         </button>
         <h3>사용자 목록</h3>
 
-        <!-- 🔥 여기: users → visibleUsers 로 변경 -->
+        <!--  여기: users → visibleUsers 로 변경 -->
         <div
           v-for="u in visibleUsers"
           :key="u.email"
@@ -104,7 +104,7 @@
       </div>
     </div>
 
-    <!-- 🗒️ 메모 팝업 -->
+    <!--  메모 팝업 -->
     <div v-if="showPopup" class="memo-popup">
       <div class="popup-content">
         <h3>{{ selectedMemo.id ? "메모 수정" : "새 메모 추가" }}</h3>
@@ -143,7 +143,7 @@
       </div>
     </div>
 
-    <!-- 👥 사용자 초대 & 삭제 팝업 (그대로 유지) -->
+    <!--  사용자 초대 & 삭제 팝업 (그대로 유지) -->
     <div v-if="showUserPopup" class="invite-popup">
       <div class="popup-content">
         <h3>사용자 관리</h3>
@@ -187,7 +187,7 @@ function toLocalDateKey(date) {
   return `${y}-${m}-${d}`;
 }
 
-// 🔥 하드코딩으로 안 보이게 할 ID 목록
+//  하드코딩으로 안 보이게 할 ID 목록
 const BLOCKED_IDS = [
   "928924a55a86b48bc19f2c175a0642bffe2666393048c3c93ae81b190e1ad39a",
   "928924a55a86b48bc19f2c175a0642",
@@ -246,7 +246,7 @@ export default {
       );
     },
 
-    // 🔥 여기서 최종적으로 화면에 보여줄 사용자만 필터링
+    //  여기서 최종적으로 화면에 보여줄 사용자만 필터링
     visibleUsers() {
       return this.users.filter((u) => {
         if (!u) return false;
@@ -299,7 +299,7 @@ export default {
       });
     },
 
-    /* ⭐ 사용자 필터링 적용 */
+    /*  사용자 필터링 적용 */
     filteredByUser(memoList) {
       if (!this.activeUserEmail) return memoList;
       return memoList.filter((m) => m.creatorEmail === this.activeUserEmail);
@@ -378,7 +378,7 @@ export default {
       this.closePopup();
     },
 
-    /* ⭐ 드래그 핸들 */
+    /*드래그 핸들 */
     startDrag(e) {
       const startX = e.clientX;
 
@@ -456,8 +456,8 @@ export default {
 
 /* 검색창 */
 .search-input {
-  flex: 0 0 140px; /* 🔥 flex 비율 제거 + 기본폭 140px 고정 */
-  max-width: 150px; /* 🔥 최대 폭 제한 */
+  flex: 0 0 140px; /*  flex 비율 제거 + 기본폭 140px 고정 */
+  max-width: 150px; /*  최대 폭 제한 */
   padding: 8px;
   border-radius: 6px;
   border: 1px solid #ccc;
@@ -488,7 +488,7 @@ export default {
   margin-bottom: 6px;
 }
 
-/* ⭐ 월 이동 버튼 스타일 */
+/*  월 이동 버튼 스타일 */
 .nav-btn {
   background: #e7f1ff;
   border: 1px solid #bcd0f7;
@@ -533,7 +533,7 @@ export default {
   margin-top: 2px;
 }
 
-/* 🗒️ 메모 팝업 */
+/*  메모 팝업 */
 .memo-popup {
   position: fixed;
   top: 0;
@@ -572,7 +572,7 @@ export default {
   line-height: 1.6;
 }
 
-/* 🎨 색상 선택 */
+/*  색상 선택 */
 .color-select {
   display: flex;
   align-items: center;
@@ -626,7 +626,7 @@ export default {
   color: white;
 }
 
-/* 👥 초대 팝업 */
+/*  초대 팝업 */
 .invite-popup {
   position: fixed;
   top: 0;
@@ -793,7 +793,7 @@ export default {
   transition: all 0.2s ease;
 }
 
-/* ⭐ 우측 사용자 드래그 패널 */
+/* 우측 사용자 드래그 패널 */
 .user-drawer {
   position: fixed;
   top: 0;
