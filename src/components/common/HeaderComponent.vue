@@ -1,5 +1,5 @@
 <template>
-    <v-app-bar app fixed flat color="white" height="64" class="px-8" >
+    <v-app-bar app fixed flat color="white" height="64" class="px-8">
         <router-link to="/home" class="text-decoration-none mr-6">
             <v-toolbar-title class="font-weight-bold text-orange text-h5">
                 Galleria
@@ -17,16 +17,16 @@
                 회원 <v-icon>mdi-menu-down</v-icon>
                 </v-btn>
             </template>
-            <v-list>
-                <v-list-item to="/generalmember">일반 회원</v-list-item>
-                <v-list-item to="/vipmember">VIP 회원</v-list-item>
-            </v-list>
-        </v-menu> -->
+<v-list>
+    <v-list-item to="/generalmember">일반 회원</v-list-item>
+    <v-list-item to="/vipmember">VIP 회원</v-list-item>
+</v-list>
+</v-menu> -->
 
         <v-menu>
             <template #activator="{ props }">
                 <v-btn text v-bind="props">
-                고객 <v-icon>mdi-menu-down</v-icon>
+                    고객 <v-icon>mdi-menu-down</v-icon>
                 </v-btn>
             </template>
             <v-list>
@@ -39,7 +39,7 @@
         <v-menu>
             <template #activator="{ props }">
                 <v-btn text v-bind="props">
-                영업관리 <v-icon>mdi-menu-down</v-icon>
+                    영업관리 <v-icon>mdi-menu-down</v-icon>
                 </v-btn>
             </template>
             <v-list>
@@ -56,8 +56,9 @@
 
         <v-btn icon><v-icon>mdi-bell-outline</v-icon></v-btn>
         <v-btn icon><v-icon>mdi-cog-outline</v-icon></v-btn>
-        <v-btn icon><v-icon>mdi-account-circle</v-icon></v-btn>
-    </v-app-bar>
+        <v-btn icon to="/mypage">
+            <v-icon>mdi-account-circle</v-icon>
+        </v-btn> </v-app-bar>
 </template>
 
 <style>

@@ -7,51 +7,23 @@
         <v-card class="pa-6 sidebar-card" flat>
 
           <!-- 검색 -->
-          <v-text-field
-            v-model="search"
-            append-inner-icon="mdi-magnify"
-            label="검색"
-            variant="outlined"
-            hide-details
-            density="comfortable"
-            class="mb-4 sidebar-input"
-          ></v-text-field>
+          <v-text-field v-model="search" append-inner-icon="mdi-magnify" label="검색" variant="outlined" hide-details
+            density="comfortable" class="mb-4 sidebar-input"></v-text-field>
 
           <!-- 정렬 -->
-          <v-select
-            v-model="sort"
-            :items="['최신순', '오래된순']"
-            label="정렬"
-            variant="outlined"
-            hide-details
-            density="comfortable"
-            class="mb-4 sidebar-input"
-          ></v-select>
+          <v-select v-model="sort" :items="['최신순', '오래된순']" label="정렬" variant="outlined" hide-details
+            density="comfortable" class="mb-4 sidebar-input"></v-select>
 
           <!-- 필터 -->
-          <v-select
-            v-model="filter"
-            :items="['모든 프로젝트', '내 프로젝트', '완료된 프로젝트']"
-            label="필터"
-            variant="outlined"
-            hide-details
-            density="comfortable"
-            class="mb-6 sidebar-input"
-          ></v-select>
+          <v-select v-model="filter" :items="['모든 프로젝트', '내 프로젝트', '완료된 프로젝트']" label="필터" variant="outlined"
+            hide-details density="comfortable" class="mb-6 sidebar-input"></v-select>
 
 
           <!-- 상태 체크박스 그룹 -->
-            <div class="sidebar-checkbox-group mt-4">진행 상태
-                <v-checkbox
-                    v-for="sidebar in sidebares"
-                    :key="sidebar.value"
-                    v-model="sidebar.checked"
-                    :label="sidebar.label"
-                    hide-details
-                    dense
-                    class="sidebar-checkbox"
-                ></v-checkbox>
-                </div>
+          <div class="sidebar-checkbox-group mt-4">진행 상태
+            <v-checkbox v-for="sidebar in sidebares" :key="sidebar.value" v-model="sidebar.checked"
+              :label="sidebar.label" hide-details dense class="sidebar-checkbox"></v-checkbox>
+          </div>
         </v-card>
       </v-col>
 
@@ -79,18 +51,12 @@
               <v-card-text class="pa-0 pipeline-section">
                 <div class="pipeline-container">
                   <template v-for="(step, i) in project.pipeline" :key="i">
-                    <v-chip
-                      :color="step.completed ? 'orange darken-2' : 'grey lighten-2'"
-                      small
-                      class="pa-1 text-center"
-                    >
+                    <v-chip :color="step.completed ? 'orange darken-2' : 'grey lighten-2'" small
+                      class="pa-1 text-center">
                       {{ step.name }}
                     </v-chip>
-                    <div
-                      v-if="i < project.pipeline.length - 1"
-                      class="pipeline-line flex-grow-1"
-                      :style="{ backgroundColor: project.pipeline[i + 1].completed ? '#fb8c00' : '#ccc' }"
-                    ></div>
+                    <div v-if="i < project.pipeline.length - 1" class="pipeline-line flex-grow-1"
+                      :style="{ backgroundColor: project.pipeline[i + 1].completed ? '#fb8c00' : '#ccc' }"></div>
                   </template>
                 </div>
 
@@ -113,64 +79,168 @@
 </template>
 
 <script setup>
-import { reactive } from 'vue'
-import { useRouter } from 'vuetify/lib/composables/router'
-
-const search = reactive('')
-const sort = reactive('최신순')
-const filter = reactive('모든 프로젝트')
+import { ref, reactive, computed, onMounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import { getProjectsWithPipelines } from '@/apis/project'
 
 const router = useRouter()
 
+// UI 상태
+const search = ref('')
+const sort = ref('최신순')
+const filter = ref('모든 프로젝트')
+
 const sidebares = reactive([
-  { label: '제안 수신', value: false },
-  { label: '내부 검토', value: false },
-  { label: '제안 작성', value: false },
-  { label: '협상 시작', value: false },
-  { label: '계약 성공', value: false }
+  { label: '제안수신', value: '제안수신', checked: false },
+  { label: '내부검토', value: '내부검토', checked: false },
+  { label: '견적', value: '견적', checked: false },
+  { label: '협상', value: '협상', checked: false },
+  { label: '계약성공', value: '계약성공', checked: false },
 ])
 
-const projects = reactive([
-  {
-    id: 1,
-    title: '디올 신규 영입 협상',
-    owner: '김민수',
-    status: '진행중',
-    progress: 60,
-    period: '2025-11-01 ~ 2025-12-15',
-    pipeline: [
-      { name: '제안 수신', completed: true },
-      { name: '내부 검토', completed: true },
-      { name: '제안 작성', completed: true },
-      { name: '협상 시작', completed: false },
-      { name: '계약 성공', completed: false }
-    ]
-  },
-  {
-    id: 2,
-    title: '폼페이 전시회 재계약',
-    owner: '홍길동',
-    status: '진행중',
-    progress: 80,
-    period: '2025-10-20 ~ 2025-12-01',
-    pipeline: [
-      { name: '제안 수신', completed: true },
-      { name: '내부 검토', completed: true },
-      { name: '제안 작성', completed: true },
-      { name: '협상 시작', completed: true },
-      { name: '계약 성공', completed: false }
-    ]
+const checkedSidebarValues = computed(() =>
+  sidebares.filter(s => s.checked).map(s => s.value)
+)
+
+
+// 서버에서 받은 원본 데이터
+const rawProjects = ref([])
+
+// 로딩 상태
+const loading = ref(false)
+
+// 상태 문자열 변환 (백엔드 enum → 한글)
+const translateStatus = (status) => {
+  switch (status) {
+    case 'IN_PROGRESS':
+      return '진행중'
+    case 'SUCCESS':
+      return '계약 성공'
+    case 'FAIL':
+      return '실패'
+    default:
+      return status
   }
-])
+}
+
+// 기간 문자열
+const formatPeriod = (startDay, endDay) => {
+  if (!startDay && !endDay) return '-'
+  if (!startDay) return `~ ${endDay}`
+  if (!endDay) return `${startDay} ~`
+  return `${startDay} ~ ${endDay}`
+}
+
+// 진행률 계산 (pipelineInfo.progressRate 사용)
+const calcProgress = (project) => {
+  if (project.pipelineInfo && project.pipelineInfo.progressRate != null) {
+    return Math.round(project.pipelineInfo.progressRate)
+  }
+
+  const total = project.stageList ? project.stageList.length : 0
+  if (!total) return 0
+
+  const completed = project.stageList.filter((s) => s.completed === true).length
+  return Math.round((completed / total) * 100)
+}
+
+// DTO → 화면 카드 모델 변환
+const mapToCard = (p) => {
+  return {
+    id: p.projectId,
+    title: p.title,
+    owner: p.salesManagerName,
+    status: translateStatus(p.status),   // ACTIVE → 한글 변환 (원하면 사용)
+    statusCode: p.status,                // 원본 상태코드
+    currentStage: p.pipelineInfo?.currentStage || null,  // ★ 여기
+    progress: calcProgress(p),
+    period: formatPeriod(p.startDay, p.endDay),
+    pipeline: (p.stageList || []).map((s) => ({
+      name: s.stageName,
+      completed: s.completed === true,
+    })),
+  }
+}
+
+
+// 정렬 적용
+const sortedCards = computed(() => {
+  const mapped = rawProjects.value.map(mapToCard)
+  if (sort.value === '최신순') {
+    // createdAt desc 로 받아온다고 가정하면 그대로 사용
+    return mapped
+  }
+  // 오래된순: 역순
+  return [...mapped].reverse()
+})
+
+// 정렬 + 사이드바(파이프라인 단계) 필터 적용
+const projects = computed(() => {
+  const base = sortedCards.value
+  const selected = checkedSidebarValues.value
+
+  if (!selected.length) return base
+
+  // currentStage 가 선택된 단계(제안수신/내부검토/...) 중 하나인 것만 노출
+  return base.filter(p => selected.includes(p.currentStage))
+})
+
+
+// UI 상태 → 쿼리 파라미터 변환
+const buildQueryParams = () => {
+  const params = {
+    page: 1,
+    size: 12,
+  }
+
+  if (search.value.trim()) {
+    params.keyword = search.value.trim()
+  }
+
+  if (filter.value === '완료된 프로젝트') {
+    params.status = 'SUCCESS'
+  } else if (filter.value === '내 프로젝트') {
+    // 실제로는 로그인 유저 이름 사용
+    // 예: params.managerName = authStore.user.name
+    params.managerName = '김민수'
+  }
+
+  // 사이드바 단계 필터는 현재 백엔드 시그니처에 없으므로 여기서는 서버에 안 보낸다
+
+  return params
+}
+
+// API 호출
+const fetchProjects = async () => {
+  loading.value = true
+  try {
+    const params = buildQueryParams()
+    const res = await getProjectsWithPipelines(params)
+    rawProjects.value = res.data || []
+  } finally {
+    loading.value = false
+  }
+}
+
+// 검색/필터/정렬 변경 시 재조회
+watch([search, filter, sort], () => {
+  fetchProjects()
+})
+
+// 초기 로딩
+onMounted(() => {
+  fetchProjects()
+})
 
 const goToDetail = (id) => {
-  router.push(`/project/${id}`);
+  router.push(`/project/${id}`)
 }
 
 const goCreateProject = () => {
   router.push({ name: 'CreateProject' })
 }
 </script>
+
 
 <style scoped>
 /* ==================== 사이드바 ==================== */
@@ -201,31 +271,32 @@ const goCreateProject = () => {
 }
 
 .sidebar-checkbox .v-input--selection-controls__ripple {
-  display: none; /* 기본 ripple 제거 */
+  display: none;
+  /* 기본 ripple 제거 */
 }
 
 .sidebar-checkbox .v-input--selection-controls__input {
-    min-width: 28px;
-    min-height: 28px;
+  min-width: 28px;
+  min-height: 28px;
 }
 
 .sidebar-checkbox .v-label {
-    font-size: 0.75rem;
-    color: #1c1c1e;
-    font-weight: 500;
+  font-size: 0.75rem;
+  color: #1c1c1e;
+  font-weight: 500;
 }
 
 .sidebar-checkbox {
-    background-color: #ffffff;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    transition: background-color 0.2s, border-color 0.2s;
+  background-color: #ffffff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: background-color 0.2s, border-color 0.2s;
 }
 
 .sidebar-checkbox:hover {
-    background-color: #f9f9f9;
-    border-color: rgba(0,0,0,0.2);
+  background-color: #f9f9f9;
+  border-color: rgba(0, 0, 0, 0.2);
 }
 
 /* ==================== 프로젝트 카드 ==================== */
@@ -293,45 +364,46 @@ const goCreateProject = () => {
 }
 
 .sidebar-checkbox-group {
-    font-weight: 600;
-    color: #555;
-    font-size: 14px;
-    margin-bottom: 8px;
+  font-weight: 600;
+  color: #555;
+  font-size: 14px;
+  margin-bottom: 8px;
 }
 
 /* 상태 체크박스 디자인 */
 .sidebar-checkbox .v-input--selection-controls__ripple {
-  display: none; /* 기본 ripple 제거 */
+  display: none;
+  /* 기본 ripple 제거 */
 }
 
 .sidebar-checkbox .v-input--selection-controls__input {
-    min-width: 28px;
-    min-height: 28px;
+  min-width: 28px;
+  min-height: 28px;
 }
 
 .sidebar-checkbox .v-label {
-    font-size: 0.75rem;
-    color: #1c1c1e;
-    font-weight: 500;
+  font-size: 0.75rem;
+  color: #1c1c1e;
+  font-weight: 500;
 }
 
 .sidebar-checkbox {
-    background-color: #ffffff;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    transition: background-color 0.2s, border-color 0.2s;
+  background-color: #ffffff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: background-color 0.2s, border-color 0.2s;
 }
 
 .sidebar-checkbox:hover {
-    background-color: #f9f9f9;
-    border-color: rgba(0,0,0,0.2);
+  background-color: #f9f9f9;
+  border-color: rgba(0, 0, 0, 0.2);
 }
 
 .sidebar-checkbox-group {
-    font-weight: 600;
-    color: #555;
-    font-size: 14px;
-    margin-bottom: 8px;
+  font-weight: 600;
+  color: #555;
+  font-size: 14px;
+  margin-bottom: 8px;
 }
 </style>

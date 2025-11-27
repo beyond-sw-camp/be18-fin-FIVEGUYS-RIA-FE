@@ -1,21 +1,70 @@
+<script setup>
+// LoginPage.vue script setup 부분
+import { ref } from "vue";
+import { useRouter } from "vue-router";
+import { useAuthStore } from "@/stores/auth";
+import bg from "@/assets/galleria.jpg";
+
+const employeeNo = ref("");
+const password = ref("");
+const loading = ref(false);
+const errorMessage = ref("");
+
+const router = useRouter();
+const authStore = useAuthStore();
+
+const handleLogin = async () => {
+  errorMessage.value = "";
+  loading.value = true;
+
+  try {
+    const role = await authStore.login(employeeNo.value, password.value);
+
+    console.log("role from store =", role);
+
+    if (role === "ROLE_ADMIN") {
+      // 관리자
+      router.push({ name: "AdminUsers" });
+    } else {
+      // 일반 사용자 기본 페이지
+      router.push({ name: "Home" });
+    }
+  } catch (err) {
+    console.error("로그인 실패:", err);
+    errorMessage.value = "사번 또는 비밀번호를 확인해주세요.";
+  } finally {
+    loading.value = false;
+  }
+};
+</script>
+
 <template>
   <div class="login-wrapper">
-    <!-- 왼쪽 이미지 -->
     <div class="left-section">
-      <!-- 갤러리아 사진 첨부? -->
+      <img :src="bg" alt="login background" />
     </div>
 
-    <!-- 오른쪽 로그인 -->
     <div class="right-section">
       <div class="login-box">
         <h2>로그인</h2>
 
         <div class="input-group">
-          <input type="id" placeholder="아이디" />
+          <input
+            v-model="employeeNo"
+            type="text"
+            placeholder="사번"
+            autocomplete="username"
+          />
         </div>
 
         <div class="input-group">
-          <input type="password" placeholder="비밀번호" />
+          <input
+            v-model="password"
+            type="password"
+            placeholder="비밀번호"
+            autocomplete="current-password"
+            @keyup.enter="handleLogin"
+          />
         </div>
 
         <div class="options">
@@ -23,7 +72,13 @@
           <label><input type="checkbox" /> 자동 로그인</label>
         </div>
 
-        <button class="login-btn">로그인</button>
+        <button class="login-btn" :disabled="loading" @click="handleLogin">
+          {{ loading ? "로그인 중..." : "로그인" }}
+        </button>
+
+        <p v-if="errorMessage" class="error-text">
+          {{ errorMessage }}
+        </p>
       </div>
     </div>
   </div>
@@ -53,10 +108,10 @@
   width: 50%;
   height: 100%;
   display: flex;
-  justify-content: center; /* 수평 중앙 */
-  align-items: center;     /* 수직 중앙 */
+  justify-content: center;
+  align-items: center;
   box-sizing: border-box;
-  padding-right: 20vw;
+  padding: 0;
 }
 
 /* 로그인 폼 */
@@ -113,7 +168,18 @@
   cursor: pointer;
 }
 
-.login-btn:hover {
+.login-btn[disabled] {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.login-btn:hover:not([disabled]) {
   background-color: #e96c00;
+}
+
+.error-text {
+  margin-top: 12px;
+  font-size: 14px;
+  color: #e53935;
 }
 </style>
