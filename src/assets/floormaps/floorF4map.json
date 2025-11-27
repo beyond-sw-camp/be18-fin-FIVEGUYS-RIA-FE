@@ -1,8 +1,134 @@
 [
   {
     "id": "area_1",
-    "name": "벨렌도르프",
+    "name": "브리오니",
     "shape": "rect",
+    "coords": "471,320,579,547"
+  },
+  {
+    "id": "area_2",
+    "name": "더블알엘",
+    "shape": "rect",
+    "coords": "471,320,579,547"
+  },
+  {
+    "id": "area_3",
+    "name": "제임스펄스(남성)",
+    "shape": "rect",
+    "coords": "471,320,579,547"
+  },
+  {
+    "id": "area_4",
+    "name": "브루넬로쿠치넬리(남성)",
+    "shape": "rect",
+    "coords": "471,320,579,547"
+  },
+  {
+    "id": "area_5",
+    "name": "PSR",
+    "shape": "poly",
+    "coords": "471,320,579,547"
+  },
+  {
+    "id": "area_6",
+    "name": "금강안경",
+    "shape": "poly",
+    "coords": "471,320,579,547"
+  },
+  {
+    "id": "area_7",
+    "name": "THE VINO494",
+    "shape": "rect",
+    "coords": "471,320,579,547"
+  },
+  {
+    "id": "area_8",
+    "name": "까날리",
+    "shape": "rect",
+    "coords": "471,320,579,547"
+  },
+  {
+    "id": "area_9",
+    "name": "아워레가시",
+    "shape": "rect",
+    "coords": "471,320,579,547"
+  },
+  {
+    "id": "area_10",
+    "name": "무이(남성)",
+    "shape": "rect",
+    "coords": "471,320,579,547"
+  },
+  {
+    "id": "area_11",
+    "name": "일레븐티",
+    "shape": "rect",
+    "coords": "471,320,579,547"
+  },
+  {
+    "id": "area_12",
+    "name": "톰 브라운(남성)",
+    "shape": "rect",
+    "coords": "471,320,579,547"
+  },
+  {
+    "id": "area_13",
+    "name": "공실",
+    "shape": "rect",
+    "coords": "471,320,579,547"
+  },
+  {
+    "id": "area_14",
+    "name": "베르사체",
+    "shape": "rect",
+    "coords": "471,320,579,547"
+  },
+  {
+    "id": "area_15",
+    "name": "톰 포드(남성)",
+    "shape": "rect",
+    "coords": "471,320,579,547"
+  },
+  {
+    "id": "area_16",
+    "name": "스테파노리치",
+    "shape": "poly",
+    "coords": "471,320,579,547"
+  },
+  {
+    "id": "area_17",
+    "name": "키톤",
+    "shape": "rect",
+    "coords": "471,320,579,547"
+  },
+  {
+    "id": "area_18",
+    "name": "로로피아나(남성)",
+    "shape": "rect",
+    "coords": "471,320,579,547"
+  },
+  {
+    "id": "area_19",
+    "name": "g.street 494 homme+(디자이너)",
+    "shape": "poly",
+    "coords": "471,320,579,547"
+  },
+  {
+    "id": "area_20",
+    "name": "g.street 494 homme(클래식)",
+    "shape": "poly",
+    "coords": "471,320,579,547"
+  },
+  {
+    "id": "area_21",
+    "name": "슬로웨어",
+    "shape": "poly",
+    "coords": "471,320,579,547"
+  },
+  {
+    "id": "area_22",
+    "name": "퓨잡",
+    "shape": "poly",
     "coords": "471,320,579,547"
   }
 ]
