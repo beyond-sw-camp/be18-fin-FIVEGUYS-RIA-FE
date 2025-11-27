@@ -58,57 +58,57 @@
 
             <v-row dense>
                 <v-col
-                    v-for="proposal in filteredProposals"
-                    :key="proposal.id"
+                    v-for="estimate in filteredestimates"
+                    :key="estimate.id"
                     cols="12"
                     sm="6"
                     md="3"
                     rounded="xl"
                 >
-                    <v-card outlined class="proposal-card" elevation="2" rounded="xl">
+                    <v-card outlined class="estimate-card" @click="goToEstimateDetail(estimate.id)" elevation="2" rounded="xl" >
 
                         <!-- 즐겨찾기 -->
                         <v-btn
                             small
                             class="favorite-btn"
-                            @click.stop="toggleFavorite(proposal)"
+                            @click.stop="toggleFavorite(estimate)"
                             elevation="0"
                         >
-                            <v-icon :color="proposal.isFavorite ? '#FFD60A' : '#8e8e93'">
-                            {{ proposal.isFavorite ? 'mdi-star' : 'mdi-star-outline' }}
+                            <v-icon :color="estimate.isFavorite ? '#FFD60A' : '#8e8e93'">
+                            {{ estimate.isFavorite ? 'mdi-star' : 'mdi-star-outline' }}
                             </v-icon>
                         </v-btn>
 
                         <!-- 카드 내용 -->
-                        <v-card-title class="proposal-title">{{ proposal.projectName }}</v-card-title>
+                        <v-card-title class="estimate-title">{{ estimate.projectName }}</v-card-title>
                         <v-divider class="my-2" />
 
                         <v-card-text class="pa-0">
                             <v-row dense class="mb-1">
                                 <v-col cols="5" class="label">고객사</v-col>
-                                <v-col cols="7">{{ proposal.clientCompany }}</v-col>
+                                <v-col cols="7">{{ estimate.clientCompany }}</v-col>
                             </v-row>
                             <v-row dense class="mb-1">
                                 <v-col cols="5" class="label">고객</v-col>
-                                <v-col cols="7">{{ proposal.clientOwner }}</v-col>
+                                <v-col cols="7">{{ estimate.clientOwner }}</v-col>
                             </v-row>
                             <v-row dense>
                                 <v-col cols="5" class="label">담당자</v-col>
-                                <v-col cols="7">{{ proposal.salesManager }}</v-col>
+                                <v-col cols="7">{{ estimate.salesManager }}</v-col>
                             </v-row>
                         </v-card-text>
 
                         <v-divider class="my-2" />
 
                         <v-card-text class="pa-0 d-flex justify-space-between align-center">
-                            <span :class="['sidebar-text', sidebarClass(proposal.sidebar)]">
-                                {{ proposal.sidebar }}
+                            <span :class="['sidebar-text', sidebarClass(estimate.sidebar)]">
+                                {{ estimate.sidebar }}
                             </span>
 
                             <!-- 변경된 내용 -->
                             <span class="period-text d-flex flex-column">
-                                <span>견적일: {{ proposal.estimateDate }}</span>
-                                <span>견적금액: {{ formatPrice(proposal.estimatePrice) }}</span>
+                                <span>견적일: {{ estimate.estimateDate }}</span>
+                                <span>견적금액: {{ formatPrice(estimate.estimatePrice) }}</span>
                             </span>
                         </v-card-text>
 
@@ -124,11 +124,14 @@
 
 <script setup>
 import { reactive, ref, computed } from 'vue';
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
 
 const search = ref('');
 const showFavoritesOnly = ref(false);
 
-const proposals = reactive([
+const estimates = reactive([
         { id: 1, projectName: '견적 A', clientCompany: '삼성전자', clientOwner: '김영업', salesManager: '박팀장',
         estimateDate: '2025-11-01', estimatePrice: 1500000, sidebar: 'Draft', isFavorite: false },
 
@@ -139,8 +142,8 @@ const proposals = reactive([
         estimateDate: '2025-12-10', estimatePrice: 5200000, sidebar: 'Completed', isFavorite: false },
 ]);
 
-const toggleFavorite = (proposal) => {
-    proposal.isFavorite = !proposal.isFavorite;
+const toggleFavorite = (estimate) => {
+    estimate.isFavorite = !estimate.isFavorite;
 };
 
 const sidebarClass = (sidebar) => {
@@ -160,8 +163,8 @@ const sidebares = reactive([
     { label: 'Canceled', value: 'Canceled', checked: true },
 ]);
 
-const filteredProposals = computed(() => {
-    return proposals.filter(p => {
+const filteredestimates = computed(() => {
+    return estimates.filter(p => {
         const matchesSearch = !search.value || p.projectName.includes(search.value);
         const matchessidebar = sidebares.some(s => s.checked && s.value === p.sidebar);
         const matchesFavorite = !showFavoritesOnly.value || p.isFavorite;
@@ -173,6 +176,11 @@ const filteredProposals = computed(() => {
 const formatPrice = (price) => {
     return price.toLocaleString() + '원';
 };
+
+const goToEstimateDetail = (id) => {
+    router.push({ name: 'EstimateDetail', params: { id } });
+};
+
 </script>
 
 <style scoped>
@@ -198,7 +206,7 @@ const formatPrice = (price) => {
 }
 
 /* 카드 */
-.proposal-card {
+.estimate-card {
     position: relative;
     padding: 16px;
     border-radius: 16px;
@@ -208,7 +216,7 @@ const formatPrice = (price) => {
     background-color: #ffffff;
 }
 
-.proposal-card:hover {
+.estimate-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 24px rgba(0,0,0,0.1);
 }
@@ -254,7 +262,7 @@ const formatPrice = (price) => {
     color: #8e8e93;
 }
 
-.proposal-title {
+.estimate-title {
     font-size: 0.9rem;
     font-weight: 600;
     margin-bottom: 4px;
