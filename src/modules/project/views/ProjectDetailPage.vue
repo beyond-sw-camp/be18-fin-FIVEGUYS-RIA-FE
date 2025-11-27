@@ -1,12 +1,11 @@
 <template>
-  <v-container fluid class="pa-6 detail-container">
-
+  <v-container fluid class="detail-container">
     <v-snackbar v-model="snackbar" :color="snackbarColor" timeout="2500">
       {{ snackbarMessage }}
     </v-snackbar>
 
     <!-- 상단 제목 -->
-    <v-row class="align-center justify-space-between mb-6">
+    <v-row class="align-center justify-space-between mb-4">
       <v-col cols="auto">
         <h2 class="project-title">{{ form.projectName }}</h2>
         <v-chip :color="project.status === '진행중' ? 'orange darken-2' : 'grey'" size="small" class="mr-2 white--text">
@@ -16,13 +15,12 @@
     </v-row>
 
     <!-- 파이프라인 -->
-    <v-row class="mb-6">
+    <v-row class="mb-4">
       <v-col cols="12">
         <div class="pipeline-full">
           <template v-for="(step, i) in project.pipeline" :key="i">
             <div class="pipeline-step" :class="step.completed ? 'completed' : 'pending'"
               @click="changePipelineStage(i + 1)">
-
               {{ step.name }}
             </div>
             <div v-if="i < project.pipeline.length - 1" class="pipeline-line"
@@ -36,16 +34,10 @@
     <v-row dense>
       <!-- 좌측 입력폼 -->
       <v-col cols="12" md="6">
-        <v-card class="pa-6 mb-4 project-card" elevation="2">
-          <v-card-title class="text-h6 mb-4">프로젝트 정보</v-card-title>
+        <v-card class="project-card mb-3" elevation="2">
+          <v-card-title class="card-title">프로젝트 정보</v-card-title>
           <v-card-text>
             <v-row dense>
-              <!-- 읽기 전용 프로젝트 ID -->
-              <!-- <v-col cols="6">
-                <div class="input-label">프로젝트 ID</div>
-                <v-text-field :model-value="project.id" readonly class="readonly-field input-field" hide-details />
-              </v-col> -->
-
               <!-- 프로젝트명 -->
               <v-col cols="6">
                 <div class="input-label">프로젝트명</div>
@@ -71,7 +63,7 @@
               <v-col cols="12">
                 <div class="input-label">설명(메모)</div>
                 <v-textarea v-model="form.description" placeholder="프로젝트 관련 메모를 입력하세요" variant="outlined" rows="3"
-                  class="input-field" hide-details />
+                  class="input-field textarea-field" hide-details />
               </v-col>
 
               <!-- 영업 담당 -->
@@ -100,7 +92,7 @@
                 <v-menu v-model="startMenu" :close-on-content-click="false" transition="scale-transition" offset-y
                   min-width="auto">
                   <template #activator="{ props }">
-                    <v-text-field :model-value="formattedStartDate" label="시작일" readonly v-bind="props"
+                    <v-text-field :model-value="formattedStartDate" placeholder="시작일" readonly v-bind="props"
                       class="input-field" hide-details />
                   </template>
                   <v-date-picker v-model="form.startDate" @update:model-value="startMenu = false" />
@@ -113,7 +105,7 @@
                 <v-menu v-model="endMenu" :close-on-content-click="false" transition="scale-transition" offset-y
                   min-width="auto">
                   <template #activator="{ props }">
-                    <v-text-field :model-value="formattedEndDate" label="종료일" readonly v-bind="props"
+                    <v-text-field :model-value="formattedEndDate" placeholder="종료일" readonly v-bind="props"
                       class="input-field" hide-details />
                   </template>
                   <v-date-picker v-model="form.endDate" @update:model-value="endMenu = false" />
@@ -123,15 +115,24 @@
               <!-- 예상 매출 -->
               <v-col cols="6">
                 <div class="input-label">예상 매출액</div>
-                <v-text-field :model-value="formattedRevenue" placeholder="금액을 입력하세요" variant="outlined" suffix="원"
-                  class="input-field" hide-details @update:model-value="updateRevenue" />
+                <v-text-field :model-value="formattedRevenue" placeholder="금액을 입력하세요" variant="outlined"
+                  class="input-field suffix-input" hide-details @update:model-value="updateRevenue">
+                  <!-- 이모티콘/아이콘은 여기서 교체 -->
+                  <template #append-inner>
+                    <span class="suffix-text">원</span>
+                  </template>
+                </v-text-field>
               </v-col>
 
               <!-- 마진율 -->
               <v-col cols="6">
                 <div class="input-label">예상 마진율</div>
-                <v-text-field v-model.number="form.expectedMarginRate" placeholder="0~100" type="number" suffix="%"
-                  variant="outlined" class="input-field" hide-details />
+                <v-text-field v-model.number="form.expectedMarginRate" placeholder="0~100" type="number"
+                  variant="outlined" class="input-field suffix-input" hide-details>
+                  <template #append-inner>
+                    <span class="suffix-text">%</span>
+                  </template>
+                </v-text-field>
               </v-col>
 
               <!-- 자동계산 예상 이익 -->
@@ -142,7 +143,7 @@
               </v-col>
             </v-row>
           </v-card-text>
-          <v-card-actions class="justify-end">
+          <v-card-actions class="justify-end actions-row">
             <v-btn color="red darken-2" class="white--text mr-2" small @click="onDeleteProject">
               삭제하기
             </v-btn>
@@ -153,24 +154,57 @@
         </v-card>
       </v-col>
 
-      <!-- 우측 제안 카드 영역 -->
+      <!-- 우측 제안/이력 카드 영역 (새 디자인) -->
       <v-col cols="12" md="6">
         <div class="cards-container">
-          <v-card v-for="(card, index) in cards" :key="index" class="mb-4 project-card" elevation="2">
-            <v-card-title>{{ card.title }}</v-card-title>
-            <v-card-text>
-              <div v-if="card.items && card.items.length">
-                <v-list dense>
-                  <v-list-item v-for="(item, i) in card.items" :key="i">
-                    <v-list-item-content>
-                      <v-list-item-title>{{ item.name }}</v-list-item-title>
-                      <v-list-item-subtitle>{{ item.date }}</v-list-item-subtitle>
-                    </v-list-item-content>
-                  </v-list-item>
-                </v-list>
+          <!-- 상단 필터 영역 (완료됨 ▼ 같은 부분) -->
+          <v-card class="history-filter-card" elevation="0">
+            <div class="history-filter-header">
+              <div class="history-filter-label">이력 상태</div>
+              <div class="history-filter-select">
+                <!-- 나중에 실제 v-select로 교체 가능 -->
+                <span>완료됨</span>
+                <v-icon size="16">mdi-chevron-down</v-icon>
               </div>
-              <div v-else>{{ card.content }}</div>
-            </v-card-text>
+            </div>
+          </v-card>
+
+          <!-- 개별 이력 카드 -->
+          <v-card v-for="(item, index) in historyItems" :key="index" class="history-card mb-3" elevation="0">
+            <div class="history-inner">
+              <!-- 왼쪽 아이콘 + 세로 라인 -->
+              <div class="history-left">
+                <div class="history-line"></div>
+                <div class="history-icon" :class="`history-icon--${item.type}`">
+                  <!-- 여기 아이콘/이모티콘 교체 -->
+                  <v-icon size="18">{{ item.icon }}</v-icon>
+                </div>
+              </div>
+
+              <!-- 중앙 내용 -->
+              <div class="history-main">
+                <div class="history-top-row">
+                  <div class="history-type">{{ item.label }}</div>
+                  <div class="history-date">{{ item.date }}</div>
+                </div>
+
+                <div class="history-title">
+                  {{ item.title }}
+                </div>
+
+                <div class="history-desc" v-if="item.description">
+                  {{ item.description }}
+                </div>
+
+                <div class="history-meta" v-if="item.meta">
+                  {{ item.meta }}
+                </div>
+
+                <div class="history-amount" v-if="item.amount">
+                  KRW {{ Number(item.amount).toLocaleString() }}
+                </div>
+              </div>
+            </div>
           </v-card>
         </div>
       </v-col>
@@ -179,9 +213,9 @@
     <!-- 고객사 선택 모달 -->
     <v-dialog v-model="clientDialog" width="500">
       <v-card class="pa-4">
-        <div class="dialog-title mb-4">고객사 선택</div>
+        <div class="dialog-title mb-3">고객사 선택</div>
 
-        <div class="mb-3 d-flex">
+        <div class="mb-2 d-flex">
           <v-chip class="mr-2" :color="clientTypeFilter === 'ALL' ? 'orange darken-2' : undefined"
             :text-color="clientTypeFilter === 'ALL' ? 'white' : undefined" @click="clientTypeFilter = 'ALL'">
             전체
@@ -197,7 +231,7 @@
         </div>
 
         <v-text-field v-model="clientSearch" placeholder="고객사명을 입력하세요" prepend-inner-icon="mdi-magnify"
-          variant="outlined" hide-details class="mb-4" />
+          variant="outlined" hide-details class="mb-3 input-field" />
 
         <v-list>
           <v-list-item v-for="item in filteredClients" :key="item.id" @click="selectClient(item)" class="dialog-item">
@@ -210,10 +244,10 @@
     <!-- 고객 담당자 선택 모달 -->
     <v-dialog v-model="clientPersonDialog" width="500">
       <v-card class="pa-4">
-        <div class="dialog-title mb-4">고객 담당자 선택</div>
+        <div class="dialog-title mb-3">고객 담당자 선택</div>
 
         <v-text-field v-model="clientPersonSearch" placeholder="검색" prepend-inner-icon="mdi-magnify" variant="outlined"
-          hide-details class="mb-4" />
+          hide-details class="mb-3 input-field" />
 
         <v-list>
           <v-list-item v-for="p in filteredClientPersons" :key="p.id" @click="selectClientPerson(p)"
@@ -227,10 +261,10 @@
     <!-- 영업 관리자 선택 모달 -->
     <v-dialog v-model="managerDialog" width="500">
       <v-card class="pa-4">
-        <div class="dialog-title mb-4">영업 관리자 선택</div>
+        <div class="dialog-title mb-3">영업 관리자 선택</div>
 
         <v-text-field v-model="managerSearch" placeholder="검색" prepend-inner-icon="mdi-magnify" variant="outlined"
-          hide-details class="mb-4" />
+          hide-details class="mb-3 input-field" />
 
         <v-list>
           <v-list-item v-for="m in filteredManagers" :key="m.userId" @click="selectManager(m)" class="dialog-item"
@@ -251,13 +285,7 @@
 </template>
 
 <script setup>
-import {
-  reactive,
-  ref,
-  computed,
-  watch,
-  onMounted,
-} from 'vue'
+import { reactive, ref, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   getProjectDetail,
@@ -297,7 +325,6 @@ const project = reactive({
 const snackbar = ref(false)
 const snackbarMessage = ref('')
 const snackbarColor = ref('red')
-
 
 const showError = (err, fallbackMessage = '요청 처리 중 오류가 발생했습니다.') => {
   const msg =
@@ -351,22 +378,23 @@ const showSuccess = (msg = '저장이 완료되었습니다.') => {
   snackbar.value = true
 }
 
-
-const cards = ref([])
-
 const clientTypeFilter = ref('ALL')
-
 const clientPage = ref(1)
 const clientPageSize = ref(10)
 const clientTotalCount = ref(0)
 const clientList = ref([])
 
 const clientPersonList = ref([])
-
 const managerList = ref([])
 const selectedManagerId = ref(null)
 
 const typeList = ['팝업 스토어', '전시회', '임대']
+
+/**
+ * 오른쪽 카드에 뿌릴 타임라인 아이템
+ * type, icon 값만 바꿔서 다른 이력 타입 추가 가능
+ */
+const historyItems = ref([])
 
 const translateStatus = (status) => {
   switch (status) {
@@ -387,7 +415,7 @@ const toLocalDateString = (date) => {
   const y = d.getFullYear()
   const m = String(d.getMonth() + 1).padStart(2, '0')
   const day = String(d.getDate()).padStart(2, '0')
-  return `${y}-${m}-${day}`   // 로컬 기준 "YYYY-MM-DD"
+  return `${y}-${m}-${day}`
 }
 
 const translateType = (type) => {
@@ -425,7 +453,7 @@ const applyDetailDto = (dto) => {
     name: s.stageName,
     completed: s.completed === true,
   }))
-  project.pipelineId = dto.pipelineInfo?.pipelineId ?? null   // ← 추가
+  project.pipelineId = dto.pipelineInfo?.pipelineId ?? null
 
   form.projectName = dto.title
   form.clientCompany = dto.clientCompanyName
@@ -442,17 +470,18 @@ const applyDetailDto = (dto) => {
       ? (dto.expectedRevenue * dto.expectedMarginRate) / 100
       : null
 
-  cards.value = [
-    {
-      title: '제안 목록',
-      items: (dto.proposals || []).map((p) => ({
-        name: `${p.title} (${p.writerName})`,
-        date: p.submitDate || p.requestDate || '',
-      })),
-    },
-  ]
+  // 오른쪽 타임라인용 변환
+  historyItems.value = (dto.proposals || []).map((p) => ({
+    type: 'proposal', // CSS에서 색상 분기용
+    icon: 'mdi-file-document-outline', // 나중에 제안/견적/계약별로 교체
+    label: '제안',
+    title: p.title,
+    description: `[${dto.clientCompanyName}] / [${p.writerName}]`,
+    meta: p.requestDate ? `요청일 : ${p.requestDate}` : '',
+    amount: dto.expectedRevenue || null,
+    date: p.submitDate || p.requestDate || '',
+  }))
 }
-
 
 const loadClients = async () => {
   const params = {
@@ -580,9 +609,6 @@ const confirmManagerSelect = async () => {
   }
 }
 
-
-
-
 const formattedRevenue = computed(() => {
   if (!form.expectedRevenue) return ''
   return Number(form.expectedRevenue).toLocaleString()
@@ -598,12 +624,11 @@ const onDeleteProject = async () => {
     await deleteProject(project.id)
 
     showSuccess('프로젝트가 삭제되었습니다.')
-    router.push('/project')   // 프로젝트 목록 URL에 맞게 필요하면 수정
+    router.push('/project')
   } catch (err) {
     showError(err, '프로젝트를 삭제할 수 없습니다.')
   }
 }
-
 
 const updateRevenue = (val) => {
   const numeric = Number((val || '').replace(/[^0-9]/g, ''))
@@ -652,8 +677,6 @@ const saveProject = async () => {
   }
 }
 
-
-
 onMounted(async () => {
   const projectId = route.params.projectId || route.params.id
   if (!projectId) return
@@ -662,40 +685,123 @@ onMounted(async () => {
 })
 </script>
 
-
 <style scoped>
 .detail-container {
   background-color: #f9f9f9;
   min-height: 100vh;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
+  padding: 8px 16px 10px !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+    Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
 }
 
 .project-title {
-  font-size: 1.5rem;
+  max-width: 1100px;
+  font-size: 1.2rem;
   font-weight: 600;
   color: #111;
-  margin-bottom: 4px;
+  margin: 2px auto 0;
 }
 
 .project-card {
-  border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border-radius: 14px;
   background-color: #fff;
+  border: 1px solid #e5e5e5;
+  padding: 8px 14px 10px;
+  max-width: 1100px;
+  margin: 0 auto;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
 }
 
+.card-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 4px 0 2px;
+}
+
+.project-card :deep(.v-col) {
+  padding-top: 2px !important;
+  padding-bottom: 2px !important;
+}
+
+.input-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #222;
+  margin-bottom: 1px;
+}
+
+/* 인풋 필드 높이 */
+.input-field {
+  border-radius: 6px !important;
+}
+
+.input-field :deep(.v-field) {
+  --v-input-control-height: 40px !important;
+  min-height: 40px !important;
+  height: 40px !important;
+}
+
+/* 인풋 내부 텍스트 */
+.input-field :deep(.v-field__input),
+.input-field :deep(input),
+.input-field :deep(textarea) {
+  font-size: 0.68rem !important;
+  line-height: 1.25 !important;
+  padding-top: 6px !important;
+  padding-bottom: 6px !important;
+  min-height: 40px !important;
+}
+
+/* 접미사(원, %) */
+.suffix-input :deep(.v-field__append-inner) {
+  padding-right: 6px;
+}
+
+.suffix-text {
+  font-size: 0.68rem;
+  line-height: 1.1;
+  display: flex;
+  align-items: center;
+}
+
+/* textarea */
+.textarea-field :deep(.v-field) {
+  min-height: 75px !important;
+}
+
+.textarea-field :deep(.v-field__input) {
+  padding-top: 14px !important;
+  padding-bottom: 8px !important;
+  align-items: flex-start !important;
+}
+
+.textarea-field :deep(textarea) {
+  min-height: 60px !important;
+  line-height: 1.25 !important;
+}
+
+.readonly-field :deep(input) {
+  background-color: #f2f2f2 !important;
+  color: #555 !important;
+}
+
+/* 파이프라인 */
 .pipeline-full {
   display: flex;
   align-items: center;
   width: 100%;
   position: relative;
-  margin-bottom: 24px;
+  margin: 4px auto 18px;
+  max-width: 1100px;
 }
 
 .pipeline-step {
-  padding: 8px 14px;
-  border-radius: 6px;
-  font-size: 0.9rem;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.85rem;
   text-align: center;
+  cursor: pointer;
+  min-width: 80px;
 }
 
 .pipeline-step.completed {
@@ -710,8 +816,8 @@ onMounted(async () => {
 
 .pipeline-line {
   flex-grow: 1;
-  height: 2px;
-  margin: 0 4px;
+  height: 3px;
+  margin: 0 6px;
   border-radius: 2px;
   background-color: #ccc;
 }
@@ -723,13 +829,165 @@ onMounted(async () => {
 .progress-text {
   position: absolute;
   right: 0;
-  bottom: -20px;
+  bottom: -18px;
   font-size: 0.75rem;
   color: #888;
 }
 
-.readonly-field input {
-  background-color: #eee !important;
-  color: #555 !important;
+.actions-row {
+  padding-top: 4px;
+}
+
+.cards-container {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* 오른쪽 상단 필터 카드 */
+.history-filter-card {
+  border-radius: 14px;
+  border: 1px solid #e5e5e5;
+  padding: 6px 14px;
+  margin-bottom: 10px;
+  background-color: #fff;
+}
+
+.history-filter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.history-filter-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #444;
+}
+
+.history-filter-select {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.78rem;
+  color: #444;
+}
+
+/* 개별 이력 카드 */
+.history-card {
+  border-radius: 16px;
+  border: 1px solid #e5e5e5;
+  background-color: #fff;
+  padding: 10px 14px;
+}
+
+.history-inner {
+  display: flex;
+}
+
+/* 왼쪽 타임라인 + 아이콘 */
+.history-left {
+  position: relative;
+  width: 32px;
+  display: flex;
+  justify-content: center;
+}
+
+.history-line {
+  position: absolute;
+  top: 0;
+  bottom: -12px;
+  width: 2px;
+  background-color: #e5e5e5;
+}
+
+.history-card:last-child .history-line {
+  bottom: 0;
+}
+
+.history-icon {
+  position: relative;
+  z-index: 1;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #eef3ff;
+}
+
+/* 타입별 색상 예시 */
+.history-icon--proposal {
+  background-color: #eef3ff;
+}
+
+/* 중앙 내용 */
+.history-main {
+  flex: 1;
+  margin-left: 10px;
+}
+
+.history-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.history-type {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.history-date {
+  font-size: 0.75rem;
+  color: #999;
+}
+
+.history-title {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: #222;
+  margin-bottom: 2px;
+}
+
+.history-desc {
+  font-size: 0.78rem;
+  color: #555;
+  margin-bottom: 2px;
+}
+
+.history-meta {
+  font-size: 0.75rem;
+  color: #777;
+  margin-bottom: 2px;
+}
+
+.history-amount {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #111;
+}
+
+.dialog-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.dialog-item {
+  padding: 5px 6px !important;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.dialog-item:hover {
+  background: #fff3e0 !important;
+}
+
+.selected-item {
+  background-color: #ffe0b2 !important;
 }
 </style>
+
+::contentReference[oaicite:0]{index=0}

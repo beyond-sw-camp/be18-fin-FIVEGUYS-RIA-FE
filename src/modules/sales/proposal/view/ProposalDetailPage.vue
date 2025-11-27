@@ -1,16 +1,17 @@
 <template>
-    <v-container fluid class="pa-6 page-wrapper">
-        <div class="page-title mb-6">제안 상세</div>
-
+    <v-container fluid class="page-wrapper">
         <v-snackbar v-model="snackbar" :color="snackbarColor" timeout="2500">
             {{ snackbarMessage }}
         </v-snackbar>
 
+        <!-- 페이지 타이틀 -->
+        <div class="page-title">제안 상세</div>
 
-        <v-card elevation="3" class="project-card pa-8">
-            <div class="section-title mb-6">제안 정보</div>
+        <!-- 카드 -->
+        <v-card elevation="1" class="project-card">
+            <div class="section-title">제안 정보</div>
 
-            <v-row dense>
+            <v-row dense class="container">
                 <!-- 제안명 -->
                 <v-col cols="12" md="6">
                     <div class="input-label">제안명</div>
@@ -44,8 +45,8 @@
                 <!-- 내용 -->
                 <v-col cols="12">
                     <div class="input-label">내용</div>
-                    <v-textarea v-model="form.content" placeholder="내용을 입력하세요" variant="outlined" class="input-field"
-                        hide-details :readonly="!editMode" rows="4" />
+                    <v-textarea v-model="form.content" placeholder="내용을 입력하세요" variant="outlined"
+                        class="input-field textarea-field" hide-details :readonly="!editMode" rows="4" />
                 </v-col>
 
                 <!-- 요청일 -->
@@ -83,14 +84,14 @@
                 <!-- 비고 -->
                 <v-col cols="12">
                     <div class="input-label">비고</div>
-                    <v-textarea v-model="form.notes" placeholder="비고를 입력하세요" variant="outlined" class="input-field"
-                        hide-details :readonly="!editMode" rows="4" />
+                    <v-textarea v-model="form.notes" placeholder="비고를 입력하세요" variant="outlined"
+                        class="input-field textarea-field" hide-details :readonly="!editMode" rows="4" />
                 </v-col>
             </v-row>
 
             <!-- 버튼 그룹 -->
-            <div class="text-right mt-8">
-                <div v-if="!editMode" class="d-flex justify-end gap-3">
+            <div class="actions-row">
+                <div v-if="!editMode" class="d-flex gap-3">
                     <v-btn color="orange darken-2" class="white--text px-6" rounded="lg" elevation="2"
                         @click="editMode = true">
                         편집
@@ -99,9 +100,8 @@
                         @click="onDeleteProposal">
                         삭제
                     </v-btn>
-
                 </div>
-                <div v-else class="d-flex justify-end gap-3">
+                <div v-else class="d-flex gap-3">
                     <v-btn color="orange darken-2" class="white--text px-6" rounded="lg" elevation="2"
                         @click="saveProposal">
                         저장
@@ -119,7 +119,6 @@
             <v-card class="pa-4">
                 <div class="dialog-title mb-4">고객사 선택</div>
 
-                <!-- 타입 필터 -->
                 <div class="mb-3 d-flex">
                     <v-chip class="mr-2" :color="clientTypeFilter === 'ALL' ? 'orange darken-2' : undefined"
                         :text-color="clientTypeFilter === 'ALL' ? 'white' : undefined"
@@ -140,11 +139,9 @@
                     </v-chip>
                 </div>
 
-                <!-- 검색 -->
                 <v-text-field v-model="clientSearch" placeholder="고객사명을 입력하세요" prepend-inner-icon="mdi-magnify"
                     variant="outlined" hide-details class="mb-4" />
 
-                <!-- 고객사 목록 -->
                 <v-list>
                     <v-list-item v-for="item in filteredCompanies" :key="item.id" @click="selectCompany(item)"
                         class="dialog-item">
@@ -155,16 +152,13 @@
         </v-dialog>
 
         <!-- 고객 모달 -->
-        <!-- 고객 모달 -->
         <v-dialog v-model="clientDialog" width="500">
             <v-card class="pa-4">
                 <div class="dialog-title mb-4">고객 선택</div>
 
-                <!-- 검색 인풋: clientPersonSearch로 변경 -->
                 <v-text-field v-model="clientPersonSearch" placeholder="고객명을 입력하세요" prepend-inner-icon="mdi-magnify"
                     variant="outlined" hide-details class="mb-4" />
 
-                <!-- 실제 내려온 리스트 렌더링 -->
                 <v-list>
                     <v-list-item v-for="p in filteredClientPersons" :key="p.id" @click="selectClient(p)"
                         class="dialog-item">
@@ -173,7 +167,6 @@
                 </v-list>
             </v-card>
         </v-dialog>
-
 
         <!-- 프로젝트(영업 기회) 모달 -->
         <v-dialog v-model="opportunityDialog" width="500">
@@ -219,27 +212,23 @@ import {
     getSimpleClientsByCompany,
 } from '@/apis/client'
 
-
 const router = useRouter()
 const route = useRoute()
 
-// 편집 모드
 const editMode = ref(false)
 
-// 공통 상태
 const startMenu = ref(false)
 const endMenu = ref(false)
 
-const companyDialog = ref(false)      // 고객사 모달
-const clientDialog = ref(false)       // 고객(담당자) 모달
-const opportunityDialog = ref(false)  // 영업기회 모달
-const managerDialog = ref(false)      // 담당자 모달
+const companyDialog = ref(false)
+const clientDialog = ref(false)
+const opportunityDialog = ref(false)
+const managerDialog = ref(false)
 
 const clientSearch = ref('')
-const clientTypeFilter = ref('ALL')   // ALL / CLIENT / LEAD
+const clientTypeFilter = ref('ALL')
 const clientPersonSearch = ref('')
 
-// 폼
 const form = reactive({
     projectName: '',
     projectId: null,
@@ -255,7 +244,7 @@ const form = reactive({
     salesManager: '',
 })
 
-// ───────────────── 영업기회 리스트 ─────────────────
+// 영업 기회
 const opportunityList = ref([])
 
 const fetchProjectTitles = async (keyword = '') => {
@@ -275,7 +264,6 @@ const selectOpportunity = async (o) => {
     form.projectType = o.name
 
     const { data } = await getProjectMeta(o.id)
-    // { projectId, projectName, clientCompanyId, clientCompanyName, clientId, clientName }
 
     form.projectId = data.projectId
     form.projectType = data.projectName
@@ -287,7 +275,7 @@ const selectOpportunity = async (o) => {
     opportunityDialog.value = false
 }
 
-// ───────────────── 고객사 리스트 ─────────────────
+// 고객사 리스트
 const companyPage = ref(1)
 const companyPageSize = ref(10)
 const companyTotalCount = ref(0)
@@ -345,7 +333,7 @@ const selectCompany = (item) => {
     loadClientsByCompany(item.id)
 }
 
-// ───────────────── 고객(담당자) 리스트 ─────────────────
+// 고객(담당자)
 const clientList = ref([])
 
 const loadClientsByCompany = async (companyId) => {
@@ -385,30 +373,35 @@ const selectClient = (p) => {
     clientDialog.value = false
 }
 
-// ───────────────── 담당자(간단 버전) ─────────────────
+// 담당자
 const managerList = ref(['박팀장', '최팀장', '장팀장'])
 
 const selectManager = (m) => {
     form.salesManager = m
     managerDialog.value = false
 }
+
+// 스낵바
+const snackbar = ref(false)
+const snackbarMessage = ref('')
+const snackbarColor = ref('red')
+
 const showSuccess = (msg = '저장이 완료되었습니다.') => {
     snackbarMessage.value = msg
     snackbarColor.value = 'green'
     snackbar.value = true
 }
 
-// ───────────────── 날짜 유틸 ─────────────────
-const formatDate = (date) => {
-    if (!date) return ''
-    const d = new Date(date)
-    const year = d.getFullYear()
-    const month = String(d.getMonth() + 1).padStart(2, '0')
-    const day = String(d.getDate()).padStart(2, '0')
-    return `${year}-${month}-${day}`
+const showError = (err) => {
+    const message =
+        err?.response?.data?.message || '요청 처리 중 오류가 발생했습니다.'
+
+    snackbarMessage.value = message
+    snackbarColor.value = 'red'
+    snackbar.value = true
 }
 
-// ───────────────── 저장 / 편집 ─────────────────
+// 저장 / 편집
 const saveProposal = async () => {
     const payload = {
         title: form.projectName,
@@ -425,9 +418,7 @@ const saveProposal = async () => {
 
     try {
         await updateProposal(id, payload)
-
         showSuccess('제안서 저장이 완료되었습니다.')
-
         editMode.value = false
         await loadDetail()
     } catch (err) {
@@ -435,23 +426,6 @@ const saveProposal = async () => {
         editMode.value = false
     }
 }
-
-
-
-const snackbar = ref(false)
-const snackbarMessage = ref('')
-const snackbarColor = ref('red')
-
-const showError = (err) => {
-    const message =
-        err?.response?.data?.message ||
-        "요청 처리 중 오류가 발생했습니다."
-
-    snackbarMessage.value = message
-    snackbarColor.value = 'red'
-    snackbar.value = true
-}
-
 
 const onDeleteProposal = async () => {
     const id = route.params.id
@@ -462,21 +436,18 @@ const onDeleteProposal = async () => {
 
     try {
         await deleteProposalApi(id)
-
         showSuccess('제안이 삭제되었습니다.')
-        router.push({ name: 'Proposal' }) // 제안 목록 라우트 이름/경로에 맞게 조정
+        router.push({ name: 'Proposal' })
     } catch (err) {
         showError(err)
     }
 }
 
-
 const loadDetail = async () => {
     const id = route.params.id
     const { data } = await getProposalDetail(id)
 
-    // 백엔드 DTO 필드 → 폼 매핑
-    form.projectName = data.title           // 제안명
+    form.projectName = data.title
     form.projectId = data.projectId
     form.projectType = data.projectTitle || ''
     form.clientCompanyId = data.clientCompanyId
@@ -495,76 +466,101 @@ const cancelEdit = async () => {
     editMode.value = false
 }
 
-// 초기 로딩
 onMounted(loadDetail)
 </script>
 
-
-
-
 <style scoped>
 .page-wrapper {
-    background: #fefefe;
+    background: #fafafa;
     min-height: 100vh;
+    padding: 8px 16px 10px;
 }
 
 .page-title {
-    font-size: 1.7rem;
+    max-width: 1100px;
+    margin: 4px auto 10px;
+    font-size: 1.2rem;
     font-weight: 700;
     color: #111;
 }
 
 .project-card {
-    border-radius: 16px;
-    background: white;
-    border: none;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    max-width: 1100px;
+    margin: 0 auto 10px;
+    border-radius: 14px;
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    padding: 8px 14px 10px;
 }
 
 .section-title {
-    font-size: 1.25rem;
+    font-size: 0.95rem;
     font-weight: 600;
-    color: #111;
+    color: #1a1a1a;
+    margin-bottom: 4px;
 }
 
 .input-label {
-    font-size: 0.85rem;
+    font-size: 0.68rem;
     font-weight: 600;
     color: #222;
-    margin-bottom: 6px;
+    margin-bottom: 1px;
 }
 
+.project-card :deep(.v-col) {
+    padding-top: 1px !important;
+    padding-bottom: 1px !important;
+}
+
+/*===== 텍스트 필드 크기 최소화 =====*/
 .input-field {
-    border-radius: 12px;
-    background: #fff;
+    border-radius: 6px !important;
+    font-size: 0.8rem;
+}
+
+.input-field :deep(.v-field) {
+    min-height: 26px !important;
+}
+
+.input-field :deep(.v-field__input) {
+    padding-top: 2px !important;
+    padding-bottom: 2px !important;
+}
+
+/*===== textarea 컴팩트 =====*/
+.textarea-field :deep(.v-field) {
+    min-height: 55px !important;
+}
+
+.textarea-field :deep(.v-field__input) {
+    padding-top: 14px !important;
+    padding-bottom: 4px !important;
+    align-items: flex-start !important;
+}
+
+.textarea-field :deep(textarea) {
+    min-height: 40px !important;
+    line-height: 1.25 !important;
+}
+
+.actions-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 10px;
 }
 
 .dialog-title {
-    font-size: 1.2rem;
+    font-size: 0.9rem;
     font-weight: 600;
 }
 
 .dialog-item {
-    padding: 12px 16px;
+    padding: 5px 6px !important;
     cursor: pointer;
-    border-radius: 8px;
+    font-size: 0.8rem;
 }
 
 .dialog-item:hover {
-    background: #f9f9f9;
-}
-
-.company-button {
-    padding: 12px 16px;
-    margin-bottom: 8px;
-    background: #f3f3f3;
-    border-radius: 12px;
-    cursor: pointer;
-    font-weight: 600;
-    display: block;
-}
-
-.company-button:hover {
-    background: #e8e8e8;
+    background: #fff3e0 !important;
 }
 </style>
