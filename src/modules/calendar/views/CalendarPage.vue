@@ -2,10 +2,8 @@
   <div class="calendar-container">
     <!-- 왼쪽: 검색 + 초대/삭제 버튼 -->
     <div class="sidebar">
-
       <!-- 가로 정렬로 버튼 + 검색창 -->
       <div class="search-header">
-
         <!-- 사용자 관리 버튼 -->
         <button class="invite-open-btn" @click="showUserPopup = true">
           사용자 관리
@@ -29,11 +27,16 @@
           @click="goToMemoDate(memo)"
         >
           <div class="search-title">
-            {{ memo.summary || (memo.description ? memo.description.slice(0, 5) + '...' : '메모') }}
+            {{
+              memo.summary ||
+              (memo.description ? memo.description.slice(0, 5) + "..." : "메모")
+            }}
           </div>
           <div class="search-date">{{ formatDate(memo.startDateTime) }}</div>
         </div>
-        <div v-if="!filteredMemos.length" class="no-results">검색 결과 없음</div>
+        <div v-if="!filteredMemos.length" class="no-results">
+          검색 결과 없음
+        </div>
       </div>
     </div>
 
@@ -104,11 +107,14 @@
     <!-- 🗒️ 메모 팝업 -->
     <div v-if="showPopup" class="memo-popup">
       <div class="popup-content">
-        <h3>{{ selectedMemo.id ? '메모 수정' : '새 메모 추가' }}</h3>
+        <h3>{{ selectedMemo.id ? "메모 수정" : "새 메모 추가" }}</h3>
 
         <input v-model="selectedMemo.summary" placeholder="제목" />
 
-        <textarea v-model="selectedMemo.description" placeholder="내용"></textarea>
+        <textarea
+          v-model="selectedMemo.description"
+          placeholder="내용"
+        ></textarea>
 
         <input v-model="selectedMemo.tags" placeholder="태그 (쉼표로 구분)" />
 
@@ -129,7 +135,9 @@
 
         <div class="popup-buttons">
           <button @click="saveMemo">저장</button>
-          <button v-if="selectedMemo.id" @click="deleteMemo(selectedMemo.id)">삭제</button>
+          <button v-if="selectedMemo.id" @click="deleteMemo(selectedMemo.id)">
+            삭제
+          </button>
           <button @click="closePopup">닫기</button>
         </div>
       </div>
@@ -141,7 +149,11 @@
         <h3>사용자 관리</h3>
 
         <div class="popup-section-title">사용자 초대</div>
-        <input v-model="inviteEmail" placeholder="초대할 이메일" class="invite-input" />
+        <input
+          v-model="inviteEmail"
+          placeholder="초대할 이메일"
+          class="invite-input"
+        />
         <select v-model="inviteRole" class="invite-role">
           <option value="reader">읽기</option>
           <option value="writer">편집</option>
@@ -152,7 +164,11 @@
         <hr />
 
         <div class="popup-section-title">사용자 삭제</div>
-        <input v-model="removeEmail" placeholder="삭제할 사용자 이메일" class="invite-input" />
+        <input
+          v-model="removeEmail"
+          placeholder="삭제할 사용자 이메일"
+          class="invite-input"
+        />
         <button class="delete-btn" @click="removeUser">삭제하기</button>
 
         <button class="close-btn" @click="showUserPopup = false">닫기</button>
@@ -174,7 +190,7 @@ function toLocalDateKey(date) {
 // 🔥 하드코딩으로 안 보이게 할 ID 목록
 const BLOCKED_IDS = [
   "928924a55a86b48bc19f2c175a0642bffe2666393048c3c93ae81b190e1ad39a",
-  "928924a55a86b48bc19f2c175a0642"
+  "928924a55a86b48bc19f2c175a0642",
 ];
 
 export default {
@@ -343,7 +359,10 @@ export default {
       };
 
       if (this.selectedMemo.id) {
-        const updated = await CalendarAPI.updateMemo(this.selectedMemo.id, memo);
+        const updated = await CalendarAPI.updateMemo(
+          this.selectedMemo.id,
+          memo
+        );
         const idx = this.memos.findIndex((m) => m.id === this.selectedMemo.id);
         if (idx !== -1) this.memos.splice(idx, 1, updated);
       } else {
@@ -416,7 +435,7 @@ export default {
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 8px;   /* 버튼과 검색창 사이 간격 */
+  gap: 8px; /* 버튼과 검색창 사이 간격 */
   margin-bottom: 10px;
 }
 
@@ -437,19 +456,37 @@ export default {
 
 /* 검색창 */
 .search-input {
-  flex: 0 0 140px;   /* 🔥 flex 비율 제거 + 기본폭 140px 고정 */
-  max-width: 150px;  /* 🔥 최대 폭 제한 */
+  flex: 0 0 140px; /* 🔥 flex 비율 제거 + 기본폭 140px 고정 */
+  max-width: 150px; /* 🔥 최대 폭 제한 */
   padding: 8px;
   border-radius: 6px;
   border: 1px solid #ccc;
 }
 
-.invite-open-btn { background: #007bff; color: white; border: none; padding: 8px 0px; border-radius: 6px; width: 500px; height: 36px; cursor: pointer; }
-.invite-open-btn:hover { background: #0056b3; }
+.invite-open-btn {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 8px 0px;
+  border-radius: 6px;
+  width: 500px;
+  height: 36px;
+  cursor: pointer;
+}
+.invite-open-btn:hover {
+  background: #0056b3;
+}
 
 /* 달력 */
-.calendar { width: 700px; }
-.calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.calendar {
+  width: 700px;
+}
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
 
 /* ⭐ 월 이동 버튼 스타일 */
 .nav-btn {
@@ -471,63 +508,151 @@ export default {
   transform: scale(0.96);
 }
 
-.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-top: 10px; }
-.day { background: white; border: 1px solid #ddd; border-radius: 8px; height: 100px; padding: 5px; overflow: hidden; cursor: pointer; }
-.today { border: 2px solid #1976d2; }
-.memo-item { font-size: 12px; padding: 2px 4px; border-radius: 6px; margin-top: 2px; }
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  margin-top: 10px;
+}
+.day {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  height: 100px;
+  padding: 5px;
+  overflow: hidden;
+  cursor: pointer;
+}
+.today {
+  border: 2px solid #1976d2;
+}
+.memo-item {
+  font-size: 12px;
+  padding: 2px 4px;
+  border-radius: 6px;
+  margin-top: 2px;
+}
 
 /* 🗒️ 메모 팝업 */
 .memo-popup {
-  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background: rgba(0, 0, 0, 0.5);
-  display: flex; justify-content: center; align-items: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   z-index: 1000;
 }
 .memo-popup .popup-content {
-  background: #fff; padding: 24px; border-radius: 20px;
-  width: 320px; height: 480px;
+  background: #fff;
+  padding: 24px;
+  border-radius: 20px;
+  width: 320px;
+  height: 480px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
-  display: flex; flex-direction: column; gap: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 .memo-popup input,
 .memo-popup textarea {
-  width: 100%; padding: 12px 14px; border-radius: 12px; border: 1.5px solid #ccc;
-  font-size: 14px; transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1.5px solid #ccc;
+  font-size: 14px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
-.memo-popup textarea { height: 200px; resize: vertical; line-height: 1.6; }
+.memo-popup textarea {
+  height: 200px;
+  resize: vertical;
+  line-height: 1.6;
+}
 
 /* 🎨 색상 선택 */
-.color-select { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
-.color-options { display: flex; gap: 8px; }
-.color-circle {
-  width: 24px; height: 24px; border-radius: 50%; cursor: pointer;
-  border: 2px solid transparent; transition: transform 0.15s ease, border-color 0.2s ease;
+.color-select {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
 }
-.color-circle:hover { transform: scale(1.15); }
-.color-circle.selected { border-color: #333; box-shadow: 0 0 4px rgba(0, 0, 0, 0.25); }
+.color-options {
+  display: flex;
+  gap: 8px;
+}
+.color-circle {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: transform 0.15s ease, border-color 0.2s ease;
+}
+.color-circle:hover {
+  transform: scale(1.15);
+}
+.color-circle.selected {
+  border-color: #333;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.25);
+}
 
 /* 버튼 */
-.memo-popup .popup-buttons { display: flex; justify-content: flex-end; gap: 10px; margin-top: 12px; }
-.memo-popup .popup-buttons button {
-  padding: 10px 18px; border-radius: 10px; border: none; cursor: pointer; font-weight: 600;
+.memo-popup .popup-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 12px;
 }
-.memo-popup .popup-buttons button:first-child { background: #1976d2; color: white; }
-.memo-popup .popup-buttons button:nth-child(2) { background: #f44336; color: white; }
-.memo-popup .popup-buttons button:last-child { background: #9e9e9e; color: white; }
+.memo-popup .popup-buttons button {
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+.memo-popup .popup-buttons button:first-child {
+  background: #1976d2;
+  color: white;
+}
+.memo-popup .popup-buttons button:nth-child(2) {
+  background: #f44336;
+  color: white;
+}
+.memo-popup .popup-buttons button:last-child {
+  background: #9e9e9e;
+  color: white;
+}
 
 /* 👥 초대 팝업 */
 .invite-popup {
-  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background: rgba(0, 0, 0, 0.6);
-  display: flex; justify-content: center; align-items: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   z-index: 1100;
 }
 .invite-popup .popup-content {
-  background: #f8f9ff; padding: 28px; border-radius: 18px; width: 400px;
+  background: #f8f9ff;
+  padding: 28px;
+  border-radius: 18px;
+  width: 400px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
 }
-.invite-input, .invite-role {
-  width: 100%; padding: 10px 12px; border-radius: 10px; border: 1.5px solid #ccc; margin-bottom: 10px;
+.invite-input,
+.invite-role {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1.5px solid #ccc;
+  margin-bottom: 10px;
 }
 
 /* 검색 결과 스타일 */
@@ -539,13 +664,13 @@ export default {
   background: #ffffff;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .search-item:hover {
   background: #e8f0fe;
   border-color: #90caf9;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   transform: translateY(-1px);
 }
 
@@ -735,4 +860,3 @@ export default {
   background: #155a9c;
 }
 </style>
-

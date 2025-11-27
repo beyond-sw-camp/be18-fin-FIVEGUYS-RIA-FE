@@ -49,7 +49,7 @@ export const CalendarAPI = {
    */
   async removeUser(email) {
     const res = await api.delete(`${API_URL}/users`, {
-      params: { email }
+      params: { email },
     });
     return res.data;
   },
@@ -60,5 +60,5 @@ export const CalendarAPI = {
   async getUsers() {
     const res = await api.get(`${API_URL}/users`);
     return res.data;
-  }
+  },
 };
