@@ -157,14 +157,24 @@ const fetchProposals = async (resetPage = false) => {
 
     loading.value = true
     try {
+
+        // 체크된 상태 계산
+        const activeStatuses = sidebares
+            .filter((s) => s.checked)
+            .map((s) => s.value)
+
         const { data } = await getProposals({
             keyword: search.value || undefined,
             page: page.value,
             size: size.value,
-            // 상태를 서버로 넘기고 싶으면 여기서 status 추가 가능
+
+            // 서버 필터: 체크된 상태가 1개일 때만 전달
+            status:
+                activeStatuses.length === 1
+                    ? activeStatuses[0]
+                    : undefined,
         })
 
-        // 백엔드 응답: { page, size, totalCount, data: [...] } 라고 가정
         const list = data.data || []
 
         proposals.value = list.map((p) => ({
@@ -181,10 +191,16 @@ const fetchProposals = async (resetPage = false) => {
     }
 }
 
+
 // 검색어 바뀌면 1페이지부터 재조회
-watch(search, () => {
-    fetchProposals(true)
-})
+watch(
+    () => sidebares.map(s => s.checked),
+    () => {
+        fetchProposals(true)
+    },
+    { deep: true }
+)
+
 
 // FE 필터링 (상태 / 즐겨찾기 / 검색 텍스트)
 const filteredProposals = computed(() => {

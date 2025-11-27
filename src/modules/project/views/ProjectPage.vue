@@ -96,6 +96,7 @@ const filterItems = [
   { title: '모든 프로젝트', value: 'ALL' },
   { title: '내 프로젝트', value: 'MINE' },
   { title: '완료된 프로젝트', value: 'DONE' },
+  { title: '취소된 프로젝트', value: 'CANCELLED' },
 ]
 const filter = ref('ALL')
 
@@ -132,10 +133,13 @@ const translateStatus = (status) => {
       return '계약 성공'
     case 'FAIL':
       return '실패'
+    case 'CANCELLED':
+      return '취소됨'
     default:
       return status
   }
 }
+
 
 // 기간 문자열
 const formatPeriod = (startDay, endDay) => {
@@ -205,13 +209,16 @@ const buildQueryParams = () => {
     params.keyword = search.value.trim()
   }
 
-  // 하나만 활성
   switch (filter.value) {
     case 'MINE':
-      params.myProject = true     // userId 기반 필터 (백엔드)
+      params.myProject = true
       break
     case 'DONE':
-      params.status = 'COMPLETED' // Project.Status.COMPLETED 와 맞출 것
+      // enum 이 COMPLETED / SUCCESS 중 뭔지에 맞춰서 문자열만 맞춰라
+      params.status = 'COMPLETED'
+      break
+    case 'CANCELLED':
+      params.status = 'CANCELLED'
       break
     case 'ALL':
     default:
@@ -220,6 +227,7 @@ const buildQueryParams = () => {
 
   return params
 }
+
 
 // API 호출
 const fetchProjects = async (resetPage = false) => {
