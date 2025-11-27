@@ -1,33 +1,47 @@
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import bg from '@/assets/galleria.jpg'
-import { useAuthStore } from '@/stores/auth'
+// LoginPage.vue script setup 부분
+import { ref } from "vue";
+import { useRouter } from "vue-router";
+import { useAuthStore } from "@/stores/auth";
+import bg from "@/assets/galleria.jpg";
 
-const router = useRouter()
-const authStore = useAuthStore()
+const employeeNo = ref("");
+const password = ref("");
+const loading = ref(false);
+const errorMessage = ref("");
 
-const id = ref('')
-const pw = ref('')
-const errorMsg = ref('')
+const router = useRouter();
+const authStore = useAuthStore();
 
-const doLogin = async () => {
-  errorMsg.value = ''
+const handleLogin = async () => {
+  errorMessage.value = "";
+  loading.value = true;
 
   try {
-    await authStore.login(id.value, pw.value)
-    router.push('/home')
-  } catch (e) {
-    const msg = e?.response?.data?.message || '로그인 실패'
-    errorMsg.value = msg
+    const role = await authStore.login(employeeNo.value, password.value);
+
+    console.log("role from store =", role);
+
+    if (role === "ROLE_ADMIN") {
+      // 관리자
+      router.push({ name: "AdminUsers" });
+    } else {
+      // 일반 사용자 기본 페이지
+      router.push({ name: "Home" });
+    }
+  } catch (err) {
+    console.error("로그인 실패:", err);
+    errorMessage.value = "사번 또는 비밀번호를 확인해주세요.";
+  } finally {
+    loading.value = false;
   }
-}
+};
 </script>
 
 <template>
   <div class="login-wrapper">
     <div class="left-section">
-      <img :src="bg" />
+      <img :src="bg" alt="login background" />
     </div>
 
     <div class="right-section">
@@ -35,11 +49,22 @@ const doLogin = async () => {
         <h2>로그인</h2>
 
         <div class="input-group">
-          <input v-model="id" type="text" placeholder="아이디" />
+          <input
+            v-model="employeeNo"
+            type="text"
+            placeholder="사번"
+            autocomplete="username"
+          />
         </div>
 
         <div class="input-group">
-          <input v-model="pw" type="password" placeholder="비밀번호" />
+          <input
+            v-model="password"
+            type="password"
+            placeholder="비밀번호"
+            autocomplete="current-password"
+            @keyup.enter="handleLogin"
+          />
         </div>
 
         <div class="options">
@@ -47,8 +72,13 @@ const doLogin = async () => {
           <label><input type="checkbox" /> 자동 로그인</label>
         </div>
 
-        <button class="login-btn" @click="doLogin">로그인</button>
-        <p v-if="errorMsg" class="error-text">{{ errorMsg }}</p>
+        <button class="login-btn" :disabled="loading" @click="handleLogin">
+          {{ loading ? "로그인 중..." : "로그인" }}
+        </button>
+
+        <p v-if="errorMessage" class="error-text">
+          {{ errorMessage }}
+        </p>
       </div>
     </div>
   </div>
@@ -81,7 +111,7 @@ const doLogin = async () => {
   justify-content: center;
   align-items: center;
   box-sizing: border-box;
-  padding: 0;      /* 기존 20vw 삭제 */
+  padding: 0;
 }
 
 /* 로그인 폼 */
@@ -138,9 +168,15 @@ const doLogin = async () => {
   cursor: pointer;
 }
 
-.login-btn:hover {
+.login-btn[disabled] {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.login-btn:hover:not([disabled]) {
   background-color: #e96c00;
 }
+
 .error-text {
   margin-top: 12px;
   font-size: 14px;
