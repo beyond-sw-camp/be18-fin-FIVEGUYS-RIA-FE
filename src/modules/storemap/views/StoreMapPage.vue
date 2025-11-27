@@ -97,10 +97,10 @@ watch(
 );
 
 /* =======================
-  층 변경 시 이전 텍스트 박스 제거 (★ 추가해야 하는 부분)
+  층 변경 시 이전 텍스트 박스 제거
 ======================== */
 watch(currentLevel, () => {
-  renderedAreas.value = [];    // ← 이것만으로 층 변경 시 잔상 완전 제거됨
+  renderedAreas.value = [];    
 });
 
 
@@ -164,7 +164,7 @@ async function handleImageLoad(event) {
       scaledCoords: scaleCoords(a.coords, scaleX, scaleY),
       textX: a.x * scaleX,
       textY: a.y * scaleY,
-      maxWidth: box.width * 0.9  // 🔥 영역 가로폭의 90%를 텍스트 박스 폭으로 사용
+      maxWidth: box.width * 0.9  //  영역 가로폭의 90%를 텍스트 박스 폭으로 사용
     };
   });
 }
@@ -279,8 +279,6 @@ onMounted(() => {
   pointer-events: none;
   color: #000;  
   pointer-events: none;
-
-  /*  여기서부터 줄바꿈 관련 핵심 */
   white-space: normal;        /* 여러 줄 허용 */
   word-break: keep-all;       /* 한글 자연스럽게 줄바꿈 */
   overflow-wrap: break-word;  /* 긴 단어 강제 줄바꿈 */
