@@ -41,11 +41,11 @@ jobs:
       - name: Build
         run: npm run build
 
-  # develop 브랜치에 push 될 때만 Docker 빌드 + ECR 푸시
+  # PR + develop push 둘 다 Docker 빌드 + ECR 푸시
   push-image-develop:
     needs: build
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
 
     steps:
       - name: Checkout
@@ -61,13 +61,6 @@ jobs:
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
-
-      # 프론트용 .env.prod 필요하면 여기에서 생성
-      # - name: Create .env.prod
-      #   run: |
-      #     cat << EOF > .env.prod
-      #     VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL }}
-      #     EOF
 
       - name: Build and Push Docker image (develop FE)
         env:
