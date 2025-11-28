@@ -41,11 +41,11 @@ jobs:
       - name: Build
         run: npm run build
 
-  # PR + develop push 둘 다 Docker 빌드 + ECR 푸시
+  # develop 브랜치로 push 될 때만 Docker 빌드 + ECR 푸시
   push-image-develop:
     needs: build
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
 
     steps:
       - name: Checkout
