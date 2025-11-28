@@ -132,7 +132,7 @@ const selectedEmployee = ref("ALL");
 // MIME 옵션
 const mimeOptions = [
   { label: "모든 문서", value: "ALL" },
-  { label: "이미지", value: "IMAGE" },
+  { label: "IMAGE", value: "IMAGE" },
   { label: "PDF", value: "PDF" },
   { label: "Word/Excel/PPT/HWP", value: "DOCS" },
   { label: "ZIP", value: "ZIP" },
