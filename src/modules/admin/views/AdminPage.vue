@@ -172,7 +172,7 @@
             item-value="value"
             label="권한"
             variant="outlined"
-            class="mb-1"
+            class="mb-3"
           />
 
           <v-text-field
@@ -181,14 +181,24 @@
             variant="outlined"
             class="mb-3"
           />
-          <v-text-field
+
+          <!-- 부서: 드롭다운 (ADMIN, SALES) -->
+          <v-select
             v-model="form.department"
+            :items="departmentOptions"
+            item-title="label"
+            item-value="value"
             label="부서"
             variant="outlined"
             class="mb-3"
           />
-          <v-text-field
+
+          <!-- 직책: 드롭다운 (시스템 관리자, 영업팀장, 영업팀원) -->
+          <v-select
             v-model="form.position"
+            :items="positionOptions"
+            item-title="label"
+            item-value="value"
             label="직책"
             variant="outlined"
             class="mb-1"
@@ -248,9 +258,9 @@ const teamOptions = [
 
 const roleFilterOptions = [
   { label: "모든 역할", value: "ALL" },
-  { label: "권한 1", value: 1 },
-  { label: "권한 2", value: 2 },
-  { label: "권한 3", value: 3 },
+  { label: "어드민", value: 1 },
+  { label: "팀장", value: 2 },
+  { label: "팀원", value: 3 },
 ];
 const roleSelectOptions = [...roleFilterOptions.slice(1)];
 
@@ -287,12 +297,23 @@ const getStatusColor = (status) => {
   }
 };
 
+/* 부서 / 직책 옵션 */
+const departmentOptions = [
+  { label: "관리자", value: "ADMIN" },
+  { label: "영업팀", value: "SALES" },
+];
+
+const positionOptions = [
+  { label: "시스템 관리자", value: "시스템 관리자" },
+  { label: "영업팀장", value: "영업팀장" },
+  { label: "영업팀원", value: "영업팀원" },
+];
+
 /* 데이터 & 페이지네이션 */
 const users = ref([]);
 const page = ref(1);
 const pageSize = 10;
 
-/** 전체 사용자 목록 가져오기 (PageResponse → content만 사용) */
 const fetchUsers = async () => {
   try {
     const res = await api.get("/api/admin/users", {
@@ -308,7 +329,6 @@ const fetchUsers = async () => {
   }
 };
 
-/** 필터 적용된 전체 목록 */
 const filteredUsers = computed(() => {
   const list = Array.isArray(users.value) ? users.value : [];
 
@@ -333,24 +353,20 @@ const filteredUsers = computed(() => {
   });
 });
 
-/** 현재 페이지에 보여줄 목록 */
 const pagedUsers = computed(() => {
   const start = (page.value - 1) * pageSize;
   return filteredUsers.value.slice(start, start + pageSize);
 });
 
-/** 필터 결과 기준 총 페이지 수 */
 const totalPages = computed(() => {
   const len = filteredUsers.value.length;
   return len === 0 ? 1 : Math.ceil(len / pageSize);
 });
 
-/** 필터 바뀔 때는 항상 1페이지로 */
 watch([searchText, selectedTeam, selectedRole, selectedStatus], () => {
   page.value = 1;
 });
 
-/* 초기 로딩 */
 onMounted(fetchUsers);
 
 /* 삭제 모달 */
@@ -384,7 +400,9 @@ const confirmDeleteUser = async () => {
 /* 추가 모달 */
 const showDialog = ref(false);
 const saving = ref(false);
-const form = ref({
+
+/* 초기 form 상태 */
+const initialFormState = {
   employeeNo: "",
   name: "",
   password: "",
@@ -392,18 +410,33 @@ const form = ref({
   email: "",
   department: "",
   position: "",
-});
+};
+
+/* form ref */
+const form = ref({ ...initialFormState });
+
+/* form 리셋 */
+const resetForm = () => {
+  form.value = { ...initialFormState };
+};
 
 const openDialog = () => {
   showDialog.value = true;
 };
+
 const closeDialog = () => {
   showDialog.value = false;
 };
 
+/* 모달 닫힐 때 자동 리셋 */
+watch(showDialog, (val) => {
+  if (!val) {
+    resetForm();
+  }
+});
+
 const createUser = async () => {
   try {
-    // 간단한 필수값 체크
     if (!form.value.employeeNo || !form.value.name || !form.value.password) {
       snackbar.show("사번 / 이름 / 비밀번호는 필수입니다.", "error");
       return;

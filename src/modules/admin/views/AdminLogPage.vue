@@ -45,7 +45,7 @@
               />
             </div>
 
-            <!-- 작업 유형 -->
+            <!-- 작업 유형 (경로 기준 도메인) -->
             <div class="filter-item">
               <div class="filter-label">작업 유형</div>
               <v-select
@@ -74,7 +74,6 @@
           </div>
 
           <div class="filter-actions">
-            <v-btn color="primary" @click="applyFilter">필터 적용</v-btn>
             <v-btn variant="outlined" @click="resetFilter">필터 초기화</v-btn>
           </div>
         </div>
@@ -126,19 +125,19 @@
                 {{ log.employeeNo || "-" }}
               </span>
 
-              <!-- 작업명 (2줄 고정) -->
+              <!-- 작업명 -->
               <span class="td th-action">
                 <span class="action-text">
                   {{ log.logName || "-" }}
                 </span>
               </span>
 
-              <!-- 영향받은 리소스 (한 줄, 말줄임) -->
+              <!-- 영향받은 리소스 -->
               <span class="td th-resource">
                 {{ formatResource(log.resource) }}
               </span>
 
-              <!-- 상태 (SUCCESS/FAILED → 성공/실패) -->
+              <!-- 상태 -->
               <span class="td th-status">
                 <v-chip
                   :color="getStatusColor(getLogStatus(log))"
@@ -214,7 +213,6 @@ import { ref, computed, onMounted, watch } from "vue";
 import api from "@/apis/http";
 import { useSnackbarStore } from "@/stores/useSnackbarStore";
 
-/* 🔔 전역 스낵바 스토어 */
 const snackbar = useSnackbarStore();
 
 /* ---------- 필터 상태 ---------- */
@@ -232,13 +230,17 @@ const size = ref(10);
 /* ---------- 사용자 옵션 ---------- */
 const userOptions = ref([{ label: "모든 사용자", value: "ALL" }]);
 
+/* ---------- 작업 유형 옵션 (경로 기준 도메인) ---------- */
 const actionOptions = [
   { label: "모든 작업", value: "ALL" },
-  { label: "사용자 정보 변경", value: "USER_UPDATE" },
-  { label: "상품 재고 조회", value: "PRODUCT_VIEW" },
-  { label: "로그인", value: "LOGIN" },
-  { label: "보고서 다운로드", value: "REPORT_DOWNLOAD" },
-  { label: "권한 설정 변경", value: "ROLE_CHANGE" },
+  { label: "관리자 (admin)", value: "admin" },
+  { label: "인증 (auth)", value: "auth" },
+  { label: "캘린더 (calendar)", value: "calendar" },
+  { label: "프로젝트 (campaign)", value: "campaign" },
+  { label: "고객/고객사 (client)", value: "client" },
+  { label: "시설 (facility)", value: "facility" },
+  { label: "문서 (storage)", value: "storage" },
+  { label: "사용자 (user)", value: "user" },
 ];
 
 /* ---------- 상태 표시 ---------- */
@@ -313,16 +315,19 @@ const filteredLogs = computed(() =>
     if (
       selectedUser.value !== "ALL" &&
       String(empNo) !== String(selectedUser.value)
-    )
-      return false;
-
-    // 작업 유형 필터 (selectedAction이 실제로 들어오면 적용)
-    if (
-      selectedAction.value !== "ALL" &&
-      log.logName &&
-      !log.logName.includes(selectedAction.value)
     ) {
       return false;
+    }
+
+    // 작업 유형 필터 (경로 기준)
+    if (selectedAction.value !== "ALL") {
+      const path = (log.resource ?? "").toLowerCase();
+      const key = String(selectedAction.value).toLowerCase();
+
+      // 예: /api/admin/users, /admin/users, /auth/login 등
+      if (!path.includes(`/${key}`)) {
+        return false;
+      }
     }
 
     // 키워드 필터
@@ -357,8 +362,6 @@ const pagedLogs = computed(() => {
 const totalElements = computed(() => filteredLogs.value.length);
 
 /* ---------- 필터 이벤트 ---------- */
-const applyFilter = () => (page.value = 1);
-
 const resetFilter = () => {
   startDate.value = "";
   endDate.value = "";

@@ -118,13 +118,13 @@ const roleFilterOptions = [
   { label: "모든 역할", value: "ALL" },
   { label: "관리자", value: 1 }, // ROLE_ADMIN
   { label: "팀장", value: 2 }, // ROLE_SALES_LEAD
-  { label: "사원", value: 3 }, // ROLE_SALES_MEMBER
+  { label: "팀원", value: 3 }, // ROLE_SALES_MEMBER
 ];
 
 const roleOptions = [
   { label: "관리자", value: 1 },
   { label: "팀장", value: 2 },
-  { label: "사원", value: 3 },
+  { label: "팀원", value: 3 },
 ];
 
 // 사용자 목록 & 페이지네이션(프론트)

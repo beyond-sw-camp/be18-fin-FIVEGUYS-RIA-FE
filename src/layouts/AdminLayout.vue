@@ -12,7 +12,8 @@
           class="menu-item"
           :class="{ active: route.name === item.name }"
         >
-          {{ item.label }}
+          <v-icon class="menu-icon" :icon="item.icon" />
+          <span class="menu-label">{{ item.label }}</span>
         </RouterLink>
       </nav>
     </aside>
@@ -38,14 +39,35 @@
 
 <script setup>
 import { useRoute } from "vue-router";
+// Vuetify 전역 등록돼 있으니 v-icon 바로 사용 가능
 
 const route = useRoute();
 
 const menuItems = [
-  { name: "AdminUsers", label: "사용자 관리", to: "/admin/users" },
-  { name: "AdminRoles", label: "권한 설정", to: "/admin/roles" },
-  { name: "AdminLogs", label: "로그 관리", to: "/admin/logs" },
-  { name: "AdminDanger", label: "삭제 페이지", to: "/admin/danger" },
+  {
+    name: "AdminUsers",
+    label: "사용자 관리",
+    to: "/admin/users",
+    icon: "mdi-account", // 사람 아이콘
+  },
+  {
+    name: "AdminRoles",
+    label: "권한 설정",
+    to: "/admin/roles",
+    icon: "mdi-shield-check", // 방패 + 체크
+  },
+  {
+    name: "AdminLogs",
+    label: "로그 관리",
+    to: "/admin/logs",
+    icon: "mdi-notebook-edit", // 노트 + 펜
+  },
+  {
+    name: "AdminDanger",
+    label: "삭제 페이지",
+    to: "/admin/danger",
+    icon: "mdi-cog", // 톱니바퀴
+  },
 ];
 </script>
 
@@ -68,23 +90,50 @@ const menuItems = [
   margin-bottom: 24px;
 }
 
+/* 메뉴 영역 */
 .menu {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
+/* RouterLink 기본 스타일 */
 .menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   padding: 10px 12px;
   border-radius: 8px;
   text-decoration: none;
   color: #333;
   font-size: 14px;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
+/* 호버 시 */
+.menu-item:hover {
+  background: #e3f2fd;
+}
+
+/* 아이콘 스타일 */
+.menu-icon {
+  font-size: 20px;
+  color: #555;
+}
+
+/* 텍스트 */
+.menu-label {
+  flex: 1;
+}
+
+/* 활성 메뉴 */
 .menu-item.active {
   background: #1976d2;
-  color: white;
+  color: #ffffff;
+}
+
+.menu-item.active .menu-icon {
+  color: #ffffff;
 }
 
 .admin-main {

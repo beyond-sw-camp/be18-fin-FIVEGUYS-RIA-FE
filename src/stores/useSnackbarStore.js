@@ -14,7 +14,6 @@ export const useSnackbarStore = defineStore("snackbar", {
       this.color = color;
       this.timeout = timeout;
       this.visible = false;
-      // 이미 떠있던 거 다시 띄우고 싶을 때 살짝 리셋
       requestAnimationFrame(() => {
         this.visible = true;
       });
