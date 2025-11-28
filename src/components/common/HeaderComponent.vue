@@ -87,8 +87,32 @@
         <v-btn icon><v-icon>mdi-cog-outline</v-icon></v-btn>
         <v-btn icon to="/mypage">
             <v-icon>mdi-account-circle</v-icon>
+        </v-btn>
+        <v-btn icon @click="logoutHandler">
+            <v-icon>mdi-logout</v-icon>
         </v-btn> </v-app-bar>
 </template>
+
+<script setup>
+import { useRouter } from "vue-router";
+import { useAuthStore } from "@/stores/auth";
+import { logout as logoutApi } from "@/apis/auth";
+const router = useRouter();
+const authStore = useAuthStore();
+
+const logoutHandler = async () => {
+    try {
+        await logoutApi();      // 서버 로그아웃 호출
+    } catch (e) {
+        console.error(e);
+    } finally {
+        authStore.forceLogout(); // 토큰/상태 초기화
+        router.push("/login");   // 로그인으로 이동
+    }
+};
+
+</script>
+
 
 <style>
 .v-application,
