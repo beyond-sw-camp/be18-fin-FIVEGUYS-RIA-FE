@@ -1,12 +1,12 @@
 <template>
     <v-container fluid class="pa-0 full-height main-container">
         <v-row no-gutters class="full-height">
-
             <!-- 좌측 사이드바 -->
             <v-col cols="12" md="2" class="pa-4 sidebar">
                 <v-card class="sidebar-card pa-6" flat>
                     <v-text-field v-model="search" append-inner-icon="mdi-magnify" label="검색" variant="outlined"
                         hide-details density="comfortable" class="mb-4" />
+
                     <!-- 즐겨찾기 버튼 -->
                     <div class="d-flex justify-end mt-2">
                         <v-btn small class="favorite-toggle-btn" @click="showFavoritesOnly = !showFavoritesOnly"
@@ -18,11 +18,11 @@
                     </div>
 
                     <!-- 상태 체크박스 그룹 -->
-                    <div class="sidebar-checkbox-group mt-4">진행 상태
+                    <div class="sidebar-checkbox-group mt-4">
+                        진행 상태
                         <v-checkbox v-for="sidebar in sidebares" :key="sidebar.value" v-model="sidebar.checked"
-                            :label="sidebar.label" hide-details dense class="sidebar-checkbox"></v-checkbox>
+                            :label="sidebar.label" hide-details dense class="sidebar-checkbox" />
                     </div>
-
                 </v-card>
             </v-col>
 
@@ -36,7 +36,7 @@
 
                 <v-row dense>
                     <v-col v-for="proposal in filteredProposals" :key="proposal.proposalId" cols="12" sm="6" md="3"
-                        rounded="xl">
+                        class="proposal-col">
                         <v-card outlined class="proposal-card" @click="goToProposalDetail(proposal.proposalId)"
                             elevation="2" rounded="xl">
                             <!-- 즐겨찾기 -->
@@ -81,154 +81,173 @@
                         </v-card>
                     </v-col>
                 </v-row>
+
+                <!-- 페이지네이션 -->
+                <v-row justify="center" class="mt-6">
+                    <v-pagination v-model="page" :length="totalPages" @update:modelValue="onPageChange" />
+                </v-row>
             </v-col>
         </v-row>
     </v-container>
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, watch } from 'vue';
-import { useRouter } from 'vue-router';
-import { getProposals } from '@/apis/proposal';
+import { ref, reactive, computed, onMounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import { getProposals } from '@/apis/proposal'
 
-const router = useRouter();
+const router = useRouter()
 
-const search = ref('');
-const showFavoritesOnly = ref(false);
+const search = ref('')
+const showFavoritesOnly = ref(false)
 
 // 서버 데이터
-const proposals = ref([]);
+const proposals = ref([])
 
-// 페이징 (원하면 UI에 사용)
-const page = ref(1);
-const size = ref(12);
-const totalElements = ref(0);
-const totalPages = ref(0);
+// 페이징
+const page = ref(1)
+const size = ref(12)
+const totalElements = ref(0)
+const totalPages = ref(0)
 
-const loading = ref(false);
+const loading = ref(false)
 
-// 상태 필터 (value는 BE enum 값과 동일하게)
+// 상태 필터
 const sidebares = reactive([
     { label: '작성중', value: 'DRAFT', checked: false },
     { label: '제출됨', value: 'SUBMITTED', checked: false },
     { label: '완료', value: 'COMPLETED', checked: false },
     { label: '취소됨', value: 'CANCELED', checked: false },
-]);
+])
 
-
-// 즐겨찾기 토글
 const toggleFavorite = (proposal) => {
-    proposal.isFavorite = !proposal.isFavorite;
-};
+    proposal.isFavorite = !proposal.isFavorite
+}
 
-// 상태에 따른 클래스
 const statusClass = (status) => {
-    const s = String(status || '').toUpperCase();
+    const s = String(status || '').toUpperCase()
     switch (s) {
-        case 'DRAFT': return 'sidebar-draft';
-        case 'SUBMITTED': return 'sidebar-submitted';
-        case 'COMPLETED': return 'sidebar-completed';
-        case 'CANCELED': return 'sidebar-canceled';
-        default: return '';
+        case 'DRAFT':
+            return 'sidebar-draft'
+        case 'SUBMITTED':
+            return 'sidebar-submitted'
+        case 'COMPLETED':
+            return 'sidebar-completed'
+        case 'CANCELED':
+            return 'sidebar-canceled'
+        default:
+            return ''
     }
-};
+}
 
 const statusLabel = (status) => {
-    const s = String(status || '').toUpperCase();
+    const s = String(status || '').toUpperCase()
     switch (s) {
-        case 'DRAFT': return '작성중';
-        case 'SUBMITTED': return '제출됨';
-        case 'COMPLETED': return '완료';
-        case 'CANCELED': return '취소됨';
-        default: return status;
+        case 'DRAFT':
+            return '작성중'
+        case 'SUBMITTED':
+            return '제출됨'
+        case 'COMPLETED':
+            return '완료'
+        case 'CANCELED':
+            return '취소됨'
+        default:
+            return status
     }
-};
-
-
+}
 
 // 목록 조회
-const fetchProposals = async () => {
-    loading.value = true;
+const fetchProposals = async (resetPage = false) => {
+    if (resetPage) {
+        page.value = 1
+    }
+
+    loading.value = true
     try {
+        const activeStatuses = sidebares
+            .filter((s) => s.checked)
+            .map((s) => s.value)
+
         const { data } = await getProposals({
             keyword: search.value || undefined,
             page: page.value,
             size: size.value,
-        });
+            status:
+                activeStatuses.length === 1
+                    ? activeStatuses[0]
+                    : undefined,
+        })
 
-        // 백엔드 응답: { page, size, totalCount, data: [...] }
-        const list = data.data || [];
+        const list = data.data || []
 
         proposals.value = list.map((p) => ({
             ...p,
-            isFavorite: false,
-        }));
+            isFavorite: p.isFavorite ?? false,
+        }))
 
-        page.value = data.page;
-        size.value = data.size;
-        totalElements.value = data.totalCount; // 필요하면 사용
-        totalPages.value = Math.ceil(data.totalCount / data.size); // 필요하면 계산
-
-        console.log('proposals >>>', proposals.value);
+        page.value = data.page
+        size.value = data.size
+        totalElements.value = data.totalCount
+        totalPages.value = Math.ceil(data.totalCount / data.size)
     } finally {
-        loading.value = false;
+        loading.value = false
     }
-};
+}
 
+// 체크박스 변경 시 재조회
+watch(
+    () => sidebares.map((s) => s.checked),
+    () => {
+        fetchProposals(true)
+    },
+    { deep: true },
+)
 
-// 검색어 바뀌면 재조회
-watch(search, () => {
-    page.value = 1;
-    fetchProposals();
-});
-
-
-// 필터링된 목록 (FE 필터)
+// FE 필터링
 const filteredProposals = computed(() => {
-    const searchText = (search.value || '').trim();
+    const searchText = (search.value || '').trim()
     const activeStatuses = sidebares
         .filter((s) => s.checked)
-        .map((s) => s.value); // ['DRAFT','SUBMITTED',...]
+        .map((s) => s.value)
 
     return proposals.value.filter((p) => {
         const matchesSearch =
             !searchText ||
             p.proposalTitle?.includes(searchText) ||
             p.clientCompanyName?.includes(searchText) ||
-            p.clientName?.includes(searchText);
+            p.clientName?.includes(searchText)
 
-        const statusStr = String(p.status || '').toUpperCase();
-
+        const statusStr = String(p.status || '').toUpperCase()
         const matchesStatus =
-            activeStatuses.length === 0 || activeStatuses.includes(statusStr);
+            activeStatuses.length === 0 || activeStatuses.includes(statusStr)
 
         const matchesFavorite =
-            !showFavoritesOnly.value || p.isFavorite;
+            !showFavoritesOnly.value || p.isFavorite
 
-        return matchesSearch && matchesStatus && matchesFavorite;
-    });
-});
+        return matchesSearch && matchesStatus && matchesFavorite
+    })
+})
 
-
+const onPageChange = () => {
+    fetchProposals(false)
+}
 
 const goToProposalDetail = (id) => {
-    router.push({ name: 'ProposalDetail', params: { id } });
-};
+    router.push({ name: 'ProposalDetail', params: { id } })
+}
 
 const goToCreateProposal = () => {
-    router.push({ name: 'CreateProposal' });
-};
+    router.push({ name: 'CreateProposal' })
+}
 
 onMounted(() => {
-    fetchProposals();
-});
+    fetchProposals()
+})
 </script>
-
 
 <style scoped>
 .main-container {
     background-color: #ffffff;
-    /* 전체 배경 완전 흰색 */
     min-height: 100vh;
 }
 
@@ -238,15 +257,20 @@ onMounted(() => {
     border: 1px solid rgba(0, 0, 0, 0.12);
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
     background-color: #ffffff;
-    /* 회색 제거 */
 }
 
-/* 즐겨찾기 버튼 - 네모, 둥근 모서리, 배경 흰색 */
+/* 카드 열 간격 */
+.proposal-col {
+    padding-left: 10px;
+    padding-right: 10px;
+    margin-bottom: 18px;
+}
+
+/* 즐겨찾기 토글 버튼 */
 .favorite-toggle-btn {
     margin-top: 12px;
     border-radius: 8px;
     background-color: #ffffff;
-    /* 회색 제거 */
     padding: 6px;
     border: 1px solid rgba(0, 0, 0, 0.12);
 }
@@ -268,11 +292,11 @@ onMounted(() => {
 }
 
 .proposal-card:hover {
-    sform: translateY(-2px);
+    transform: translateY(-2px);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
 }
 
-/* 카드 우측 상단 즐겨찾기 - 네모, 둥근 모서리, 배경 흰색 */
+/* 카드 우측 상단 즐겨찾기 */
 .favorite-btn {
     position: absolute;
     top: 12px;
@@ -338,7 +362,6 @@ onMounted(() => {
 /* 상태 체크박스 디자인 */
 .sidebar-checkbox .v-input--selection-controls__ripple {
     display: none;
-    /* 기본 ripple 제거 */
 }
 
 .sidebar-checkbox .v-input--selection-controls__input {
