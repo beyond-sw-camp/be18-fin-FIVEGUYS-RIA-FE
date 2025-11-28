@@ -128,7 +128,9 @@
 
               <!-- 작업명 (2줄 고정) -->
               <span class="td th-action">
-                {{ log.logName || "-" }}
+                <span class="action-text">
+                  {{ log.logName || "-" }}
+                </span>
               </span>
 
               <!-- 영향받은 리소스 (한 줄, 말줄임) -->
@@ -463,16 +465,19 @@ onMounted(async () => {
 .table-header-row,
 .table-row {
   display: grid;
-  /* 타임스탬프/이름/사번/작업명/리소스/상태 */
   grid-template-columns: 1.6fr 1.1fr 0.8fr 1.6fr 2.4fr 0.8fr;
   padding: 10px 8px;
   font-size: 14px;
-  align-items: center;
+  align-items: flex-start; /* ← 행 안의 셀들을 위로 정렬 */
 }
 
+/* 모든 셀 공통: 위쪽 정렬 + 기본 줄 간격 */
 .th,
 .td {
-  padding: 0 8px;
+  padding: 4px 8px;
+  display: flex;
+  align-items: flex-start; /* ← 가운데(X), 위쪽(O) */
+  line-height: 1.4;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -490,23 +495,30 @@ onMounted(async () => {
   color: #777;
 }
 
-/* 상태 칼럼 칩 가운데 */
+/* 상태 칼럼 – 위에서 이미 flex라서 따로 안 해도 됨 */
 .th-status,
 .td.th-status {
-  display: flex;
+  /* 이 부분은 지워도 됨. 남겨두고 싶으면 아래만 두기 */
   align-items: center;
 }
 
-/* 작업명: 2줄 고정 + 줄바꿈 허용 */
+/* 작업명 셀: 행 안에서 세로 가운데 정렬 */
 .td.th-action {
-  white-space: normal !important;
-  display: -webkit-box;
-  -webkit-line-clamp: 2; /* 최대 2줄 */
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  line-height: 1.4;
-  height: calc(1.4em * 2); /* 2줄 높이 고정 */
+  /* display:flex, align-items:center는 위에서 이미 공통으로 들어감 */
+}
+
+/* 작업명 셀만 살짝 아래로 내리기 */
+/* 작업명 셀: 여러 줄 허용 + 전체 보이기 */
+.td.th-action {
+  white-space: normal; /* 줄바꿈 허용 */
+  overflow: visible; /* 잘라내지 말고 다 보여줘 */
+  text-overflow: unset; /* … 없애기 */
+}
+
+/* 작업명 텍스트: camelCase도 줄바꿈 되도록 */
+.td.th-action .action-text {
+  white-space: normal;
+  word-break: break-all; /* AdminUserController.changeUserRole 같은 것도 줄바꿈 */
 }
 
 /* 빈 데이터 */
