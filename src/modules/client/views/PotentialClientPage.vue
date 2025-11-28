@@ -9,10 +9,9 @@
                     <v-text-field v-model="search" append-inner-icon="mdi-magnify" label="검색" variant="outlined"
                         hide-details density="comfortable" class="mb-4 sidebar-input" />
 
-                    <!-- 카테고리 셀렉트 (client 등록과 동일 스타일) -->
+                    <!-- 카테고리 셀렉트 -->
                     <v-select v-model="selectedCategory" :items="categoryItems" item-title="title" item-value="value"
-                        label="카테고리" variant="outlined" density="comfortable" class="sidebar-input" clearable
-                        @update:modelValue="fetchLeadCompanies" />
+                        label="카테고리" variant="outlined" density="comfortable" class="sidebar-input" clearable />
                 </v-card>
             </v-col>
 
@@ -56,6 +55,11 @@
                         </v-card>
                     </v-col>
                 </v-row>
+
+                <!-- 페이지네이션 -->
+                <div class="d-flex justify-center mt-4">
+                    <v-pagination v-model="page" :length="totalPages" @update:model-value="fetchLeadCompanies" />
+                </div>
             </v-col>
         </v-row>
 
@@ -95,10 +99,13 @@
                         class="modal-input" />
                 </v-card-text>
 
-
                 <v-card-actions class="justify-end modal-actions">
-                    <v-btn text color="grey darken-1" class="cancel-btn" @click="showModal = false">취소</v-btn>
-                    <v-btn color="orange darken-2" class="white--text add-btn" @click="addCustomer">추가</v-btn>
+                    <v-btn text color="grey darken-1" class="cancel-btn" @click="showModal = false">
+                        취소
+                    </v-btn>
+                    <v-btn color="orange darken-2" class="white--text add-btn" @click="addCustomer">
+                        추가
+                    </v-btn>
                 </v-card-actions>
 
             </v-card>
@@ -113,35 +120,42 @@ import { registerLeadCompany, getLeadCompanies } from '@/apis/client'
 
 const router = useRouter()
 
-
 const goToCompanyDetail = (customer) => {
-    // id 없으면 이동 못 함 → 경고 찍고 끝
     if (!customer.id) {
         console.warn('고객사 id 없음, 이동 불가', customer)
         return
     }
 
     router.push({
-        name: 'ClientCompanyDetail',   // 라우터에 정의된 name
-        params: { id: customer.id }    // /clientcompany/:id
+        name: 'ClientCompanyDetail',
+        params: { id: customer.id }
     })
 }
 
 // 검색
 const search = ref('')
 
-// 카테고리 필터 (v-select)
+// 카테고리 필터
 const selectedCategory = ref(null)
 
 // 서버에서 가져올 잠재 고객사 목록
 const leadCompanies = ref([])
 
-// 화면에서 쓰는 alias
+// 화면 alias
 const potentialCustomers = leadCompanies
+
+// 페이지네이션
+const page = ref(1)
+const size = ref(20)
+const totalCount = ref(0)
+
+const totalPages = computed(() => {
+    if (!totalCount.value || !size.value) return 1
+    return Math.max(1, Math.ceil(totalCount.value / size.value))
+})
 
 // 모달
 const showModal = ref(false)
-const menu = ref(false)
 
 // 폼 (백엔드 DTO와 1:1 매칭)
 const form = reactive({
@@ -152,10 +166,10 @@ const form = reactive({
     fax: '',
     website: '',
     zipCode: '',
-    address: '',
+    address: ''
 })
 
-// 카테고리 (client 등록 때 쓰던 동일 구성)
+// 카테고리 (client 등록과 동일)
 const categoryItems = [
     { title: '패션', value: 'FASHION' },
     { title: '뷰티', value: 'BEAUTY' },
@@ -167,37 +181,36 @@ const categoryItems = [
     { title: '서비스/기타', value: 'SERVICE' }
 ]
 
-// ==========================
-//   잠재 고객사 목록 조회
-// ==========================
+// 잠재 고객사 목록 조회
 const fetchLeadCompanies = async () => {
     try {
         const params = {
             keyword: search.value || null,
-            category: null,
-            page: 1,
-            size: 20
+            category: selectedCategory.value || null,
+            page: page.value,
+            size: size.value
         }
 
         const { data } = await getLeadCompanies(params)
 
-        leadCompanies.value = data.data.map(item => ({
-            id: item.clientCompanyId,          // ★ 여기
+        leadCompanies.value = (data.data || []).map(item => ({
+            id: item.clientCompanyId,
             company: item.companyName,
-            owner: '-',                        // 아직 없다면 임시값
+            owner: '-',                 // 아직 필드 없으면 임시값
             phone: item.phone,
             email: item.website ?? '-',
-            lastMeeting: '-'                   // 프론트 전용
+            lastMeeting: '-'            // 프론트 전용
         }))
+
+        totalCount.value = data.totalCount
+        page.value = data.page
+        size.value = data.size
     } catch (e) {
         console.error('잠재 고객사 목록 조회 실패', e)
     }
 }
 
-
-// ==========================
-//      잠재 고객사 등록
-// ==========================
+// 잠재 고객사 등록
 const addCustomer = async () => {
     try {
         const payload = {
@@ -213,11 +226,11 @@ const addCustomer = async () => {
 
         await registerLeadCompany(payload)
 
-        // 등록 후 다시 불러오기
-        await fetchLeadCompanies()
-
         showModal.value = false
         Object.keys(form).forEach(k => (form[k] = ''))
+
+        page.value = 1
+        await fetchLeadCompanies()
     } catch (e) {
         console.error('잠재 고객사 등록 실패', e)
     }
@@ -228,17 +241,18 @@ onMounted(() => {
     fetchLeadCompanies()
 })
 
-// 검색 입력 시 자동 갱신
+// 검색 변경 시 1페이지로 초기화 후 조회
 watch(search, () => {
+    page.value = 1
     fetchLeadCompanies()
 })
 
-// 카테고리 변경 시 자동 갱신
+// 카테고리 변경 시 1페이지로 초기화 후 조회
 watch(selectedCategory, () => {
+    page.value = 1
     fetchLeadCompanies()
 })
 </script>
-
 
 <style scoped>
 /* 사이드바 */
@@ -254,13 +268,10 @@ watch(selectedCategory, () => {
     box-shadow: 0 10px 28px rgba(0, 0, 0, 0.12);
 }
 
-.status-label {
-    font-weight: 600;
-    color: #555;
-    font-size: 14px;
-    margin-bottom: 8px;
+.sidebar-input {
+    background-color: #fff;
+    border-radius: 8px;
 }
-
 
 /* 잠재 고객 카드 */
 .customer-card {
@@ -288,7 +299,6 @@ watch(selectedCategory, () => {
     color: #888;
 }
 
-
 /* 모달 카드 */
 .modal-card {
     border-radius: 20px;
@@ -315,14 +325,12 @@ watch(selectedCategory, () => {
     margin-top: 4px;
 }
 
-
 /* 모달 input 스타일 */
 :deep(.modal-input) .v-field__control {
     background-color: #ffffff !important;
     border-radius: 12px;
     box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08);
 }
-
 
 /* 모달 버튼 */
 .modal-actions {
@@ -342,7 +350,6 @@ watch(selectedCategory, () => {
 /* 상태 체크박스 디자인 */
 .sidebar-checkbox .v-input--selection-controls__ripple {
     display: none;
-    /* 기본 ripple 제거 */
 }
 
 .sidebar-checkbox .v-input--selection-controls__input {

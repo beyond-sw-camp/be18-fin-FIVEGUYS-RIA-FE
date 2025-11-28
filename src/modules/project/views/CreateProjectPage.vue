@@ -1,6 +1,6 @@
 <template>
   <v-container fluid class="page-wrapper">
-    <v-snackbar v-model="snackbar" :color="snackbarColor" timeout="2500">
+    <v-snackbar v-model="snackbar" :color="snackbarColor" timeout="2500" location="top center" class="toast-snackbar">
       {{ snackbarMessage }}
     </v-snackbar>
 

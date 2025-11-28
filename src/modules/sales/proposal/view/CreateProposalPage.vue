@@ -16,35 +16,35 @@
         <v-col cols="12" md="6">
           <div class="input-label">제안명</div>
           <v-text-field v-model="form.projectName" placeholder="제안명을 입력하세요" variant="outlined" class="input-field"
-            density="compact" hide-details />
+            hide-details />
         </v-col>
 
         <!-- 영업 기회 -->
         <v-col cols="12" md="6">
           <div class="input-label">영업 기회</div>
           <v-text-field v-model="form.projectType" placeholder="영업 기회를 선택하세요" variant="outlined" class="input-field"
-            density="compact" hide-details readonly @click="opportunityDialog = true" />
+            hide-details readonly @click="opportunityDialog = true" />
         </v-col>
 
         <!-- 고객사 -->
         <v-col cols="12" md="6">
           <div class="input-label">고객사</div>
           <v-text-field v-model="form.clientCompany" placeholder="고객사를 선택하세요" variant="outlined" class="input-field"
-            density="compact" hide-details readonly @click="clientDialog = true" />
+            hide-details readonly @click="clientDialog = true" />
         </v-col>
 
         <!-- 고객(담당자) -->
         <v-col cols="12" md="6">
           <div class="input-label">고객 담당자</div>
           <v-text-field v-model="form.client" placeholder="고객 담당자를 선택하세요" variant="outlined" class="input-field"
-            density="compact" hide-details readonly @click="clientPersonDialog = true" />
+            hide-details readonly @click="clientPersonDialog = true" />
         </v-col>
 
         <!-- 내용 -->
         <v-col cols="12">
           <div class="input-label">내용</div>
-          <v-textarea v-model="form.content" placeholder="내용을 입력하세요" variant="outlined" class="input-field"
-            density="compact" hide-details rows="4" />
+          <v-textarea v-model="form.content" placeholder="내용을 입력하세요" variant="outlined"
+            class="input-field textarea-field" hide-details rows="4" />
         </v-col>
 
         <!-- 요청일 -->
@@ -53,7 +53,7 @@
           <v-menu v-model="startMenu" :close-on-content-click="false" offset-y>
             <template #activator="{ props }">
               <v-text-field :model-value="formatDate(form.startDate)" placeholder="요청일" variant="outlined"
-                class="input-field" density="compact" hide-details readonly v-bind="props" />
+                class="input-field" hide-details readonly v-bind="props" />
             </template>
             <v-date-picker v-model="form.startDate" @update:model-value="startMenu = false" />
           </v-menu>
@@ -65,7 +65,7 @@
           <v-menu v-model="endMenu" :close-on-content-click="false" offset-y>
             <template #activator="{ props }">
               <v-text-field :model-value="formatDate(form.endDate)" placeholder="제출일" variant="outlined"
-                class="input-field" density="compact" hide-details readonly v-bind="props" />
+                class="input-field" hide-details readonly v-bind="props" />
             </template>
             </v-list>
         </v-card>
@@ -74,15 +74,14 @@
         <!-- 비고 -->
         <v-col cols="12">
           <div class="input-label">비고</div>
-          <v-textarea v-model="form.notes" placeholder="비고를 입력하세요" variant="outlined" class="input-field"
-            density="compact" hide-details rows="3" />
+          <v-textarea v-model="form.notes" placeholder="비고를 입력하세요" variant="outlined" class="input-field textarea-field"
+            hide-details rows="3" />
         </v-col>
       </v-row>
 
       <!-- 저장 버튼 -->
       <div class="actions-row">
-        <v-btn color="orange darken-2" class="white--text px-5" size="small" rounded="lg" elevation="1"
-          @click="saveProposal">
+        <v-btn color="orange darken-2" class="white--text px-6" rounded="lg" elevation="2" @click="saveProposal">
           저장
         </v-btn>
       </div>
@@ -109,7 +108,7 @@
         </div>
 
         <v-text-field v-model="clientSearch" placeholder="고객사명을 입력하세요" prepend-inner-icon="mdi-magnify"
-          variant="outlined" density="compact" hide-details class="mb-4" />
+          variant="outlined" hide-details class="mb-4" />
 
         <v-list>
           <v-list-item v-for="item in filteredClients" :key="item.id" @click="selectClient(item)" class="dialog-item">
@@ -125,7 +124,7 @@
         <div class="dialog-title mb-4">고객 담당자 선택</div>
 
         <v-text-field v-model="clientPersonSearch" placeholder="검색" prepend-inner-icon="mdi-magnify" variant="outlined"
-          density="compact" hide-details class="mb-4" />
+          hide-details class="mb-4" />
 
         <v-list>
           <v-list-item v-for="p in filteredClientPersons" :key="p.id" @click="selectClientPerson(p)"
@@ -142,7 +141,7 @@
         <div class="dialog-title mb-4">영업 기회 선택</div>
 
         <v-text-field v-model="opportunitySearch" placeholder="검색" prepend-inner-icon="mdi-magnify" variant="outlined"
-          density="compact" hide-details class="mb-4" />
+          hide-details class="mb-4" />
 
         <v-list>
           <v-list-item v-for="o in filteredOpportunities" :key="o.id" @click="selectOpportunity(o)" class="dialog-item">
@@ -159,8 +158,7 @@ import { reactive, ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { createProposal } from '@/apis/proposal'
 import { getProjectTitles, getProjectMeta } from '@/apis/project'
-import { getSimpleClientCompanies } from '@/apis/client'
-import { getSimpleClientsByCompany } from '@/apis/client'
+import { getSimpleClientCompanies, getSimpleClientsByCompany } from '@/apis/client'
 
 const router = useRouter()
 
@@ -199,7 +197,7 @@ const opportunitySearch = ref('')
 // 고객사 타입 필터
 const clientTypeFilter = ref('ALL')
 
-// 페이지네이션 (필요하면 UI 추가)
+// 페이지네이션
 const clientPage = ref(1)
 const clientPageSize = ref(10)
 
@@ -227,9 +225,7 @@ const form = reactive({
   notes: '',
 })
 
-/**
- * 고객사 로딩
- */
+/** 고객사 로딩 */
 const loadClients = async () => {
   const params = {
     page: clientPage.value,
@@ -266,9 +262,7 @@ watch([clientTypeFilter, clientSearch], () => {
   }
 })
 
-/**
- * 고객 담당자 로딩
- */
+/** 고객 담당자 로딩 */
 const loadClientPersons = async (companyId) => {
   if (!companyId) return
 
@@ -300,9 +294,7 @@ watch(clientPersonSearch, () => {
 
 const filteredClientPersons = computed(() => clientPersonList.value)
 
-/**
- * 영업 기회 로딩
- */
+/** 영업 기회 로딩 */
 const loadOpportunities = async () => {
   const { data } = await getProjectTitles(opportunitySearch.value || '')
   opportunityList.value = data.map((p) => ({
@@ -328,9 +320,7 @@ const filteredOpportunities = computed(() =>
   opportunityList.value.filter((o) => o.name.includes(opportunitySearch.value)),
 )
 
-/**
- * 선택 핸들러
- */
+/** 선택 핸들러 */
 const selectClient = (item) => {
   form.clientCompany = item.name
   form.clientCompanyId = item.id
@@ -356,14 +346,11 @@ const selectOpportunity = async (o) => {
   form.projectType = o.name
 
   const { data } = await getProjectMeta(o.id)
-  // { projectId, projectName, clientCompanyId, clientCompanyName, clientId, clientName }
 
   form.projectId = data.projectId
   form.projectType = data.projectName
-
   form.clientCompanyId = data.clientCompanyId
   form.clientCompany = data.clientCompanyName
-
   form.clientId = data.clientId
   form.client = data.clientName
 
@@ -375,9 +362,7 @@ const selectOpportunity = async (o) => {
   opportunityDialog.value = false
 }
 
-/**
- * 유틸
- */
+/** 유틸 */
 const formatDate = (date) => {
   if (!date) return ''
   const d = new Date(date)
@@ -396,9 +381,7 @@ const toLocalDateString = (date) => {
   return `${y}-${m}-${day}`
 }
 
-/**
- * 저장
- */
+/** 저장 */
 const saveProposal = async () => {
   const payload = {
     title: form.projectName,
@@ -425,78 +408,110 @@ const saveProposal = async () => {
 .page-wrapper {
   background: #fafafa;
   min-height: 100vh;
-  padding: 16px 24px 24px;
+  padding: 8px 16px 10px;
 }
 
 .page-title {
-  max-width: 1200px;
-  margin: 8px auto 16px;
-  font-size: 1.4rem;
+  max-width: 1100px;
+  margin: 4px auto 10px;
+  font-size: 1.2rem;
   font-weight: 700;
   color: #111;
 }
 
 .project-card {
-  max-width: 1200px;
-  margin: 0 auto 16px;
-  border-radius: 16px;
+  max-width: 1100px;
+  margin: 0 auto 10px;
+  border-radius: 14px;
   background: #fff;
-  border: 1px solid #e7e7e7;
-  padding: 16px 20px 18px;
+  border: 1px solid #e5e5e5;
+  padding: 8px 14px 10px;
 }
 
 .section-title {
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   font-weight: 600;
   color: #1a1a1a;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 
+/* 라벨 폰트 +10px 느낌으로 크게 */
 .input-label {
-  font-size: 0.76rem;
+  font-size: 0.9rem;
   font-weight: 600;
   color: #222;
-  margin-bottom: 3px;
+  margin-bottom: 4px;
 }
 
 .project-card :deep(.v-col) {
-  padding-top: 4px !important;
-  padding-bottom: 4px !important;
+  padding-top: 1px !important;
+  padding-bottom: 1px !important;
 }
 
+/* ===== 인풋 박스/텍스트 높이 +10px ===== */
 .input-field {
-  border-radius: 8px !important;
-  font-size: 0.9rem;
+  border-radius: 6px !important;
+  font-size: 0.8rem;
 }
 
 .input-field :deep(.v-field) {
-  min-height: 34px !important;
+  min-height: 32px !important;
+  height: 32px !important;
 }
 
+/* 실제 인풋 영역 */
 .input-field :deep(.v-field__input) {
-  padding-top: 3px !important;
-  padding-bottom: 3px !important;
+  font-size: 0.8rem !important;
+  line-height: 1.2 !important;
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+  min-height: 32px !important;
 }
 
-:deep(textarea) {
-  min-height: 52px !important;
+/* suffix / 아이콘 */
+.input-field :deep(.v-field__append-inner),
+.input-field :deep(.v-field__suffix),
+.input-field :deep(.v-field__prepend-inner) {
+  font-size: 0.8rem !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  align-items: center !important;
+}
+
+/* textarea 높이도 +10px */
+.textarea-field :deep(.v-field) {
+  min-height: 65px !important;
+}
+
+.textarea-field :deep(.v-field__input) {
+  font-size: 0.8rem !important;
+  padding-top: 14px !important;
+  padding-bottom: 6px !important;
+  align-items: flex-start !important;
+}
+
+/* ▼ 여기 resize: none 추가 */
+.textarea-field :deep(textarea) {
+  min-height: 50px !important;
+  line-height: 1.25 !important;
+  resize: none !important;
 }
 
 .actions-row {
   display: flex;
   justify-content: flex-end;
-  margin-top: 16px;
+  margin-top: 10px;
 }
 
 .dialog-title {
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 600;
 }
 
 .dialog-item {
-  padding: 8px 6px !important;
+  padding: 5px 6px !important;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
 }
 
 .dialog-item:hover {

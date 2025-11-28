@@ -7,15 +7,15 @@
                 <v-card class="pa-6 sidebar-card" flat>
                     <v-text-field v-model="search" append-inner-icon="mdi-magnify" label="검색" variant="outlined"
                         hide-details density="comfortable" class="mb-4 sidebar-input" />
-                    <!-- 필터 -->
+
                     <v-select v-model="category" :items="categoryItems" item-title="title" item-value="value"
                         label="카테고리" variant="outlined" hide-details density="comfortable" class="mb-6 sidebar-input" />
 
                     <v-select v-model="contractStatus" :items="['활성', '종료']" label="계약 상태" variant="outlined"
-                        hide-details density="comfortable" class="mb-6 sidebar-input"></v-select>
+                        hide-details density="comfortable" class="mb-6 sidebar-input" />
 
                     <v-select v-model="floor" :items="['B1', '1F', '2F']" label="층" variant="outlined" hide-details
-                        density="comfortable" class="mb-6 sidebar-input"></v-select>
+                        density="comfortable" class="mb-6 sidebar-input" />
                 </v-card>
             </v-col>
 
@@ -33,7 +33,9 @@
                 <v-row dense>
                     <v-col v-for="(client, index) in clients" :key="index" cols="12" sm="6" md="3">
                         <v-card outlined class="pa-4 client-card" @click="goToClientCompanyDetail(client.id)">
-                            <v-card-title class="client-title text-center">{{ client.company }}</v-card-title>
+                            <v-card-title class="client-title text-center">
+                                {{ client.company }}
+                            </v-card-title>
                             <v-divider class="my-2" />
                             <v-card-text class="pa-0">
                                 <v-row dense class="mb-1">
@@ -61,8 +63,14 @@
                     </v-col>
                 </v-row>
 
+                <!-- 페이지네이션 -->
+                <div class="d-flex justify-center mt-4">
+                    <v-pagination v-model="page" :length="totalPages" @update:model-value="fetchClients" />
+                </div>
+
             </v-col>
         </v-row>
+
         <!-- ==================== 고객사 추가 모달 ==================== -->
         <v-dialog v-model="showModal" max-width="500">
             <v-card class="pa-6 modal-card">
@@ -76,7 +84,7 @@
                     <!-- companyName -->
                     <v-text-field v-model="form.companyName" label="고객사명" variant="outlined" class="modal-input" />
 
-                    <!-- category (ENUM: FASHION, BEAUTY, ...) -->
+                    <!-- category (ENUM) -->
                     <v-select v-model="form.category" :items="[
                         { title: '패션', value: 'FASHION' },
                         { title: '뷰티', value: 'BEAUTY' },
@@ -127,7 +135,7 @@
 </template>
 
 <script setup>
-import { reactive, ref, onMounted, watch } from 'vue'
+import { reactive, ref, onMounted, watch, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { registerCustomer, getCustomerCompanies } from '@/apis/client'
 
@@ -157,6 +165,11 @@ const page = ref(1)
 const size = ref(20)
 const totalCount = ref(0)
 
+const totalPages = computed(() => {
+    if (!totalCount.value || !size.value) return 1
+    return Math.max(1, Math.ceil(totalCount.value / size.value))
+})
+
 // 모달 / 폼
 const showModal = ref(false)
 
@@ -170,6 +183,7 @@ const form = reactive({
     fax: '',
     zipCode: ''
 })
+
 const toKoreanCategory = (value) => {
     switch (value) {
         case 'FASHION': return '패션'
@@ -184,43 +198,27 @@ const toKoreanCategory = (value) => {
     }
 }
 
-
 // 고객사 목록 조회 (GET /api/companies/clients)
 const fetchClients = async () => {
     try {
         const params = {
             keyword: search.value || null,
-            category: category.value || null,   // ENUM 그대로 전달
+            category: category.value || null,
             page: page.value,
             size: size.value
         }
 
         const { data } = await getCustomerCompanies(params)
 
-        // 백엔드 DTO:
-        // ClientCompanyListPageResponseDto {
-        //   long totalCount;
-        //   int page;
-        //   int size;
-        //   List<ClientCompanyListResponseDto> data;
-        // }
-        // ClientCompanyListResponseDto {
-        //   Long clientCompanyId;
-        //   String companyName;
-        //   String category;
-        //   LocalDateTime createdAt;
-        // }
-
-        clients.value = data.data.map((c) => ({
+        clients.value = (data.data || []).map((c) => ({
             id: c.clientCompanyId,
             company: c.companyName,
-            category: c.category,                         // ENUM
-            categoryLabel: toKoreanCategory(c.category), // 카드에서 쓰는 한글
+            category: c.category,
+            categoryLabel: toKoreanCategory(c.category),
             owner: '-',
             floor: '-',
             status: '-'
         }))
-
 
         totalCount.value = data.totalCount
         page.value = data.page
@@ -234,11 +232,17 @@ const fetchClients = async () => {
 onMounted(() => {
     fetchClients()
 })
+
+// 카테고리, 검색 변경 시 1페이지부터 다시 조회
 watch(category, () => {
     page.value = 1
     fetchClients()
 })
 
+watch(search, () => {
+    page.value = 1
+    fetchClients()
+})
 
 // 고객사 등록
 const addClient = async () => {
@@ -262,7 +266,7 @@ const addClient = async () => {
             form[k] = ''
         })
 
-        // 등록 후 목록 재조회
+        page.value = 1
         await fetchClients()
     } catch (e) {
         console.error('고객사 등록 실패', e)
@@ -276,7 +280,6 @@ const goToClientCompanyDetail = (id) => {
     })
 }
 </script>
-
 
 <style scoped>
 /* 사이드바 */
