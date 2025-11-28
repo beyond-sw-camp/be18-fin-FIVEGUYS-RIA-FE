@@ -1,5 +1,11 @@
 <template>
+
+  <div v-if="errorMessage" class="toast-error">
+    {{ errorMessage }}
+  </div>
+
   <div class="calendar-container">
+    
 
     <!-- ====================== -->
     <!--   왼쪽: 검색 + 사용자   -->
@@ -7,7 +13,6 @@
     <div class="left-sidebar">
       <div class="card left-card">
 
-        <!-- 검색 -->
         <h3 class="card-title">검색</h3>
         <input
           v-model="searchQuery"
@@ -101,10 +106,7 @@
     <!-- ====================== -->
     <transition name="slide-panel">
       <div v-if="showPopup" class="memo-side-panel">
-
-        <!-- 기존 모달의 UI 구조 그대로 이동 -->
         <div class="popup-content panel-popup-content">
-
           <h3 class="memo-title">
             {{ selectedMemo.id ? "메모 수정" : "새 메모" }}
           </h3>
@@ -140,17 +142,12 @@
             <button v-if="selectedMemo.id" @click="deleteMemo(selectedMemo.id)">삭제</button>
             <button @click="closePopup">닫기</button>
           </div>
-
         </div>
       </div>
     </transition>
 
   </div>
 </template>
-
-
-
-
 
 <script>
 import { CalendarAPI } from "@/apis/calendar.js";
@@ -167,6 +164,7 @@ const BLOCKED_IDS = [
   "928924a55a86b48bc19f2c175a0642",
 ];
 
+
 export default {
   data() {
     return {
@@ -177,31 +175,26 @@ export default {
       selectedDate: null,
       selectedMemo: {},
       searchQuery: "",
-
-      // 사용자 관리
       inviteEmail: "",
       inviteRole: "writer",
       removeEmail: "",
-
       users: [],
       activeUserEmail: null,
+      errorMessage: null,
+      errorTimer: null,
     };
   },
 
   computed: {
-    currentYear() {
-      return this.currentDate.getFullYear();
-    },
-    currentMonth() {
-      return this.currentDate.getMonth();
-    },
+    currentYear() { return this.currentDate.getFullYear(); },
+    currentMonth() { return this.currentDate.getMonth(); },
 
     daysInMonth() {
       const year = this.currentYear;
       const month = this.currentMonth;
       const days = [];
-      const lastDay = new Date(year, month + 1, 0).getDate();
-      for (let i = 1; i <= lastDay; i++) {
+      const last = new Date(year, month + 1, 0).getDate();
+      for (let i = 1; i <= last; i++) {
         days.push({ day: i, date: new Date(year, month, i) });
       }
       return days;
@@ -223,7 +216,6 @@ export default {
         if (!u) return false;
         const email = u.email || "";
         const name = u.name || "";
-
         if (BLOCKED_IDS.includes(email) || BLOCKED_IDS.includes(name)) return false;
         return true;
       });
@@ -231,18 +223,29 @@ export default {
   },
 
   async mounted() {
-    this.memos = await CalendarAPI.getEvents();
-
-    this.users = (await CalendarAPI.getUsers()).filter(
-      (u) =>
-        typeof u.email === "string" &&
-        u.email.includes("@") &&
-        u.email.includes(".") &&
-        !u.email.includes("gserviceaccount")
-    );
+    try {
+      this.memos = await CalendarAPI.getEvents();
+      this.users = (await CalendarAPI.getUsers()).filter(
+        (u) =>
+          typeof u.email === "string" &&
+          u.email.includes("@") &&
+          !u.email.includes("gserviceaccount")
+      );
+    } catch (e) {
+      this.showError(e.response?.data?.message || e.message);
+    }
   },
 
   methods: {
+    showError(msg) {
+      this.errorMessage = msg;
+      if (this.errorTimer) clearTimeout(this.errorTimer);
+
+      this.errorTimer = setTimeout(() => {
+        this.errorMessage = null;
+      }, 3000);
+    },
+
     formatDate(d) {
       const date = new Date(d);
       return `${date.getMonth() + 1}/${date.getDate()}`;
@@ -265,14 +268,13 @@ export default {
       });
     },
 
-    filteredByUser(memoList) {
-      if (!this.activeUserEmail) return memoList;
-      return memoList.filter((m) => m.creatorEmail === this.activeUserEmail);
+    filteredByUser(list) {
+      if (!this.activeUserEmail) return list;
+      return list.filter((m) => m.creatorEmail === this.activeUserEmail);
     },
 
     highlightUser(email) {
-      this.activeUserEmail =
-        this.activeUserEmail === email ? null : email;
+      this.activeUserEmail = this.activeUserEmail === email ? null : email;
     },
 
     goToMemoDate(memo) {
@@ -307,9 +309,12 @@ export default {
       this.showPopup = false;
     },
 
+    // ========================================
+    //  패치: 예외 메시지 표시 처리 포함
+    // ========================================
     async saveMemo() {
       if (!this.selectedMemo.summary && !this.selectedMemo.description)
-        return alert("내용을 입력해주세요!");
+        return this.showError("내용을 입력해주세요!");
 
       const summary =
         this.selectedMemo.summary ||
@@ -323,40 +328,59 @@ export default {
         color: this.selectedMemo.color,
       };
 
-      if (this.selectedMemo.id) {
-        const updated = await CalendarAPI.updateMemo(this.selectedMemo.id, memo);
-        const idx = this.memos.findIndex((m) => m.id === this.selectedMemo.id);
-        if (idx !== -1) this.memos.splice(idx, 1, updated);
-      } else {
-        const created = await CalendarAPI.createMemo(memo);
-        this.memos.push(created);
-      }
+      try {
+        if (this.selectedMemo.id) {
+          const updated = await CalendarAPI.updateMemo(this.selectedMemo.id, memo);
+          const idx = this.memos.findIndex((m) => m.id === this.selectedMemo.id);
+          if (idx !== -1) this.memos.splice(idx, 1, updated);
+        } else {
+          const created = await CalendarAPI.createMemo(memo);
+          this.memos.push(created);
+        }
 
-      this.closePopup();
+        this.closePopup();
+      } catch (e) {
+        this.showError(e.response?.data?.message || e.message);
+      }
     },
 
     async deleteMemo(id) {
-      await CalendarAPI.deleteEvent(id);
-      this.memos = this.memos.filter((m) => m.id !== id);
-      this.closePopup();
+      try {
+        await CalendarAPI.deleteEvent(id);
+        this.memos = this.memos.filter((m) => m.id !== id);
+        this.closePopup();
+      } catch (e) {
+        this.showError(e.response?.data?.message || e.message);
+      }
     },
 
     async inviteUser() {
-      if (!this.inviteEmail.trim()) return alert("이메일 입력하세요!");
-      const res = await CalendarAPI.addUser(this.inviteEmail, this.inviteRole);
-      alert("초대 완료: " + res);
-      this.inviteEmail = "";
+      if (!this.inviteEmail.trim()) return this.showError("이메일 입력!");
+
+      try {
+        await CalendarAPI.addUser(this.inviteEmail, this.inviteRole);
+        alert("초대 완료");
+        this.inviteEmail = "";
+      } catch (e) {
+        this.showError(e.response?.data?.message || e.message);
+      }
     },
 
     async removeUser() {
-      if (!this.removeEmail.trim()) return alert("삭제할 이메일 입력!");
-      const res = await CalendarAPI.removeUser(this.removeEmail);
-      alert("사용자 삭제 완료: " + res);
-      this.removeEmail = "";
+      if (!this.removeEmail.trim()) return this.showError("삭제할 이메일 입력!");
+
+      try {
+        await CalendarAPI.removeUser(this.removeEmail);
+        alert("사용자 삭제 완료");
+        this.removeEmail = "";
+      } catch (e) {
+        this.showError(e.response?.data?.message || e.message);
+      }
     },
   },
 };
 </script>
+
 
 <style scoped>
 /* ===========================
@@ -768,6 +792,25 @@ export default {
 
 .popup-buttons button:last-child {
   background: #9ca3af;
+}
+.toast-error {
+  position: fixed;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);  
+  background: #ff5252;
+  color: white;
+  padding: 12px 18px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 9999;
+  font-weight: 600;
+  animation: fadein 0.3s ease;
+}
+
+@keyframes fadein {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 </style>
