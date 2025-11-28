@@ -176,34 +176,28 @@
         </div>
       </div>
     </section>
-
-    <!--  공통 스낵바 -->
-    <v-snackbar
-      v-model="snackbar"
-      :color="snackbarColor"
-      timeout="2500"
-      location="top center"
-      class="toast-snackbar"
-    >
-      {{ snackbarMessage }}
-    </v-snackbar>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, watch } from "vue";
 import api from "@/apis/http";
+import { useSnackbarStore } from "@/stores/useSnackbarStore";
 
-/** 업로드 타입은 일단 기본 CONTRACT 로 세팅 (백엔드 enum 맞추기 용) */
+/** 전역 스낵바 */
+const snackbar = useSnackbarStore();
+
+/** 업로드 타입 */
 const activeUploadType = ref("CONTRACT");
 
+/** 데이터 */
 const docs = ref([]);
 const loading = ref(false);
 
-/* 필터 상태 */
+/* 필터 */
 const searchKeyword = ref("");
-const selectedMime = ref("ALL"); // 문서 유형
-const uploaderFilter = ref("ALL"); // 'ALL' | 'MY'
+const selectedMime = ref("ALL");
+const uploaderFilter = ref("ALL");
 
 const mimeOptions = [
   { label: "모든 문서", value: "ALL" },
@@ -223,19 +217,7 @@ const isDragOver = ref(false);
 const uploading = ref(false);
 const fileInputRef = ref(null);
 
-/*  스낵바 상태 */
-const snackbar = ref(false);
-const snackbarMessage = ref("");
-const snackbarColor = ref("success");
-
-/*  스낵바 헬퍼 */
-const showSnackbar = (message, color = "error") => {
-  snackbarMessage.value = message;
-  snackbarColor.value = color;
-  snackbar.value = true;
-};
-
-/* 문서 조회: ALL / MY 에 따라 엔드포인트 변경 */
+/* 문서 조회 */
 const fetchDocs = async () => {
   loading.value = true;
   try {
@@ -249,7 +231,7 @@ const fetchDocs = async () => {
     docs.value = res.data.content ?? [];
   } catch (e) {
     docs.value = [];
-    showSnackbar("문서 목록 조회에 실패했습니다.", "error");
+    snackbar.show("문서 목록 조회 실패", "error");
   } finally {
     loading.value = false;
   }
@@ -257,14 +239,12 @@ const fetchDocs = async () => {
 
 onMounted(fetchDocs);
 
-/* 업로더 필터 바뀌면 다시 조회 */
-watch(uploaderFilter, () => {
-  fetchDocs();
-});
+watch(uploaderFilter, () => fetchDocs());
 
 /* MIME 카테고리 매칭 */
 const matchesMimeCategory = (mime, category) => {
   if (!mime || category === "ALL") return true;
+
   const m = mime.toLowerCase();
 
   switch (category) {
@@ -290,10 +270,9 @@ const matchesMimeCategory = (mime, category) => {
   }
 };
 
-/* 검색 + MIME 필터 적용된 목록 */
+/* 필터링 적용 */
 const filteredDocs = computed(() => {
   return docs.value.filter((d) => {
-    // 파일명 검색
     if (
       searchKeyword.value &&
       !d.originalName?.toLowerCase().includes(searchKeyword.value.toLowerCase())
@@ -301,7 +280,6 @@ const filteredDocs = computed(() => {
       return false;
     }
 
-    // MIME 필터
     if (!matchesMimeCategory(d.mimeType, selectedMime.value)) {
       return false;
     }
@@ -310,7 +288,7 @@ const filteredDocs = computed(() => {
   });
 });
 
-/* 업로드 input 열기 */
+/* 업로드 Input Open */
 const openFilePicker = () => {
   fileInputRef.value?.click();
 };
@@ -322,17 +300,13 @@ const onFileChange = (e) => {
   e.target.value = "";
 };
 
-const onDragOver = () => {
-  isDragOver.value = true;
-};
-const onDragLeave = () => {
-  isDragOver.value = false;
-};
+const onDragOver = () => (isDragOver.value = true);
+const onDragLeave = () => (isDragOver.value = false);
+
 const onDrop = (event) => {
   isDragOver.value = false;
   const file = event.dataTransfer?.files?.[0];
-  if (!file) return;
-  uploadFile(file);
+  if (file) uploadFile(file);
 };
 
 /* 파일 업로드 */
@@ -344,13 +318,12 @@ const uploadFile = async (file) => {
       originalName: file.name,
       mimeType: file.type,
       size: file.size,
-      // 타입 enum이 필수라면 일단 기본값만 사용
       type: activeUploadType.value,
     });
 
     const uploadUrl = data.uploadUrl;
     if (!uploadUrl) {
-      showSnackbar("업로드 URL 생성에 실패했습니다.", "error");
+      snackbar.show("업로드 URL 생성 실패", "error");
       return;
     }
 
@@ -363,26 +336,27 @@ const uploadFile = async (file) => {
     });
 
     await fetchDocs();
-    showSnackbar("파일이 업로드되었습니다.", "success");
+    snackbar.show("파일 업로드 완료", "success");
   } catch (e) {
-    showSnackbar("문서 업로드에 실패했습니다.", "error");
+    snackbar.show("문서 업로드 실패", "error");
   } finally {
     uploading.value = false;
   }
 };
 
-/* 파일 다운로드 */
+/* 다운로드 */
 const downloadFile = async (file) => {
   try {
     const { data } = await api.get(`/api/storages/${file.fileId}/download`);
     const url = data.downloadUrl;
     if (!url) {
-      showSnackbar("다운로드 URL을 가져오지 못했습니다.", "error");
+      snackbar.show("다운로드 URL 생성 실패", "error");
       return;
     }
+
     window.open(url, "_blank");
   } catch (e) {
-    showSnackbar("파일 다운로드에 실패했습니다.", "error");
+    snackbar.show("파일 다운로드 실패", "error");
   }
 };
 
@@ -394,20 +368,20 @@ const deleteFile = async (file) => {
   try {
     await api.delete(`/api/storages/${file.fileId}`);
     await fetchDocs();
-    showSnackbar("파일이 삭제되었습니다.", "success");
+    snackbar.show("파일 삭제 완료", "success");
   } catch (e) {
-    showSnackbar("파일 삭제에 실패했습니다.", "error");
+    snackbar.show("파일 삭제 실패", "error");
   }
 };
 
-/* 포맷 함수 */
+/* formatting 함수들 */
 const formatDate = (iso) => {
   if (!iso) return "-";
   return new Date(iso).toLocaleDateString("ko-KR");
 };
 
 const formatSize = (bytes) => {
-  if (bytes === null || bytes === undefined) return "-";
+  if (!bytes && bytes !== 0) return "-";
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
@@ -415,6 +389,7 @@ const formatSize = (bytes) => {
 
 const simplifyMime = (mime) => {
   if (!mime) return "-";
+
   const m = mime.toLowerCase();
   if (m.startsWith("image/")) return "IMAGE";
   if (m === "application/pdf") return "PDF";
@@ -433,6 +408,7 @@ const simplifyMime = (mime) => {
     return "문서";
   if (m === "application/zip" || m === "application/x-zip-compressed")
     return "ZIP";
+
   return mime;
 };
 </script>
@@ -512,7 +488,7 @@ const simplifyMime = (mime) => {
   align-items: center;
 }
 
-/* 필터 행 */
+/* 필터 row */
 .filter-row {
   display: flex;
   gap: 8px;
@@ -607,15 +583,5 @@ const simplifyMime = (mime) => {
   height: 28px;
   min-width: 28px;
   padding: 0;
-}
-
-/*  스낵바 스타일 */
-.toast-snackbar {
-  font-weight: 600;
-}
-
-.toast-snackbar .v-snackbar__wrapper {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  border-radius: 8px;
 }
 </style>

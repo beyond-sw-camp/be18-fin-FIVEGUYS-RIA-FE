@@ -43,7 +43,6 @@
           />
         </div>
 
-        <!-- 사용자 페이지랑 동일하게: 상단 구분선 -->
         <v-divider />
 
         <!-- 테이블 헤더 -->
@@ -73,7 +72,7 @@
                 color="error"
                 variant="outlined"
                 :disabled="!file.canDelete"
-                @click="deleteFile(file.fileId)"
+                @click="askDelete(file.fileId)"
               >
                 삭제
               </v-btn>
@@ -87,7 +86,7 @@
 
         <v-divider />
 
-        <!-- 페이지네이션 (스타일도 사용자 페이지와 동일) -->
+        <!-- 페이지네이션 -->
         <div class="table-footer">
           <v-btn
             variant="outlined"
@@ -113,12 +112,32 @@
         </div>
       </v-card>
     </section>
+
+    <!-- 삭제 확인 다이얼로그 -->
+    <v-dialog v-model="deleteDialog" max-width="400">
+      <v-card>
+        <v-card-title class="dialog-title">파일 삭제</v-card-title>
+
+        <v-card-text>
+          <p>정말 이 파일을 삭제하시겠습니까?</p>
+        </v-card-text>
+
+        <v-card-actions>
+          <v-spacer />
+          <v-btn variant="text" @click="closeDeleteDialog">취소</v-btn>
+          <v-btn color="error" @click="confirmDelete">삭제</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import api from "@/apis/http";
+import { useSnackbarStore } from "@/stores/useSnackbarStore";
+
+const snackbar = useSnackbarStore();
 
 // 검색 상태
 const searchKeyword = ref("");
@@ -126,7 +145,7 @@ const searchKeyword = ref("");
 // MIME 필터 상태
 const selectedMime = ref("ALL");
 
-// 🔹 사번 필터 상태
+// 사번 필터 상태
 const selectedEmployee = ref("ALL");
 
 // MIME 옵션
@@ -138,7 +157,7 @@ const mimeOptions = [
   { label: "ZIP", value: "ZIP" },
 ];
 
-// 🔹 사번 드롭다운 옵션
+// 사번 드롭다운 옵션
 const employeeOptions = ref([{ label: "모든 사번", value: "ALL" }]);
 
 // 데이터
@@ -148,29 +167,39 @@ const files = ref([]);
 const page = ref(1);
 const size = ref(10);
 
+// 삭제 다이얼로그 상태
+const deleteDialog = ref(false);
+const deleteTargetFileId = ref(null);
+
 // 파일 조회
 const fetchFiles = async () => {
-  const res = await api.get("/api/storages", {
-    params: { page: 0, size: 1000 },
-  });
-  const list = res.data.content ?? [];
-  files.value = list;
+  try {
+    const res = await api.get("/api/storages", {
+      params: { page: 0, size: 1000 },
+    });
+    const list = res.data.content ?? [];
+    files.value = list;
 
-  // 🔹 사번 옵션 채우기 (중복 제거)
-  const empSet = new Set();
-  list.forEach((f) => {
-    if (f.employeeNo) {
-      empSet.add(f.employeeNo);
-    }
-  });
+    // 사번 옵션 채우기 (중복 제거)
+    const empSet = new Set();
+    list.forEach((f) => {
+      if (f.employeeNo) {
+        empSet.add(f.employeeNo);
+      }
+    });
 
-  employeeOptions.value = [
-    { label: "모든 사번", value: "ALL" },
-    ...Array.from(empSet).map((empNo) => ({
-      label: String(empNo),
-      value: String(empNo),
-    })),
-  ];
+    employeeOptions.value = [
+      { label: "모든 사번", value: "ALL" },
+      ...Array.from(empSet).map((empNo) => ({
+        label: String(empNo),
+        value: String(empNo),
+      })),
+    ];
+  } catch (err) {
+    console.error("파일 목록 조회 실패:", err);
+    snackbar.show("파일 목록 조회에 실패했습니다.", "error");
+    files.value = [];
+  }
 };
 
 // MIME 카테고리 매칭
@@ -229,27 +258,57 @@ const filteredFiles = computed(() =>
   })
 );
 
+// 필터가 바뀌면 항상 1페이지로
+watch([searchKeyword, selectedMime, selectedEmployee], () => {
+  page.value = 1;
+});
+
 // 페이지네이션 계산
 const totalPages = computed(() =>
   Math.max(1, Math.ceil(filteredFiles.value.length / size.value))
 );
 
+// 현재 페이지 데이터
 const pagedData = computed(() => {
   const start = (page.value - 1) * size.value;
   return filteredFiles.value.slice(start, start + size.value);
 });
 
-// 삭제
-const deleteFile = async (fileId) => {
-  if (!confirm("정말 삭제하시겠습니까?")) return;
+// 페이지 범위 보정
+watch(
+  () => filteredFiles.value.length,
+  () => {
+    if (page.value > totalPages.value) {
+      page.value = totalPages.value;
+    }
+  }
+);
+
+// 삭제 다이얼로그 오픈
+const askDelete = (fileId) => {
+  deleteTargetFileId.value = fileId;
+  deleteDialog.value = true;
+};
+
+// 삭제 다이얼로그 닫기
+const closeDeleteDialog = () => {
+  deleteDialog.value = false;
+  deleteTargetFileId.value = null;
+};
+
+// 실제 삭제 실행
+const confirmDelete = async () => {
+  if (!deleteTargetFileId.value) return;
 
   try {
-    await api.delete(`/api/storages/${fileId}`);
-    alert("삭제되었습니다.");
-    fetchFiles();
+    await api.delete(`/api/storages/${deleteTargetFileId.value}`);
+    snackbar.show("파일이 삭제되었습니다.", "success");
+    await fetchFiles();
   } catch (err) {
-    console.error(err);
-    alert("삭제 실패");
+    console.error("파일 삭제 실패:", err);
+    snackbar.show("파일 삭제에 실패했습니다.", "error");
+  } finally {
+    closeDeleteDialog();
   }
 };
 
@@ -260,7 +319,7 @@ const formatDate = (iso) => {
 };
 
 const formatSize = (bytes) => {
-  if (!bytes) return "-";
+  if (!bytes && bytes !== 0) return "-";
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
@@ -270,7 +329,6 @@ onMounted(fetchFiles);
 </script>
 
 <style scoped>
-/* 페이지 뼈대 – 사용자 관리 페이지와 동일 */
 .danger-page {
   padding: 24px 40px 32px;
   background: #f5f5f5;
@@ -285,7 +343,7 @@ onMounted(fetchFiles);
 
 .danger-card {
   width: 100%;
-  max-width: 960px; /* users-card랑 동일 */
+  max-width: 960px;
   border-radius: 16px;
   background-color: #ffffff;
   border: 1px solid #e5e5e5;
@@ -314,7 +372,7 @@ onMounted(fetchFiles);
   flex: 0 0 160px;
 }
 
-/* 테이블 헤더/바디 – users 페이지와 동일 스타일 */
+/* 테이블 헤더/바디 */
 .table-header-row {
   display: grid;
   grid-template-columns: 2fr 1.2fr 1fr 1fr 1.2fr 0.8fr;
@@ -322,9 +380,6 @@ onMounted(fetchFiles);
   font-size: 13px;
   font-weight: 600;
   color: #777;
-}
-
-.table-body {
 }
 
 .table-row {
@@ -352,7 +407,7 @@ onMounted(fetchFiles);
   color: #888;
 }
 
-/* 페이지네이션 – users 페이지와 동일 */
+/* 페이지네이션 */
 .table-footer {
   display: flex;
   justify-content: center;
@@ -368,5 +423,10 @@ onMounted(fetchFiles);
 .page-info {
   font-size: 13px;
   color: #555;
+}
+
+/* 다이얼로그 제목 */
+.dialog-title {
+  font-weight: 600;
 }
 </style>

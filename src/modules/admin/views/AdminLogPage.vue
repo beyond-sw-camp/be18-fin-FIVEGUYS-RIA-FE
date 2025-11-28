@@ -2,7 +2,7 @@
   <div class="admin-log-page">
     <section class="logs-section">
       <v-card class="logs-card" elevation="0">
-        <!-- 🔷 필터 영역 -->
+        <!-- 필터 영역 -->
         <div class="filter-section">
           <h2 class="section-title">로그 필터</h2>
 
@@ -81,7 +81,7 @@
 
         <v-divider class="mt-4 mb-2" />
 
-        <!-- 🔷 활동 로그 -->
+        <!-- 활동 로그 -->
         <div class="logs-section-body">
           <div class="logs-header">
             <div class="logs-title-group">
@@ -212,6 +212,10 @@
 <script setup>
 import { ref, computed, onMounted, watch } from "vue";
 import api from "@/apis/http";
+import { useSnackbarStore } from "@/stores/useSnackbarStore";
+
+/* 🔔 전역 스낵바 스토어 */
+const snackbar = useSnackbarStore();
 
 /* ---------- 필터 상태 ---------- */
 const startDate = ref("");
@@ -261,7 +265,6 @@ const formatDateTime = (iso) => {
 const formatResource = (resource) => resource?.replace(/\s+/g, " ") ?? "-";
 
 /* ---------- API 호출 ---------- */
-// ✔ 인터셉터가 자동으로 JWT 붙여줌 → headers 필요 없음
 const fetchLogs = async () => {
   try {
     const res = await api.get("/api/admin/logs", {
@@ -272,6 +275,7 @@ const fetchLogs = async () => {
   } catch (err) {
     console.error("로그 조회 실패:", err);
     logs.value = [];
+    snackbar.show("로그 목록 조회에 실패했습니다.", "error");
   }
 };
 
@@ -291,6 +295,7 @@ const fetchUsersForFilter = async () => {
     ];
   } catch (err) {
     console.error("필터용 사용자 목록 조회 실패:", err);
+    snackbar.show("필터용 사용자 목록 조회에 실패했습니다.", "error");
   }
 };
 
@@ -310,6 +315,15 @@ const filteredLogs = computed(() =>
       String(empNo) !== String(selectedUser.value)
     )
       return false;
+
+    // 작업 유형 필터 (selectedAction이 실제로 들어오면 적용)
+    if (
+      selectedAction.value !== "ALL" &&
+      log.logName &&
+      !log.logName.includes(selectedAction.value)
+    ) {
+      return false;
+    }
 
     // 키워드 필터
     const kw = keyword.value.trim();
@@ -468,15 +482,15 @@ onMounted(async () => {
   grid-template-columns: 1.6fr 1.1fr 0.8fr 1.6fr 2.4fr 0.8fr;
   padding: 10px 8px;
   font-size: 14px;
-  align-items: flex-start; /* ← 행 안의 셀들을 위로 정렬 */
+  align-items: flex-start;
 }
 
-/* 모든 셀 공통: 위쪽 정렬 + 기본 줄 간격 */
+/* 모든 셀 공통 */
 .th,
 .td {
   padding: 4px 8px;
   display: flex;
-  align-items: flex-start; /* ← 가운데(X), 위쪽(O) */
+  align-items: flex-start;
   line-height: 1.4;
   white-space: nowrap;
   overflow: hidden;
@@ -495,30 +509,16 @@ onMounted(async () => {
   color: #777;
 }
 
-/* 상태 칼럼 – 위에서 이미 flex라서 따로 안 해도 됨 */
-.th-status,
-.td.th-status {
-  /* 이 부분은 지워도 됨. 남겨두고 싶으면 아래만 두기 */
-  align-items: center;
-}
-
-/* 작업명 셀: 행 안에서 세로 가운데 정렬 */
-.td.th-action {
-  /* display:flex, align-items:center는 위에서 이미 공통으로 들어감 */
-}
-
-/* 작업명 셀만 살짝 아래로 내리기 */
 /* 작업명 셀: 여러 줄 허용 + 전체 보이기 */
 .td.th-action {
-  white-space: normal; /* 줄바꿈 허용 */
-  overflow: visible; /* 잘라내지 말고 다 보여줘 */
-  text-overflow: unset; /* … 없애기 */
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
 }
 
-/* 작업명 텍스트: camelCase도 줄바꿈 되도록 */
 .td.th-action .action-text {
   white-space: normal;
-  word-break: break-all; /* AdminUserController.changeUserRole 같은 것도 줄바꿈 */
+  word-break: break-all;
 }
 
 /* 빈 데이터 */

@@ -55,6 +55,10 @@
                 :items="roleOptions"
                 item-title="label"
                 item-value="value"
+                density="compact"
+                variant="outlined"
+                hide-details
+                class="role-select"
                 @update:model-value="(val) => changeUserRole(user, val)"
               />
             </span>
@@ -99,6 +103,10 @@
 <script setup>
 import { ref, computed, onMounted, watch } from "vue";
 import api from "@/apis/http";
+import { useSnackbarStore } from "@/stores/useSnackbarStore";
+
+/* 전역 스낵바 스토어 */
+const snackbar = useSnackbarStore();
 
 /* ---------------------------
  * 상태 / 상수
@@ -127,13 +135,12 @@ const pageSize = 10;
 /* ---------------------------
  * API 호출
  * ------------------------- */
-// 모든 사용자 한 번에 많이 가져오기 (백엔드 페이지네이션 무시)
 const fetchUsers = async () => {
   try {
     const res = await api.get("/api/admin/users", {
       params: {
-        page: 0, // 첫 페이지
-        size: 1000, // 충분히 크게 (유저 수보다 크도록)
+        page: 0,
+        size: 1000,
       },
     });
 
@@ -141,6 +148,7 @@ const fetchUsers = async () => {
     users.value = Array.isArray(data.content) ? data.content : [];
   } catch (error) {
     console.error("사용자 목록 조회 실패:", error);
+    snackbar.show("사용자 목록 조회에 실패했습니다.", "error");
     users.value = [];
   }
 };
@@ -149,15 +157,19 @@ const fetchUsers = async () => {
  * 권한 변경
  * ------------------------- */
 const changeUserRole = async (user, newRoleId) => {
+  const previousRoleId = user.roleId;
+
   try {
     await api.patch(`/api/admin/users/${user.id}/changes`, {
       roleId: newRoleId,
     });
-    alert("권한이 변경되었습니다.");
-    await fetchUsers(); // 목록 새로고침
+    snackbar.show("권한이 변경되었습니다.", "success");
+    await fetchUsers();
   } catch (e) {
     console.error("권한 변경 실패:", e);
-    alert("권한 변경 중 오류가 발생했습니다.");
+    // 실패 시 롤백
+    user.roleId = previousRoleId;
+    snackbar.show("권한 변경 중 오류가 발생했습니다.", "error");
   }
 };
 
@@ -193,6 +205,16 @@ const pagedUsers = computed(() => {
 watch([searchText, selectedRoleFilter], () => {
   page.value = 1;
 });
+
+// 필터 결과가 줄어들었을 때 페이지 보정
+watch(
+  () => filteredUsers.value.length,
+  () => {
+    if (page.value > totalPages.value) {
+      page.value = totalPages.value;
+    }
+  }
+);
 
 onMounted(() => {
   fetchUsers();
@@ -293,7 +315,7 @@ onMounted(() => {
 }
 
 .role-select :deep(.v-field) {
-  min-height: 32px;
+  min-height: 36px;
 }
 
 .table-empty {

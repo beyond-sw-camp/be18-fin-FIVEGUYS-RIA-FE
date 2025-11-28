@@ -230,6 +230,9 @@
 <script setup>
 import { ref, computed, onMounted, watch } from "vue";
 import api from "@/apis/http";
+import { useSnackbarStore } from "@/stores/useSnackbarStore";
+
+const snackbar = useSnackbarStore();
 
 /* 필터 상태 */
 const searchText = ref("");
@@ -293,7 +296,7 @@ const pageSize = 10;
 const fetchUsers = async () => {
   try {
     const res = await api.get("/api/admin/users", {
-      params: { page: 0, size: 1000 }, // 충분히 큰 숫자로 전체 조회
+      params: { page: 0, size: 1000 },
     });
 
     const data = res.data;
@@ -301,6 +304,7 @@ const fetchUsers = async () => {
   } catch (e) {
     console.error("사용자 목록 조회 실패:", e);
     users.value = [];
+    snackbar.show("사용자 목록 조회에 실패했습니다.", "error");
   }
 };
 
@@ -368,6 +372,10 @@ const confirmDeleteUser = async () => {
   try {
     await api.delete(`/api/admin/users/${deleteTargetUser.value.id}`);
     await fetchUsers();
+    snackbar.show("사용자를 삭제했습니다.", "success");
+  } catch (e) {
+    console.error("사용자 삭제 실패:", e);
+    snackbar.show("사용자 삭제에 실패했습니다.", "error");
   } finally {
     closeDeleteDialog();
   }
@@ -395,13 +403,23 @@ const closeDialog = () => {
 
 const createUser = async () => {
   try {
+    // 간단한 필수값 체크
+    if (!form.value.employeeNo || !form.value.name || !form.value.password) {
+      snackbar.show("사번 / 이름 / 비밀번호는 필수입니다.", "error");
+      return;
+    }
+
     saving.value = true;
     await api.post("/api/admin/create", {
       ...form.value,
       roleId: Number(form.value.roleId),
     });
     await fetchUsers();
+    snackbar.show("사용자를 추가했습니다.", "success");
     closeDialog();
+  } catch (e) {
+    console.error("사용자 생성 실패:", e);
+    snackbar.show("사용자 생성에 실패했습니다.", "error");
   } finally {
     saving.value = false;
   }
