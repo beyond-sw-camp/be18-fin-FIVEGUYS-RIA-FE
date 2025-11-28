@@ -20,9 +20,15 @@
 
     <!-- 오른쪽 전체 영역 -->
     <main class="admin-main">
-      <!-- 상단 현재 페이지 이름 -->
+      <!-- 상단 현재 페이지 이름 + 로그아웃 아이콘 -->
       <header class="admin-header">
         <h1>{{ route.meta.title ?? "관리자 페이지" }}</h1>
+
+        <div class="admin-header-actions">
+          <v-btn icon variant="text" elevation="0" @click="logoutHandler">
+            <v-icon>mdi-logout</v-icon>
+          </v-btn>
+        </div>
       </header>
 
       <!-- 실제 페이지 들어가는 곳 -->
@@ -38,37 +44,51 @@
 </template>
 
 <script setup>
-import { useRoute } from "vue-router";
-// Vuetify 전역 등록돼 있으니 v-icon 바로 사용 가능
+import { useRoute, useRouter } from "vue-router";
+import { useAuthStore } from "@/stores/auth";
+import { logout as logoutApi } from "@/apis/auth";
 
 const route = useRoute();
+const router = useRouter();
+const authStore = useAuthStore();
 
 const menuItems = [
   {
     name: "AdminUsers",
     label: "사용자 관리",
     to: "/admin/users",
-    icon: "mdi-account", // 사람 아이콘
+    icon: "mdi-account",
   },
   {
     name: "AdminRoles",
     label: "권한 설정",
     to: "/admin/roles",
-    icon: "mdi-shield-check", // 방패 + 체크
+    icon: "mdi-shield-check",
   },
   {
     name: "AdminLogs",
     label: "로그 관리",
     to: "/admin/logs",
-    icon: "mdi-notebook-edit", // 노트 + 펜
+    icon: "mdi-notebook-edit",
   },
   {
     name: "AdminDanger",
     label: "삭제 페이지",
     to: "/admin/danger",
-    icon: "mdi-cog", // 톱니바퀴
+    icon: "mdi-cog",
   },
 ];
+
+const logoutHandler = async () => {
+  try {
+    await logoutApi(); // 서버 로그아웃 호출
+  } catch (e) {
+    console.error(e);
+  } finally {
+    authStore.forceLogout(); // 토큰/상태 초기화
+    router.push("/login"); // 로그인으로 이동
+  }
+};
 </script>
 
 <style scoped>
@@ -142,10 +162,21 @@ const menuItems = [
   flex-direction: column;
 }
 
+/* 상단 헤더 */
 .admin-header {
   padding: 24px 32px 8px;
   background: white;
   border-bottom: 1px solid #e2e2e2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* 헤더 오른쪽 액션 영역 */
+.admin-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .admin-content {
