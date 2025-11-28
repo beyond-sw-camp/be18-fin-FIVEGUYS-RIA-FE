@@ -1,9 +1,8 @@
 <template>
   <div class="admin-role-page">
-    <!-- 중앙 카드 영역 -->
     <section class="users-section">
       <v-card class="users-card" elevation="0">
-        <!-- 카드 상단: 제목 + 검색/필터 -->
+        <!-- 카드 상단 -->
         <div class="users-card-header">
           <h2 class="users-card-title">사용자 목록</h2>
 
@@ -49,18 +48,39 @@
             <span class="td th-name">{{ user.name }}</span>
             <span class="td th-email">{{ user.email }}</span>
 
+            <!-- 권한 칩 + 드롭다운 -->
             <span class="td th-role">
-              <v-select
-                v-model="user.roleId"
-                :items="roleOptions"
-                item-title="label"
-                item-value="value"
-                density="compact"
-                variant="outlined"
-                hide-details
-                class="role-select"
-                @update:model-value="(val) => changeUserRole(user, val)"
-              />
+              <v-menu>
+                <template #activator="{ props }">
+                  <v-chip
+                    v-bind="props"
+                    class="role-chip clickable-chip"
+                    :color="getRoleColor(user.roleId)"
+                    size="small"
+                    variant="flat"
+                  >
+                    {{ getRoleLabel(user.roleId) }}
+                    <v-icon end small>mdi-chevron-down</v-icon>
+                  </v-chip>
+                </template>
+
+                <v-list>
+                  <v-list-item
+                    v-for="role in roleOptions"
+                    :key="role.value"
+                    @click="changeUserRole(user, role.value)"
+                  >
+                    <v-chip
+                      :color="role.color"
+                      size="small"
+                      class="role-chip"
+                      variant="flat"
+                    >
+                      {{ role.label }}
+                    </v-chip>
+                  </v-list-item>
+                </v-list>
+              </v-menu>
             </span>
           </div>
 
@@ -105,7 +125,6 @@ import { ref, computed, onMounted, watch } from "vue";
 import api from "@/apis/http";
 import { useSnackbarStore } from "@/stores/useSnackbarStore";
 
-/* 전역 스낵바 스토어 */
 const snackbar = useSnackbarStore();
 
 /* ---------------------------
@@ -116,18 +135,24 @@ const selectedRoleFilter = ref("ALL");
 
 const roleFilterOptions = [
   { label: "모든 역할", value: "ALL" },
-  { label: "관리자", value: 1 }, // ROLE_ADMIN
-  { label: "팀장", value: 2 }, // ROLE_SALES_LEAD
-  { label: "팀원", value: 3 }, // ROLE_SALES_MEMBER
-];
-
-const roleOptions = [
   { label: "관리자", value: 1 },
   { label: "팀장", value: 2 },
   { label: "팀원", value: 3 },
 ];
 
-// 사용자 목록 & 페이지네이션(프론트)
+// 칩 색상 포함 옵션
+const roleOptions = [
+  { label: "관리자", value: 1, color: "red" },
+  { label: "팀장", value: 2, color: "blue" },
+  { label: "팀원", value: 3, color: "green" },
+];
+
+const getRoleLabel = (roleId) =>
+  roleOptions.find((r) => r.value === roleId)?.label || "알수없음";
+
+const getRoleColor = (roleId) =>
+  roleOptions.find((r) => r.value === roleId)?.color || "green";
+
 const users = ref([]);
 const page = ref(1);
 const pageSize = 10;
@@ -138,18 +163,13 @@ const pageSize = 10;
 const fetchUsers = async () => {
   try {
     const res = await api.get("/api/admin/users", {
-      params: {
-        page: 0,
-        size: 1000,
-      },
+      params: { page: 0, size: 1000 },
     });
 
-    const data = res.data;
-    users.value = Array.isArray(data.content) ? data.content : [];
+    users.value = Array.isArray(res.data.content) ? res.data.content : [];
   } catch (error) {
     console.error("사용자 목록 조회 실패:", error);
     snackbar.show("사용자 목록 조회에 실패했습니다.", "error");
-    users.value = [];
   }
 };
 
@@ -157,7 +177,7 @@ const fetchUsers = async () => {
  * 권한 변경
  * ------------------------- */
 const changeUserRole = async (user, newRoleId) => {
-  const previousRoleId = user.roleId;
+  const prev = user.roleId;
 
   try {
     await api.patch(`/api/admin/users/${user.id}/changes`, {
@@ -165,23 +185,21 @@ const changeUserRole = async (user, newRoleId) => {
     });
     snackbar.show("권한이 변경되었습니다.", "success");
     await fetchUsers();
-  } catch (e) {
-    console.error("권한 변경 실패:", e);
-    // 실패 시 롤백
-    user.roleId = previousRoleId;
-    snackbar.show("권한 변경 중 오류가 발생했습니다.", "error");
+  } catch (err) {
+    console.error("권한 변경 실패:", err);
+    user.roleId = prev; // 롤백
+    snackbar.show("권한 변경 실패", "error");
   }
 };
 
 /* ---------------------------
- * 필터 + 프론트 페이지네이션
+ * 필터 / 페이지네이션
  * ------------------------- */
 const filteredUsers = computed(() => {
   return users.value.filter((user) => {
-    const matchSearch =
-      !searchText.value ||
-      user.name?.includes(searchText.value) ||
-      user.email?.includes(searchText.value);
+    const s = searchText.value;
+
+    const matchSearch = !s || user.name?.includes(s) || user.email?.includes(s);
 
     const matchRole =
       selectedRoleFilter.value === "ALL" ||
@@ -191,56 +209,37 @@ const filteredUsers = computed(() => {
   });
 });
 
-const totalPages = computed(() => {
-  const len = filteredUsers.value.length;
-  return len === 0 ? 1 : Math.ceil(len / pageSize);
-});
+const totalPages = computed(() =>
+  filteredUsers.value.length === 0
+    ? 1
+    : Math.ceil(filteredUsers.value.length / pageSize)
+);
 
 const pagedUsers = computed(() => {
   const start = (page.value - 1) * pageSize;
   return filteredUsers.value.slice(start, start + pageSize);
 });
 
-// 검색어나 필터가 바뀌면 1페이지로 리셋
 watch([searchText, selectedRoleFilter], () => {
   page.value = 1;
 });
 
-// 필터 결과가 줄어들었을 때 페이지 보정
 watch(
   () => filteredUsers.value.length,
   () => {
-    if (page.value > totalPages.value) {
-      page.value = totalPages.value;
-    }
+    if (page.value > totalPages.value) page.value = totalPages.value;
   }
 );
 
-onMounted(() => {
-  fetchUsers();
-});
+onMounted(fetchUsers);
 </script>
 
 <style scoped>
 .admin-role-page {
   padding: 24px 40px 32px;
   background-color: #f5f5f5;
-  min-height: 100%;
-  box-sizing: border-box;
 }
 
-/* 상단 타이틀 */
-.page-header {
-  margin-bottom: 24px;
-}
-
-.page-title {
-  font-size: 24px;
-  font-weight: 700;
-  color: #222;
-}
-
-/* 중앙 카드 정렬 */
 .users-section {
   display: flex;
   justify-content: center;
@@ -248,19 +247,17 @@ onMounted(() => {
 
 .users-card {
   width: 100%;
-  max-width: 800px;
+  max-width: 900px;
   border-radius: 16px;
-  background-color: #ffffff;
+  background: white;
   border: 1px solid #e5e5e5;
-  padding: 20px 24px 12px;
+  padding: 20px 24px;
 }
 
-/* 카드 헤더 */
 .users-card-header {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  margin-bottom: 8px;
 }
 
 .users-card-title {
@@ -269,44 +266,25 @@ onMounted(() => {
   color: #333;
 }
 
-/* 검색 / 필터 */
 .users-toolbar {
   display: flex;
-  align-items: center;
   gap: 8px;
-  white-space: nowrap;
 }
 
 .toolbar-search {
   flex: 1 1 auto;
-  min-width: 260px;
 }
 
 .toolbar-select {
   flex: 0 0 150px;
 }
 
-/* 테이블 레이아웃 */
-.table-header-row {
-  display: grid;
-  grid-template-columns: 1.2fr 2fr 1.2fr;
-  padding: 10px 4px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #777;
-}
-
-.table-body {
-  display: flex;
-  flex-direction: column;
-}
-
+.table-header-row,
 .table-row {
   display: grid;
   grid-template-columns: 1.2fr 2fr 1.2fr;
-  padding: 10px 4px;
-  font-size: 14px;
   align-items: center;
+  padding: 10px 4px;
 }
 
 .th,
@@ -314,8 +292,9 @@ onMounted(() => {
   padding: 0 8px;
 }
 
-.role-select :deep(.v-field) {
-  min-height: 36px;
+.table-body {
+  display: flex;
+  flex-direction: column;
 }
 
 .table-empty {
@@ -325,12 +304,27 @@ onMounted(() => {
   font-size: 14px;
 }
 
+/* 권한 칩 */
+.role-chip {
+  color: white !important;
+  font-weight: 600;
+  padding: 4px 12px;
+}
+
+.clickable-chip {
+  cursor: pointer;
+  transition: 0.15s ease;
+}
+
+.clickable-chip:hover {
+  opacity: 0.9;
+}
+
 /* 하단 페이지네이션 */
 .table-footer {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  padding: 12px 0 4px;
+  padding-top: 12px;
 }
 
 .footer-btn {
