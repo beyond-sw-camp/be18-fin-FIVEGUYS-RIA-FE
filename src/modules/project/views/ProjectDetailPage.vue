@@ -1,6 +1,7 @@
 <template>
   <v-container fluid class="detail-container">
-    <v-snackbar v-model="snackbar" :color="snackbarColor" timeout="2500">
+    <!-- 스낵바 -->
+    <v-snackbar v-model="snackbar" :color="snackbarColor" timeout="2500" location="top center" class="toast-snackbar">
       {{ snackbarMessage }}
     </v-snackbar>
 
@@ -20,7 +21,7 @@
         <div class="pipeline-full">
           <template v-for="(step, i) in project.pipeline" :key="i">
             <div class="pipeline-step" :class="step.completed ? 'completed' : 'pending'"
-              @click="changePipelineStage(i + 1)">
+              @click="openPipelineConfirm(i + 1)">
               {{ step.name }}
             </div>
             <div v-if="i < project.pipeline.length - 1" class="pipeline-line"
@@ -277,6 +278,28 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <!-- 파이프라인 변경 확인 모달 -->
+    <v-dialog v-model="pipelineConfirmDialog" width="400">
+      <v-card class="pa-4">
+        <div class="dialog-title mb-3">진행 상태 변경</div>
+        <div class="mb-4">
+          진행 상태를
+          <strong>
+            {{ targetStageName }}
+          </strong>
+          단계로 변경하시겠습니까?
+        </div>
+        <v-card-actions class="justify-end">
+          <v-btn variant="text" color="grey darken-1" @click="pipelineConfirmDialog = false">
+            아니오
+          </v-btn>
+          <v-btn color="orange darken-2" class="white--text" @click="confirmChangePipelineStage">
+            예
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
@@ -287,11 +310,11 @@ import {
   getProjectDetail,
   updateProject,
   updateProjectManager,
-  deleteProject,
+  deleteProject
 } from '@/apis/project'
 import {
   getSimpleClientCompanies,
-  getSimpleClientsByCompany,
+  getSimpleClientsByCompany
 } from '@/apis/client'
 import { getUserList } from '@/apis/user'
 import { updatePipelineStage } from '@/apis/pipeline'
@@ -315,12 +338,12 @@ const project = reactive({
   statusCode: '',
   progress: 0,
   pipeline: [],
-  pipelineId: null,
+  pipelineId: null
 })
 
 const snackbar = ref(false)
 const snackbarMessage = ref('')
-const snackbarColor = ref('red')
+const snackbarColor = ref('error')
 
 const showError = (err, fallbackMessage = '요청 처리 중 오류가 발생했습니다.') => {
   const msg =
@@ -329,18 +352,49 @@ const showError = (err, fallbackMessage = '요청 처리 중 오류가 발생했
     fallbackMessage
 
   snackbarMessage.value = msg
-  snackbarColor.value = 'red'
+  snackbarColor.value = 'error'
   snackbar.value = true
 }
 
-const changePipelineStage = async (targetStageNo) => {
+const showSuccess = (msg = '저장이 완료되었습니다.') => {
+  snackbarMessage.value = msg
+  snackbarColor.value = 'success'
+  snackbar.value = true
+}
+
+/* 파이프라인 변경 확인용 상태 */
+const pipelineConfirmDialog = ref(false)
+const targetStageNo = ref(null)
+
+const openPipelineConfirm = (stageNo) => {
+  targetStageNo.value = stageNo
+  pipelineConfirmDialog.value = true
+}
+
+const confirmChangePipelineStage = async () => {
+  if (!targetStageNo.value) {
+    pipelineConfirmDialog.value = false
+    return
+  }
+  await changePipelineStage(targetStageNo.value)
+  pipelineConfirmDialog.value = false
+  targetStageNo.value = null
+}
+
+const targetStageName = computed(() => {
+  if (!targetStageNo.value || !project.pipeline.length) return ''
+  const idx = targetStageNo.value - 1
+  return project.pipeline[idx]?.name || ''
+})
+
+const changePipelineStage = async (targetStageNoParam) => {
   try {
     if (!project.pipelineId) {
       showError(null, '파이프라인 ID를 찾을 수 없습니다.')
       return
     }
 
-    await updatePipelineStage(project.pipelineId, { targetStageNo })
+    await updatePipelineStage(project.pipelineId, { targetStageNo: targetStageNoParam })
 
     const res = await getProjectDetail(project.id)
     applyDetailDto(res.data)
@@ -365,14 +419,8 @@ const form = reactive({
   expectedRevenue: null,
   expectedMarginRate: null,
   expectedProfit: null,
-  description: '',
+  description: ''
 })
-
-const showSuccess = (msg = '저장이 완료되었습니다.') => {
-  snackbarMessage.value = msg
-  snackbarColor.value = 'green'
-  snackbar.value = true
-}
 
 const clientTypeFilter = ref('ALL')
 const clientPage = ref(1)
@@ -443,7 +491,7 @@ const applyDetailDto = (dto) => {
   project.progress = dto.pipelineInfo?.progressRate ?? 0
   project.pipeline = (dto.stageList || []).map((s) => ({
     name: s.stageName,
-    completed: s.completed === true,
+    completed: s.completed === true
   }))
   project.pipelineId = dto.pipelineInfo?.pipelineId ?? null
 
@@ -470,14 +518,14 @@ const applyDetailDto = (dto) => {
     description: `[${dto.clientCompanyName}] / [${p.writerName}]`,
     meta: p.requestDate ? `요청일 : ${p.requestDate}` : '',
     amount: dto.expectedRevenue || null,
-    date: p.submitDate || p.requestDate || '',
+    date: p.submitDate || p.requestDate || ''
   }))
 }
 
 const loadClients = async () => {
   const params = {
     page: clientPage.value,
-    size: clientPageSize.value,
+    size: clientPageSize.value
   }
 
   if (clientTypeFilter.value !== 'ALL') {
@@ -494,7 +542,7 @@ const loadClients = async () => {
 }
 
 const filteredClients = computed(() =>
-  clientList.value.filter((c) => c.name.includes(clientSearch.value)),
+  clientList.value.filter((c) => c.name.includes(clientSearch.value))
 )
 
 watch(clientDialog, (open) => {
@@ -553,9 +601,7 @@ watch(managerDialog, async (open) => {
 })
 
 const filteredManagers = computed(() =>
-  managerList.value.filter((m) =>
-    m.name.includes(managerSearch.value),
-  ),
+  managerList.value.filter((m) => m.name.includes(managerSearch.value))
 )
 
 const selectClient = (item) => {
@@ -582,9 +628,7 @@ const selectManager = (item) => {
 const confirmManagerSelect = async () => {
   if (!selectedManagerId.value) return
 
-  const selected = managerList.value.find(
-    (m) => m.userId === selectedManagerId.value,
-  )
+  const selected = managerList.value.find((m) => m.userId === selectedManagerId.value)
   if (!selected) return
 
   try {
@@ -653,7 +697,7 @@ const saveProject = async () => {
     expectedRevenue: form.expectedRevenue,
     expectedMarginRate: form.expectedMarginRate,
     startDay: toLocalDateString(form.startDate),
-    endDay: toLocalDateString(form.endDate),
+    endDay: toLocalDateString(form.endDate)
   }
 
   try {
@@ -753,7 +797,6 @@ onMounted(async () => {
   align-items: center;
 }
 
-/* textarea + resize none */
 .textarea-field :deep(.v-field) {
   min-height: 80px !important;
 }
@@ -874,7 +917,6 @@ onMounted(async () => {
   display: flex;
 }
 
-/* 왼쪽 타임라인 + 아이콘 */
 .history-left {
   position: relative;
   width: 32px;
@@ -910,7 +952,6 @@ onMounted(async () => {
   background-color: #eef3ff;
 }
 
-/* 중앙 내용 */
 .history-main {
   flex: 1;
   margin-left: 10px;
@@ -976,5 +1017,19 @@ onMounted(async () => {
 
 .selected-item {
   background-color: #ffe0b2 !important;
+}
+
+/* 스낵바 디자인 */
+.toast-snackbar {
+  font-weight: 600;
+}
+
+:deep(.toast-snackbar .v-snackbar__wrapper) {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+}
+
+:deep(.toast-snackbar .v-snackbar__content) {
+  font-size: 0.85rem;
 }
 </style>
