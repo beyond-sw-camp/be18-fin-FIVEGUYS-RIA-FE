@@ -13,8 +13,14 @@ permissions:
   id-token: write
   contents: read
 
+env:
+  # 고정값이면 그대로 넣어도 된다
+  S3_BUCKET: ria-frontend-prod
+  # us-east-1 말고 S3/배포 리전으로 맞춰라 (지금은 서울)
+  AWS_REGION: ap-northeast-2
+
 jobs:
-  # PR / push 공통 빌드
+  # 1) PR / push 공통 빌드
   build:
     runs-on: ubuntu-latest
 
@@ -41,8 +47,15 @@ jobs:
       - name: Build
         run: npm run build
 
-  # develop 브랜치로 push 될 때만 Docker 빌드 + ECR 푸시
-  push-image-develop:
+      # dist 결과를 다음 job에서 쓰기 위해 아티팩트로 저장
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: fe-dist
+          path: dist
+
+  # 2) develop 브랜치 push 시에만 S3 배포 + CloudFront 캐시 무효화
+  deploy-to-s3:
     needs: build
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
@@ -51,23 +64,48 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: fe-dist
+          path: dist
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: ${{ env.AWS_REGION }}
           role-session-name: github-actions-ria-fe
 
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Build and Push Docker image (develop FE)
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: ria-fe
-          IMAGE_TAG: latest
+      # 배포 버전 문자열 생성 (YYYYMMDD-HHMMSS-SHA7)
+      - name: Set deploy version
+        id: version
         run: |
-          docker build \
-            -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          DATE=$(date +'%Y%m%d-%H%M%S')
+          SHA_SHORT=${GITHUB_SHA::7}
+          echo "VERSION=${DATE}-${SHA_SHORT}" >> $GITHUB_OUTPUT
+
+      # 2-1) 과거 버전 보관용 경로에 업로드 (버전 폴더)
+      - name: Upload build to versioned path
+        run: |
+          VERSION=${{ steps.version.outputs.VERSION }}
+          aws s3 sync dist "s3://${S3_BUCKET}/releases/${VERSION}" --delete
+
+      # 2-2) 실제 서비스용 루트에 배포 (현재 버전)
+      - name: Upload build to root (current)
+        run: |
+          aws s3 sync dist "s3://${S3_BUCKET}/" --delete
+
+      # 2-3) 마지막 배포 버전 메타데이터 기록 (선택사항)
+      - name: Save latest version metadata
+        run: |
+          VERSION=${{ steps.version.outputs.VERSION }}
+          echo "${VERSION}" > latest.txt
+          aws s3 cp latest.txt "s3://${S3_BUCKET}/deployments/latest.txt"
+
+      # 2-4) CloudFront 캐시 무효화
+      - name: Invalidate CloudFront cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
+            --paths "/*"
