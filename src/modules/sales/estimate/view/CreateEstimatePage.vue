@@ -44,6 +44,7 @@
         <!-- 제안 -->
         <v-col cols="12" md="6">
           <div class="input-label">제안</div>
+
           <v-select
             :items="proposalOptions"
             v-model="form.proposalId"
@@ -54,6 +55,13 @@
             hide-details
             class="input-field"
             clearable
+            :no-data-text="
+              !form.projectId
+                ? '프로젝트를 먼저 선택하세요'
+                : proposalOptions.length === 0
+                ? '연결할 수 있는 제안이 없습니다'
+                : ''
+            "
             @update:modelValue="onProposalChange"
           />
         </v-col>
@@ -312,6 +320,18 @@
             <v-text-field v-model.number="sp.discountAmount" type="number" />
           </v-col>
         </v-row>
+
+        <!-- 공간 설명 (추가) -->
+        <v-col cols="12">
+          <div class="input-label">공간 설명</div>
+          <v-textarea
+            :model-value="sp.description"
+            readonly
+            variant="outlined"
+            hide-details
+            class="textarea-field"
+          />
+        </v-col>
 
         <v-btn
           color="red"

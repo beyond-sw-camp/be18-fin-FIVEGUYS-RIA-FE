@@ -1,13 +1,11 @@
 <template>
   <v-container fluid class="pa-0 full-height main-container">
     <v-row no-gutters class="full-height">
-
       <!-- =======================
-           좌측 사이드바
+          좌측 사이드바
       ======================== -->
       <v-col cols="12" md="2" class="pa-4 sidebar">
         <v-card class="sidebar-card pa-6" flat>
-
           <!-- 검색 -->
           <v-text-field
             v-model="search"
@@ -28,7 +26,7 @@
               elevation="1"
             >
               <v-icon :color="showFavoritesOnly ? '#FFD60A' : '#8e8e93'">
-                {{ showFavoritesOnly ? 'mdi-star' : 'mdi-star-outline' }}
+                {{ showFavoritesOnly ? "mdi-star" : "mdi-star-outline" }}
               </v-icon>
             </v-btn>
           </div>
@@ -50,10 +48,9 @@
       </v-col>
 
       <!-- =======================
-           메인 컨텐츠
+          메인 컨텐츠
       ======================== -->
       <v-col cols="12" md="10" class="pa-6 main-content">
-
         <div class="d-flex justify-end mb-4">
           <v-btn
             color="#ff9500"
@@ -70,7 +67,7 @@
         <v-row dense>
           <v-col
             v-for="estimate in filteredEstimates"
-            :key="estimate.id"
+            :key="estimate.estimateId"
             cols="12"
             sm="6"
             md="3"
@@ -81,9 +78,8 @@
               class="proposal-card"
               elevation="2"
               rounded="xl"
-              @click="goToEstimateDetail(estimate.id)"
+              @click="goToEstimateDetail(estimate.estimateId)"
             >
-
               <!-- 즐겨찾기 버튼 -->
               <v-btn
                 small
@@ -123,7 +119,9 @@
 
               <v-divider class="my-2" />
 
-              <v-card-text class="pa-0 d-flex justify-space-between align-center">
+              <v-card-text
+                class="pa-0 d-flex justify-space-between align-center"
+              >
                 <!-- 상태 -->
                 <span :class="['sidebar-text', statusClass(estimate.status)]">
                   {{ statusLabel(estimate.status) }}
@@ -134,7 +132,6 @@
                   <span>견적일: {{ estimate.estimateDate }}</span>
                 </span>
               </v-card-text>
-
             </v-card>
           </v-col>
         </v-row>
@@ -147,14 +144,13 @@
             @update:modelValue="onPageChange"
           />
         </v-row>
-
       </v-col>
     </v-row>
   </v-container>
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from "vue";
+import { ref, reactive, computed, onMounted, watch } from "vue";
 import { useRouter } from "vue-router";
 import { getEstimates } from "@/apis/estimate";
 
@@ -180,6 +176,15 @@ const sidebares = reactive([
   { label: "취소됨", value: "CANCELED", checked: false },
 ]);
 
+watch(
+  () => sidebares.map((s) => s.checked),
+  () => {
+    page.value = 1; // 페이지 초기화
+    fetchEstimates(); // API 다시 호출
+  },
+  { deep: true }
+);
+
 /* 즐겨찾기 토글 */
 const toggleFavorite = (item) => {
   item.isFavorite = !item.isFavorite;
@@ -188,31 +193,43 @@ const toggleFavorite = (item) => {
 /* 상태 CSS */
 const statusClass = (status) => {
   const s = String(status || "").toUpperCase();
-  return {
-    DRAFT: "sidebar-draft",
-    SUBMITTED: "sidebar-submitted",
-    COMPLETED: "sidebar-completed",
-    CANCELED: "sidebar-canceled",
-  }[s] || "";
+  return (
+    {
+      DRAFT: "sidebar-draft",
+      SUBMITTED: "sidebar-submitted",
+      COMPLETED: "sidebar-completed",
+      CANCELED: "sidebar-canceled",
+    }[s] || ""
+  );
 };
 
 /* 상태 라벨 */
 const statusLabel = (status) => {
   const s = String(status || "").toUpperCase();
-  return {
-    DRAFT: "작성중",
-    SUBMITTED: "제출됨",
-    COMPLETED: "완료",
-    CANCELED: "취소됨",
-  }[s] || status;
+  return (
+    {
+      DRAFT: "작성중",
+      SUBMITTED: "제출됨",
+      COMPLETED: "완료",
+      CANCELED: "취소됨",
+    }[s] || status
+  );
 };
 
 /* API 호출 */
 const fetchEstimates = async () => {
+  // 현재 체크된 상태들
+  const activeStatuses = sidebares.filter((s) => s.checked).map((s) => s.value);
+
+  // BE로 보낼 status 파라미터
+  // 1개만 체크되었을 때만 보냄
+  const statusParam = activeStatuses.length === 1 ? activeStatuses[0] : null;
+
   const { data } = await getEstimates({
     page: page.value,
     size: size.value,
     keyword: search.value || undefined,
+    status: statusParam || undefined,
   });
 
   const list = data.data || [];
@@ -228,9 +245,7 @@ const fetchEstimates = async () => {
 /* FE 필터 */
 const filteredEstimates = computed(() => {
   const keyword = search.value.trim().toLowerCase();
-  const activeStatuses = sidebares
-    .filter((s) => s.checked)
-    .map((s) => s.value);
+  const activeStatuses = sidebares.filter((s) => s.checked).map((s) => s.value);
 
   return estimates.value.filter((e) => {
     const matchesSearch =
@@ -243,8 +258,7 @@ const filteredEstimates = computed(() => {
       activeStatuses.length === 0 ||
       activeStatuses.includes(String(e.status).toUpperCase());
 
-    const matchesFavorite =
-      !showFavoritesOnly.value || e.isFavorite;
+    const matchesFavorite = !showFavoritesOnly.value || e.isFavorite;
 
     return matchesSearch && matchesStatus && matchesFavorite;
   });
@@ -257,8 +271,7 @@ const onPageChange = () => fetchEstimates();
 const goToEstimateDetail = (id) =>
   router.push({ name: "EstimateDetail", params: { id } });
 
-const goToCreateEstimate = () =>
-  router.push({ name: "CreateEstimate" });
+const goToCreateEstimate = () => router.push({ name: "CreateEstimate" });
 
 onMounted(fetchEstimates);
 </script>
