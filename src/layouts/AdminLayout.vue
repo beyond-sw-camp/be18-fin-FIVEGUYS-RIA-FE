@@ -12,16 +12,23 @@
           class="menu-item"
           :class="{ active: route.name === item.name }"
         >
-          {{ item.label }}
+          <v-icon class="menu-icon" :icon="item.icon" />
+          <span class="menu-label">{{ item.label }}</span>
         </RouterLink>
       </nav>
     </aside>
 
     <!-- 오른쪽 전체 영역 -->
     <main class="admin-main">
-      <!-- 상단 현재 페이지 이름 -->
+      <!-- 상단 현재 페이지 이름 + 로그아웃 아이콘 -->
       <header class="admin-header">
         <h1>{{ route.meta.title ?? "관리자 페이지" }}</h1>
+
+        <div class="admin-header-actions">
+          <v-btn icon variant="text" elevation="0" @click="logoutHandler">
+            <v-icon>mdi-logout</v-icon>
+          </v-btn>
+        </div>
       </header>
 
       <!-- 실제 페이지 들어가는 곳 -->
@@ -37,16 +44,51 @@
 </template>
 
 <script setup>
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
+import { useAuthStore } from "@/stores/auth";
+import { logout as logoutApi } from "@/apis/auth";
 
 const route = useRoute();
+const router = useRouter();
+const authStore = useAuthStore();
 
 const menuItems = [
-  { name: "AdminUsers", label: "사용자 관리", to: "/admin/users" },
-  { name: "AdminRoles", label: "권한 설정", to: "/admin/roles" },
-  { name: "AdminLogs", label: "로그 관리", to: "/admin/logs" },
-  { name: "AdminDanger", label: "삭제 페이지", to: "/admin/danger" },
+  {
+    name: "AdminUsers",
+    label: "사용자 관리",
+    to: "/admin/users",
+    icon: "mdi-account",
+  },
+  {
+    name: "AdminRoles",
+    label: "권한 설정",
+    to: "/admin/roles",
+    icon: "mdi-shield-check",
+  },
+  {
+    name: "AdminLogs",
+    label: "로그 관리",
+    to: "/admin/logs",
+    icon: "mdi-notebook-edit",
+  },
+  {
+    name: "AdminDanger",
+    label: "삭제 페이지",
+    to: "/admin/danger",
+    icon: "mdi-cog",
+  },
 ];
+
+const logoutHandler = async () => {
+  try {
+    await logoutApi(); // 서버 로그아웃 호출
+  } catch (e) {
+    console.error(e);
+  } finally {
+    authStore.forceLogout(); // 토큰/상태 초기화
+    router.push("/login"); // 로그인으로 이동
+  }
+};
 </script>
 
 <style scoped>
@@ -68,23 +110,50 @@ const menuItems = [
   margin-bottom: 24px;
 }
 
+/* 메뉴 영역 */
 .menu {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
+/* RouterLink 기본 스타일 */
 .menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   padding: 10px 12px;
   border-radius: 8px;
   text-decoration: none;
   color: #333;
   font-size: 14px;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
+/* 호버 시 */
+.menu-item:hover {
+  background: #e3f2fd;
+}
+
+/* 아이콘 스타일 */
+.menu-icon {
+  font-size: 20px;
+  color: #555;
+}
+
+/* 텍스트 */
+.menu-label {
+  flex: 1;
+}
+
+/* 활성 메뉴 */
 .menu-item.active {
   background: #1976d2;
-  color: white;
+  color: #ffffff;
+}
+
+.menu-item.active .menu-icon {
+  color: #ffffff;
 }
 
 .admin-main {
@@ -93,10 +162,21 @@ const menuItems = [
   flex-direction: column;
 }
 
+/* 상단 헤더 */
 .admin-header {
   padding: 24px 32px 8px;
   background: white;
   border-bottom: 1px solid #e2e2e2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* 헤더 오른쪽 액션 영역 */
+.admin-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .admin-content {

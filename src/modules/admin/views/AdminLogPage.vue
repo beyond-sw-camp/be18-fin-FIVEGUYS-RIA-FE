@@ -2,7 +2,7 @@
   <div class="admin-log-page">
     <section class="logs-section">
       <v-card class="logs-card" elevation="0">
-        <!-- 🔷 필터 영역 -->
+        <!-- 필터 영역 -->
         <div class="filter-section">
           <h2 class="section-title">로그 필터</h2>
 
@@ -45,7 +45,7 @@
               />
             </div>
 
-            <!-- 작업 유형 -->
+            <!-- 작업 유형 (경로 기준 도메인) -->
             <div class="filter-item">
               <div class="filter-label">작업 유형</div>
               <v-select
@@ -74,14 +74,13 @@
           </div>
 
           <div class="filter-actions">
-            <v-btn color="primary" @click="applyFilter">필터 적용</v-btn>
             <v-btn variant="outlined" @click="resetFilter">필터 초기화</v-btn>
           </div>
         </div>
 
         <v-divider class="mt-4 mb-2" />
 
-        <!-- 🔷 활동 로그 -->
+        <!-- 활동 로그 -->
         <div class="logs-section-body">
           <div class="logs-header">
             <div class="logs-title-group">
@@ -126,17 +125,19 @@
                 {{ log.employeeNo || "-" }}
               </span>
 
-              <!-- 작업명 (2줄 고정) -->
+              <!-- 작업명 -->
               <span class="td th-action">
-                {{ log.logName || "-" }}
+                <span class="action-text">
+                  {{ log.logName || "-" }}
+                </span>
               </span>
 
-              <!-- 영향받은 리소스 (한 줄, 말줄임) -->
+              <!-- 영향받은 리소스 -->
               <span class="td th-resource">
                 {{ formatResource(log.resource) }}
               </span>
 
-              <!-- 상태 (SUCCESS/FAILED → 성공/실패) -->
+              <!-- 상태 -->
               <span class="td th-status">
                 <v-chip
                   :color="getStatusColor(getLogStatus(log))"
@@ -210,6 +211,9 @@
 <script setup>
 import { ref, computed, onMounted, watch } from "vue";
 import api from "@/apis/http";
+import { useSnackbarStore } from "@/stores/useSnackbarStore";
+
+const snackbar = useSnackbarStore();
 
 /* ---------- 필터 상태 ---------- */
 const startDate = ref("");
@@ -226,13 +230,17 @@ const size = ref(10);
 /* ---------- 사용자 옵션 ---------- */
 const userOptions = ref([{ label: "모든 사용자", value: "ALL" }]);
 
+/* ---------- 작업 유형 옵션 (경로 기준 도메인) ---------- */
 const actionOptions = [
   { label: "모든 작업", value: "ALL" },
-  { label: "사용자 정보 변경", value: "USER_UPDATE" },
-  { label: "상품 재고 조회", value: "PRODUCT_VIEW" },
-  { label: "로그인", value: "LOGIN" },
-  { label: "보고서 다운로드", value: "REPORT_DOWNLOAD" },
-  { label: "권한 설정 변경", value: "ROLE_CHANGE" },
+  { label: "관리자 (admin)", value: "admin" },
+  { label: "인증 (auth)", value: "auth" },
+  { label: "캘린더 (calendar)", value: "calendar" },
+  { label: "프로젝트 (campaign)", value: "campaign" },
+  { label: "고객/고객사 (client)", value: "client" },
+  { label: "시설 (facility)", value: "facility" },
+  { label: "문서 (storage)", value: "storage" },
+  { label: "사용자 (user)", value: "user" },
 ];
 
 /* ---------- 상태 표시 ---------- */
@@ -259,7 +267,6 @@ const formatDateTime = (iso) => {
 const formatResource = (resource) => resource?.replace(/\s+/g, " ") ?? "-";
 
 /* ---------- API 호출 ---------- */
-// ✔ 인터셉터가 자동으로 JWT 붙여줌 → headers 필요 없음
 const fetchLogs = async () => {
   try {
     const res = await api.get("/api/admin/logs", {
@@ -270,6 +277,7 @@ const fetchLogs = async () => {
   } catch (err) {
     console.error("로그 조회 실패:", err);
     logs.value = [];
+    snackbar.show("로그 목록 조회에 실패했습니다.", "error");
   }
 };
 
@@ -289,6 +297,7 @@ const fetchUsersForFilter = async () => {
     ];
   } catch (err) {
     console.error("필터용 사용자 목록 조회 실패:", err);
+    snackbar.show("필터용 사용자 목록 조회에 실패했습니다.", "error");
   }
 };
 
@@ -306,8 +315,20 @@ const filteredLogs = computed(() =>
     if (
       selectedUser.value !== "ALL" &&
       String(empNo) !== String(selectedUser.value)
-    )
+    ) {
       return false;
+    }
+
+    // 작업 유형 필터 (경로 기준)
+    if (selectedAction.value !== "ALL") {
+      const path = (log.resource ?? "").toLowerCase();
+      const key = String(selectedAction.value).toLowerCase();
+
+      // 예: /api/admin/users, /admin/users, /auth/login 등
+      if (!path.includes(`/${key}`)) {
+        return false;
+      }
+    }
 
     // 키워드 필터
     const kw = keyword.value.trim();
@@ -341,8 +362,6 @@ const pagedLogs = computed(() => {
 const totalElements = computed(() => filteredLogs.value.length);
 
 /* ---------- 필터 이벤트 ---------- */
-const applyFilter = () => (page.value = 1);
-
 const resetFilter = () => {
   startDate.value = "";
   endDate.value = "";
@@ -463,16 +482,19 @@ onMounted(async () => {
 .table-header-row,
 .table-row {
   display: grid;
-  /* 타임스탬프/이름/사번/작업명/리소스/상태 */
   grid-template-columns: 1.6fr 1.1fr 0.8fr 1.6fr 2.4fr 0.8fr;
   padding: 10px 8px;
   font-size: 14px;
-  align-items: center;
+  align-items: flex-start;
 }
 
+/* 모든 셀 공통 */
 .th,
 .td {
-  padding: 0 8px;
+  padding: 4px 8px;
+  display: flex;
+  align-items: flex-start;
+  line-height: 1.4;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -490,23 +512,16 @@ onMounted(async () => {
   color: #777;
 }
 
-/* 상태 칼럼 칩 가운데 */
-.th-status,
-.td.th-status {
-  display: flex;
-  align-items: center;
+/* 작업명 셀: 여러 줄 허용 + 전체 보이기 */
+.td.th-action {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
 }
 
-/* 작업명: 2줄 고정 + 줄바꿈 허용 */
-.td.th-action {
-  white-space: normal !important;
-  display: -webkit-box;
-  -webkit-line-clamp: 2; /* 최대 2줄 */
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  line-height: 1.4;
-  height: calc(1.4em * 2); /* 2줄 높이 고정 */
+.td.th-action .action-text {
+  white-space: normal;
+  word-break: break-all;
 }
 
 /* 빈 데이터 */
