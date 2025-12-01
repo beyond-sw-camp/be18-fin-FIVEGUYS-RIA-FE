@@ -4,94 +4,176 @@
 
       <!-- Header -->
       <v-card-title class="text-h6 font-weight-bold">
-      입주한 브랜드의 상세정보
+        입주한 브랜드의 상세정보
       </v-card-title>
 
       <v-divider />
 
-      <!-- Tabs -->
-      <v-tabs
-        v-model="tab"
-        color="primary"
-        align-tabs="center"
-        class="fixed-tabs"
-      > 
-        <v-tab value="info">기본 정보</v-tab>
-        <v-tab value="sales">매출/거래 정보</v-tab>
-      </v-tabs>
+      <!-- 로딩 -->
+      <v-card-text v-if="loading" class="text-center py-6">
+        <v-progress-circular indeterminate color="primary" />
+      </v-card-text>
 
-      <v-divider />
-      
+      <!-- 에러 -->
+      <v-card-text v-else-if="error" class="text-center py-6 text-error">
+        {{ error }}
+      </v-card-text>
 
-      <!-- Window (height transition 제거) -->
-      <v-card-text class="no-window-transition">
+      <!-- 실제 내용 -->
+      <v-card-text v-else class="no-window-transition">
+
+        <!-- Tabs -->
+        <v-tabs
+          v-model="tab"
+          color="primary"
+          align-tabs="center"
+          class="fixed-tabs"
+        >
+          <v-tab value="info">기본 정보</v-tab>
+          <v-tab value="sales">매출/거래 정보</v-tab>
+        </v-tabs>
+
+        <v-divider />
+
         <v-window v-model="tab" :touch="false">
+
           <!-- 기본 정보 -->
           <v-window-item value="info">
             <v-row class="py-4" dense>
+
               <v-col cols="12">
-                <v-text-field label="입주명" :model-value="brand.name" variant="outlined" readonly />
+                <v-text-field
+                  label="입주명"
+                  :model-value="brand.storeDisplayName"
+                  variant="outlined"
+                  readonly
+                />
               </v-col>
 
               <v-col cols="12">
-                <v-text-field label="면적" :model-value="brand.area" suffix="㎡" variant="outlined" readonly />
+                <v-text-field
+                  label="면적"
+                  :model-value="brand.areaSize"
+                  suffix="㎡"
+                  variant="outlined"
+                  readonly
+                />
               </v-col>
 
               <v-col cols="12">
-                <v-text-field label="입점일" :model-value="brand.moveInDate" variant="outlined" readonly />
+                <v-text-field
+                  label="입점일"
+                  :model-value="brand.startDate"
+                  variant="outlined"
+                  readonly
+                />
               </v-col>
 
               <v-col cols="12">
                 <div class="d-flex align-center ga-2">
-                  <v-text-field class="flex-1-1" label="계약 시작일" :model-value="brand.leaseStart" variant="outlined" readonly />
+                  <v-text-field
+                    class="flex-1-1"
+                    label="계약 시작일"
+                    :model-value="brand.contractStartDate"
+                    variant="outlined"
+                    readonly
+                  />
                   <span>~</span>
-                  <v-text-field class="flex-1-1" label="계약 종료일" :model-value="brand.leaseEnd" variant="outlined" readonly />
+                  <v-text-field
+                    class="flex-1-1"
+                    label="계약 종료일"
+                    :model-value="brand.contractEndDate"
+                    variant="outlined"
+                    readonly
+                  />
                 </div>
               </v-col>
 
               <v-col cols="12">
-                <v-text-field label="총 임대료" :model-value="brand.rent" suffix="원" variant="outlined" readonly />
+                <v-text-field
+                  label="총 임대료"
+                  :model-value="brand.finalContractAmount"
+                  suffix="원"
+                  variant="outlined"
+                  readonly
+                />
               </v-col>
 
               <v-col cols="12">
-                <v-text-field label="매출 수수료율" :model-value="brand.feeRate" suffix="%" variant="outlined" readonly />
+                <v-text-field
+                  label="매출 수수료율"
+                  :model-value="brand.commissionRate"
+                  suffix="%"
+                  variant="outlined"
+                  readonly
+                />
               </v-col>
 
-              <v-col cols="12">
-                <v-text-field label="평균 매출" :model-value="brand.avgSales" suffix="원" variant="outlined" readonly />
-              </v-col>
             </v-row>
           </v-window-item>
 
-          <!-- 매출 / 거래 정보 -->
+          <!-- 매출 정보 -->
           <v-window-item value="sales">
             <v-row class="py-4" dense>
+
               <v-col cols="6">
-                <v-text-field label="전체 거래 횟수" :model-value="brand.totalOrders" suffix="건" variant="outlined" readonly />
+                <v-text-field
+                  label="전체 거래 횟수"
+                  :model-value="brand.totalPurchaseCount"
+                  suffix="건"
+                  variant="outlined"
+                  readonly
+                />
               </v-col>
 
               <v-col cols="6">
-                <v-text-field label="총 매출 금액" :model-value="brand.totalAmount" suffix="원" variant="outlined" readonly />
+                <v-text-field
+                  label="총 매출 금액"
+                  :model-value="brand.totalSalesAmount"
+                  suffix="원"
+                  variant="outlined"
+                  readonly
+                />
               </v-col>
 
               <v-col cols="6">
-                <v-text-field label="VIP 거래 횟수" :model-value="brand.vipOrders" suffix="건" variant="outlined" readonly />
+                <v-text-field
+                  label="VIP 거래 횟수"
+                  :model-value="brand.vipPurchaseCount"
+                  suffix="건"
+                  variant="outlined"
+                  readonly
+                />
               </v-col>
 
               <v-col cols="6">
-                <v-text-field label="VIP 매출 금액" :model-value="brand.vipAmount" suffix="원" variant="outlined" readonly />
+                <v-text-field
+                  label="VIP 매출 금액"
+                  :model-value="brand.vipSalesAmount"
+                  suffix="원"
+                  variant="outlined"
+                  readonly
+                />
               </v-col>
 
               <v-col cols="12">
-                <v-text-field label="VIP 매출 비중" :model-value="brand.vipRate" suffix="%" variant="outlined" readonly />
+                <v-text-field
+                  label="VIP 매출 비중"
+                  :model-value="brand.vipRatio"
+                  suffix="%"
+                  variant="outlined"
+                  readonly
+                />
               </v-col>
+
             </v-row>
           </v-window-item>
+
         </v-window>
       </v-card-text>
 
       <v-card-actions>
-        <v-spacer></v-spacer>
+        <v-spacer />
         <v-btn color="primary" variant="flat" @click="close">확인</v-btn>
       </v-card-actions>
 
@@ -99,32 +181,67 @@
   </v-dialog>
 </template>
 
-
 <script setup>
-import { ref, watch, computed } from "vue";
-
+import { ref, watch } from "vue";
+import { fetchStoreDetailStats } from "@/apis/storemap";   
+/* -----------------------------
+      Props & Emits
+----------------------------- */
 const props = defineProps({
   modelValue: { type: Boolean, required: true },
-  brand: { type: Object, default: () => ({}) }
+  storeId: { type: Number, required: true },     
 });
 
 const emit = defineEmits(["update:modelValue"]);
 
+/* -----------------------------
+      Dialog 상태 동기화
+----------------------------- */
 const internalDialog = ref(props.modelValue);
 
-// 부모 → 자식
 watch(
   () => props.modelValue,
-  (val) => (internalDialog.value = val)
+  (v) => (internalDialog.value = v)
 );
 
-// 자식 → 부모
-watch(internalDialog, (val) => {
-  emit("update:modelValue", val);
-});
+watch(internalDialog, (v) => emit("update:modelValue", v));
 
-const brand = computed(() => props.brand || {});
+/* -----------------------------
+      API 데이터
+----------------------------- */
+const brand = ref({});
+const loading = ref(false);
+const error = ref(null);
 const tab = ref("info");
+
+/* -----------------------------
+      storeId 변경 시 API 호출
+----------------------------- */
+watch(
+  () => props.storeId,
+  async (id) => {
+    if (!id) return;
+    await loadStoreDetail(id);
+  },
+  { immediate: true }
+);
+
+/* -----------------------------
+          API Fetch
+----------------------------- */
+async function loadStoreDetail(id) {
+  loading.value = true;
+  error.value = null;
+
+  try {
+    const data = await fetchStoreDetailStats(id);
+    brand.value = data.data;
+  } catch (err) {
+    error.value = "매장 정보를 불러오는 중 오류 발생";
+  } finally {
+    loading.value = false;
+  }
+}
 
 function close() {
   internalDialog.value = false;
@@ -136,14 +253,13 @@ function close() {
   max-height: 600px;
   overflow-y: auto;
 }
+
 .fixed-tabs {
-  height: 56px !important;       /* 원하는 높이 지정 */
-  min-height: 56px !important;
-  max-height: 56px !important;
+  height: 56px !important;
   display: flex;
-  align-items: center;           /* 탭 텍스트 정중앙 */
+  align-items: center;
 }
-/* v-window의 height transition 제거 */
+
 .no-window-transition .v-window__container {
   transition: none !important;
 }

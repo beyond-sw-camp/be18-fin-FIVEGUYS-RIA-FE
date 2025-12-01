@@ -1,7 +1,7 @@
 <template>
   <div class="map-container" ref="containerRef">
 
-    <!-- 전체 도면 zoom + pan -->
+    <!-- zoom + pan wrapper -->
     <div
       class="zoom-wrapper"
       :style="{
@@ -11,20 +11,20 @@
       ref="zoomWrapperRef"
     >
 
-      <!-- 이미지 + 텍스트 오버레이 -->
+      <!-- floor image -->
       <div class="image-wrapper">
         <img
+          class="map-image"
           :src="reloadSrc"
           usemap="#store-map"
-          class="map-image"
           @load="handleImageLoad"
         />
 
+        <!-- 텍스트 오버레이 -->
         <div class="label-overlay">
           <div
             v-for="area in renderedAreas"
             :key="area.id"
-            :id="`label-${area.id}`"
             class="label-item"
             :style="{
               left: area.textX + 'px',
@@ -37,7 +37,7 @@
         </div>
       </div>
 
-      <!-- 이미지맵 클릭 영역 -->
+      <!-- 이미지맵 -->
       <map name="store-map">
         <area
           v-for="area in renderedAreas"
@@ -45,24 +45,25 @@
           :shape="area.shape"
           :coords="area.scaledCoords"
           @click="openModal(area)"
+          style="cursor: pointer"
         />
       </map>
     </div>
 
-    <!-- 모달 -->
-    <BrandDetailModal v-model="dialog" :brand="selectedBrand" />
+    <BrandDetailModal
+      v-model="dialog"
+      :store-id="selectedStoreId"
+    />
   </div>
 </template>
 
-
 <script setup>
-import { ref, computed, watch, nextTick, onMounted } from "vue";
+import { ref, computed, watch, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import BrandDetailModal from "@/modules/storemap/views/BrandDetailModal.vue";
+import { fetchStoreNames } from "@/apis/storemap";   // ★ 추가된 부분
 
-/* =======================
-    이미지 & JSON
-======================== */
+/* 이미지/좌표 파일 */
 import floorB1Img from "@/assets/images/floorB1.png";
 import floorB1Map from "@/assets/floormaps/floorB1map.json";
 import floor1FImg from "@/assets/images/floorF1.png";
@@ -86,9 +87,25 @@ const route = useRoute();
 const currentLevel = computed(() => route.params.level || "B1");
 const currentFloor = computed(() => floorConfig[currentLevel.value]);
 
-/* =======================
-  이미지 reload
-======================== */
+/* ---- DB 매장명 불러오기 ---- */
+const storeNames = ref({}); // { 1: "나이키 A-102점" }
+
+async function loadStoreNames() {
+  try {
+    const res = await fetchStoreNames();
+    storeNames.value = Object.fromEntries(
+      res.data.map(s => [s.storeId, s.storeDisplayName])
+    );
+  } catch (e) {
+    console.error("매장명 불러오기 실패:", e);
+  }
+}
+
+onMounted(() => {
+  loadStoreNames(); // ★ 페이지 로드시 DB 매장명 먼저 로드
+});
+
+/* 이미지 reload */
 const reloadSrc = ref("");
 watch(
   () => currentFloor.value.img,
@@ -96,45 +113,31 @@ watch(
   { immediate: true }
 );
 
-/* =======================
-  층 변경 시 이전 텍스트 박스 제거
-======================== */
-watch(currentLevel, () => {
-  renderedAreas.value = [];    
-});
-
-
-/* =======================
-  좌표 스케일링
-======================== */
+/* 좌표 스케일링 */
 const renderedAreas = ref([]);
 
-/**
- * poly / rect 모두 지원하는 bounding box 계산
- * 원본 coords + scaleX/scaleY → 스케일된 left/right/top/bottom
- */
+watch(currentLevel, () => {
+  renderedAreas.value = [];
+});
+
+/* poly / rect 공통 bounding */
 function getAreaBox(originalCoords, scaleX, scaleY) {
   const nums = originalCoords.split(",").map(Number);
-  let xs = [];
-  let ys = [];
+  const xs = [];
+  const ys = [];
 
   for (let i = 0; i < nums.length; i += 2) {
     xs.push(nums[i] * scaleX);
     ys.push(nums[i + 1] * scaleY);
   }
 
-  const left = Math.min(...xs);
-  const right = Math.max(...xs);
-  const top = Math.min(...ys);
-  const bottom = Math.max(...ys);
-
   return {
-    left,
-    right,
-    top,
-    bottom,
-    width: right - left,
-    height: bottom - top
+    left: Math.min(...xs),
+    right: Math.max(...xs),
+    top: Math.min(...ys),
+    bottom: Math.max(...ys),
+    width: Math.max(...xs) - Math.min(...xs),
+    height: Math.max(...ys) - Math.min(...ys),
   };
 }
 
@@ -146,42 +149,52 @@ function scaleCoords(original, scaleX, scaleY) {
     .join(",");
 }
 
-async function handleImageLoad(event) {
+/* ---- 핵심: handleImageLoad는 storeNames 로딩 후에만 실행 ---- */
+function handleImageLoad(event) {
   const img = event.target;
 
-  const naturalW = img.naturalWidth;
-  const naturalH = img.naturalHeight;
-  const clientW = img.clientWidth;
-  const clientH = img.clientHeight;
+  if (!storeNames.value || Object.keys(storeNames.value).length === 0) {
+    console.warn("❗ storeNames not loaded yet → 렌더링 보류");
+    return;
+  }
 
-  const scaleX = clientW / naturalW;
-  const scaleY = clientH / naturalH;
+  const scaleX = img.clientWidth / img.naturalWidth;
+  const scaleY = img.clientHeight / img.naturalHeight;
 
   renderedAreas.value = currentFloor.value.areas.map(a => {
     const box = getAreaBox(a.coords, scaleX, scaleY);
+    const sid = a.storeId ?? Number(a.id);
+
     return {
       ...a,
+      storeId: sid,
+      name: storeNames.value[sid] ?? a.name, // ★ JSON 이름 → DB 이름으로 변경
       scaledCoords: scaleCoords(a.coords, scaleX, scaleY),
       textX: a.x * scaleX,
       textY: a.y * scaleY,
-      maxWidth: box.width * 0.9  //  영역 가로폭의 90%를 텍스트 박스 폭으로 사용
+      maxWidth: box.width * 0.9,
     };
   });
 }
 
-/* =======================
-    모달
-======================== */
+/* DB 매장명이 로딩된 후 자동으로 재렌더링 */
+watch(storeNames, () => {
+  const img = document.querySelector(".map-image");
+  if (img && img.complete) {
+    handleImageLoad({ target: img });
+  }
+});
+
+/* 모달 */
 const dialog = ref(false);
-const selectedBrand = ref(null);
+const selectedStoreId = ref(null);
+
 function openModal(area) {
-  selectedBrand.value = area;
+  selectedStoreId.value = area.storeId;
   dialog.value = true;
 }
 
-/* =======================
-    zoom + pan
-======================== */
+/* zoom + pan */
 const zoomLevel = ref(1);
 const translateX = ref(0);
 const translateY = ref(0);
@@ -194,7 +207,6 @@ let startX = 0;
 let startY = 0;
 
 onMounted(() => {
-  // Ctrl + wheel zoom
   containerRef.value.addEventListener(
     "wheel",
     e => {
@@ -207,7 +219,6 @@ onMounted(() => {
     { passive: false }
   );
 
-  // Pan (drag)
   zoomWrapperRef.value.addEventListener("mousedown", e => {
     isPanning = true;
     startX = e.clientX - translateX.value;
@@ -230,7 +241,6 @@ onMounted(() => {
 });
 </script>
 
-
 <style scoped>
 .map-container {
   width: 100%;
@@ -238,36 +248,11 @@ onMounted(() => {
   overflow: hidden;
   position: relative;
 }
-
-.zoom-wrapper {
-  position: absolute;
-  left: 0;
-  top: 0;
-  cursor: grab;
-}
-.zoom-wrapper:active {
-  cursor: grabbing;
-}
-
-.image-wrapper {
-  position: relative;
-}
-
-.map-image {
-  max-width: 100%;
-  height: auto;
-  display: block;
-}
-
-.label-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-}
-
+.zoom-wrapper { position: absolute; left: 0; top: 0; cursor: grab; }
+.zoom-wrapper:active { cursor: grabbing; }
+.image-wrapper { position: relative; }
+.map-image { max-width: 100%; display: block; }
+.label-overlay { position: absolute; top: 0; left: 0; width:100%; height:100%; pointer-events:none; }
 .label-item {
   position: absolute;
   transform: translate(-50%, -50%);
@@ -275,17 +260,10 @@ onMounted(() => {
   padding: 0;
   font-size: 13px;
   font-weight: 600;
-  white-space: nowrap;
-  pointer-events: none;
-  color: #000;  
-  pointer-events: none;
-  white-space: normal;        /* 여러 줄 허용 */
-  word-break: keep-all;       /* 한글 자연스럽게 줄바꿈 */
-  overflow-wrap: break-word;  /* 긴 단어 강제 줄바꿈 */
+  white-space: normal;
+  word-break: keep-all;
+  overflow-wrap: break-word;
   line-height: 1.2;
   text-align: center;
 }
-
-
-
 </style>
