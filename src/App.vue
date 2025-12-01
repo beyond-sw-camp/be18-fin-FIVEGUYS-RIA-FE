@@ -1,26 +1,38 @@
 <template>
   <v-app>
-    <HeaderComponent v-if="!hideHeader"/>
+    <HeaderComponent v-if="!hideHeader" />
 
     <v-main>
       <router-view />
     </v-main>
 
-    <FooterComponent v-if="!hideFooter"/>
+    <FooterComponent v-if="!hideFooter" />
+
+    <!-- 전역 스낵바 -->
+    <v-snackbar
+      v-model="snackbar.visible"
+      :color="snackbar.color"
+      :timeout="snackbar.timeout"
+      location="top center"
+      class="toast-snackbar"
+    >
+      {{ snackbar.message }}
+    </v-snackbar>
   </v-app>
 </template>
 
 <script setup>
-  import { computed } from 'vue'
-  import { useRoute } from 'vue-router';
-  import HeaderComponent from '@/components/common/HeaderComponent.vue';
-  import FooterComponent from '@/components/common/FooterComponent.vue';
+import { computed } from "vue";
+import { useRoute } from "vue-router";
+import HeaderComponent from "@/components/common/HeaderComponent.vue";
+import FooterComponent from "@/components/common/FooterComponent.vue";
+import { useSnackbarStore } from "@/stores/useSnackbarStore";
 
-  const route = useRoute();
+const route = useRoute();
+const snackbar = useSnackbarStore();
 
-  const hideHeader = computed(() => !!route.meta?.hideHeader);
-  const hideFooter = computed(() => !!route.meta?.hideFooter);
-
+const hideHeader = computed(() => !!route.meta?.hideHeader);
+const hideFooter = computed(() => !!route.meta?.hideFooter);
 </script>
 
 <style>
@@ -28,7 +40,7 @@
   width: 100% !important;
   max-width: 100% !important;
   height: 100% !important;
-  margin: 0 !important; 
+  margin: 0 !important;
   padding: 0 !important;
 }
 
@@ -64,7 +76,7 @@
 .v-container {
   width: 100% !important;
   max-width: 100% !important;
-  min-width: 0 !important; 
+  min-width: 0 !important;
   margin: 0 !important;
   padding: 0 !important;
 }
@@ -75,14 +87,4 @@
   margin: 0 !important;
   padding: 0 !important;
 }
-
-/* .v-row {
-  width: 100vw !important;
-  max-width: 100vw !important;
-  min-width: 0 !important;
-}
-
-.v-col {
-  min-width: 0 !important;
-} */
 </style>

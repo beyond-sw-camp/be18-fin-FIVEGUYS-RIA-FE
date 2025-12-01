@@ -1,0 +1,103 @@
+name: CI/CD-FE
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+    types: [opened, synchronize, reopened]
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  S3_BUCKET: ria-frontend-prod
+  AWS_REGION: ap-northeast-2
+
+jobs:
+  # 1) PR / push 공통 빌드
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: fe-dist
+          path: dist
+
+  # 2) main 브랜치 push 시에만 S3 배포 + CloudFront 캐시 무효화
+  deploy-to-s3:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: fe-dist
+          path: dist
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: github-actions-ria-fe
+
+      - name: Set deploy version
+        id: version
+        run: |
+          DATE=$(date +'%Y%m%d-%H%M%S')
+          SHA_SHORT=${GITHUB_SHA::7}
+          echo "VERSION=${DATE}-${SHA_SHORT}" >> $GITHUB_OUTPUT
+
+      - name: Upload build to versioned path
+        run: |
+          VERSION=${{ steps.version.outputs.VERSION }}
+          aws s3 sync dist "s3://${S3_BUCKET}/releases/${VERSION}" --delete
+
+      - name: Upload build to root (current)
+        run: |
+          aws s3 sync dist "s3://${S3_BUCKET}/" --delete
+
+      - name: Save latest version metadata
+        run: |
+          VERSION=${{ steps.version.outputs.VERSION }}
+          echo "${VERSION}" > latest.txt
+          aws s3 cp latest.txt "s3://${S3_BUCKET}/deployments/latest.txt"
+
+      - name: Invalidate CloudFront cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
+            --paths "/*"

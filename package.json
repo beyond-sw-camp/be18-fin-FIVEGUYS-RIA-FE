@@ -34,5 +34,8 @@
     "tailwindcss": "^4.1.16",
     "vite": "^7.1.11",
     "vite-plugin-vue-devtools": "^8.0.3"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "4.53.3"
   }
 }
