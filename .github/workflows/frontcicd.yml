@@ -3,10 +3,10 @@ name: CI/CD-FE
 on:
   push:
     branches:
-      - develop
+      - main
   pull_request:
     branches:
-      - develop
+      - main
     types: [opened, synchronize, reopened]
 
 permissions:
@@ -14,9 +14,7 @@ permissions:
   contents: read
 
 env:
-  # 고정값이면 그대로 넣어도 된다
   S3_BUCKET: ria-frontend-prod
-  # us-east-1 말고 S3/배포 리전으로 맞춰라 (지금은 서울)
   AWS_REGION: ap-northeast-2
 
 jobs:
@@ -47,18 +45,17 @@ jobs:
       - name: Build
         run: npm run build
 
-      # dist 결과를 다음 job에서 쓰기 위해 아티팩트로 저장
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: fe-dist
           path: dist
 
-  # 2) develop 브랜치 push 시에만 S3 배포 + CloudFront 캐시 무효화
+  # 2) main 브랜치 push 시에만 S3 배포 + CloudFront 캐시 무효화
   deploy-to-s3:
     needs: build
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
       - name: Checkout
@@ -77,7 +74,6 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
           role-session-name: github-actions-ria-fe
 
-      # 배포 버전 문자열 생성 (YYYYMMDD-HHMMSS-SHA7)
       - name: Set deploy version
         id: version
         run: |
@@ -85,25 +81,21 @@ jobs:
           SHA_SHORT=${GITHUB_SHA::7}
           echo "VERSION=${DATE}-${SHA_SHORT}" >> $GITHUB_OUTPUT
 
-      # 2-1) 과거 버전 보관용 경로에 업로드 (버전 폴더)
       - name: Upload build to versioned path
         run: |
           VERSION=${{ steps.version.outputs.VERSION }}
           aws s3 sync dist "s3://${S3_BUCKET}/releases/${VERSION}" --delete
 
-      # 2-2) 실제 서비스용 루트에 배포 (현재 버전)
       - name: Upload build to root (current)
         run: |
           aws s3 sync dist "s3://${S3_BUCKET}/" --delete
 
-      # 2-3) 마지막 배포 버전 메타데이터 기록 (선택사항)
       - name: Save latest version metadata
         run: |
           VERSION=${{ steps.version.outputs.VERSION }}
           echo "${VERSION}" > latest.txt
           aws s3 cp latest.txt "s3://${S3_BUCKET}/deployments/latest.txt"
 
-      # 2-4) CloudFront 캐시 무효화
       - name: Invalidate CloudFront cache
         run: |
           aws cloudfront create-invalidation \
