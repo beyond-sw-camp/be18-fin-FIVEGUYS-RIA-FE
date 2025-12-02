@@ -18,7 +18,7 @@ import FileStoragePage from "@/modules/file/views/FileStoragePage.vue";
 import FloorPage from "@/modules/storemap/views/StoreMapPage.vue";
 import HomePage from "@/views/HomePage.vue";
 import LoginPage from "@/views/LoginPage.vue";
-import MyPage from "@/modules/user/MyPage.vue"; // ← 추가
+import MyPage from "@/modules/user/MyPage.vue";
 import PotentialClientPage from "@/modules/client/views/PotentialClientPage.vue";
 import ProjectDetailPage from "@/modules/project/views/ProjectDetailPage.vue";
 import ProjectPage from "@/modules/project/views/ProjectPage.vue";
