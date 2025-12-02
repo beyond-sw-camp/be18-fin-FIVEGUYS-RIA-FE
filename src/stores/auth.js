@@ -18,7 +18,7 @@ function parseJwt(token) {
 }
 
 export const useAuthStore = defineStore("auth", {
-  // ✅ 새로고침 시 localStorage에서 복구
+  //  새로고침 시 localStorage에서 복구
   state: () => {
     const savedToken = localStorage.getItem("accessToken"); // 스샷 기준 키 이름
     const payload = savedToken ? parseJwt(savedToken) : null;
