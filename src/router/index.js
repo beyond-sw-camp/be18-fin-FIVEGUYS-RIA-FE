@@ -16,7 +16,6 @@ import CreateProposalPage from "@/modules/sales/proposal/view/CreateProposalPage
 import EstimatePage from "@/modules/sales/estimate/view/EstimatePage.vue";
 import FileStoragePage from "@/modules/file/views/FileStoragePage.vue";
 import FloorPage from "@/modules/storemap/views/StoreMapPage.vue";
-import HomePage from "@/views/HomePage.vue";
 import LoginPage from "@/views/LoginPage.vue";
 import MyPage from "@/modules/user/MyPage.vue";
 import PotentialClientPage from "@/modules/client/views/PotentialClientPage.vue";
@@ -25,6 +24,7 @@ import ProjectPage from "@/modules/project/views/ProjectPage.vue";
 import ProposalDetailPage from "@/modules/sales/proposal/view/ProposalDetailPage.vue";
 import ProposalPage from "@/modules/sales/proposal/view/ProposalPage.vue";
 import RevenuePage from "@/modules/sales/revenue/view/RevenuePage.vue";
+import StatsDashboard from "@/views/StatsDashboard.vue";
 import VipMemberListPage from "@/modules/member/views/VipMemberListPage.vue";
 import VipMemberPage from "@/modules/member/views/VipMemberPage.vue";
 import { useAuthStore } from "@/stores/auth";
@@ -38,7 +38,7 @@ const routes = [
   },
   { path: "/", redirect: "/home" },
   { path: "/mypage", name: "MyPage", component: MyPage },
-  { path: "/home", name: "Home", component: HomePage },
+  { path: "/home", name: "Home", component: StatsDashboard },
   { path: "/calendar", name: "Calendar", component: CalendarPage },
   { path: "/project", name: "Project", component: ProjectPage },
   {
