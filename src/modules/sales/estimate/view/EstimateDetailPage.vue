@@ -3,6 +3,7 @@
     <div class="page-title">견적 상세</div>
 
     <v-card elevation="1" class="project-card">
+      <!-- 견적 정보 -->
       <div class="section-title">견적 정보</div>
 
       <v-row dense>
@@ -104,16 +105,6 @@
             :readonly="!editMode"
           />
         </v-col>
-
-        <!-- 총 견적 금액 -->
-        <v-col cols="12">
-          <v-card class="total-card pa-4 mt-4">
-            <div class="total-title">총 견적 금액</div>
-            <div class="total-price">
-              ₩{{ totalEstimateAmount.toLocaleString() }}
-            </div>
-          </v-card>
-        </v-col>
       </v-row>
 
       <!-- 공간 정보 -->
@@ -147,14 +138,21 @@
         </tbody>
       </v-table>
 
+      <v-card class="total-card pa-4 mt-4">
+        <div class="total-title">총 견적 금액</div>
+        <div class="total-price">
+          ₩{{ totalEstimateAmount.toLocaleString() }}
+        </div>
+      </v-card>
       <!-- 하단 버튼 -->
       <div class="actions-row">
+        <!-- 조회 모드 -->
         <div v-if="!editMode" class="d-flex gap-3">
           <v-btn
             color="orange-darken-2"
             class="white--text"
             rounded="lg"
-            @click="editMode = true"
+            @click="goEdit"
           >
             편집
           </v-btn>
@@ -168,6 +166,7 @@
           </v-btn>
         </div>
 
+        <!-- 수정 모드 -->
         <div v-else class="d-flex gap-3">
           <v-btn
             color="orange-darken-2"
@@ -282,6 +281,13 @@ const mapPaymentCondition = (v) => {
 const totalEstimateAmount = computed(() =>
   form.spaces.reduce((total, s) => total + (s.finalAmount || 0), 0)
 );
+
+const goEdit = () => {
+  router.push({
+    name: "EstimateEdit",
+    params: { id: route.params.id },
+  });
+};
 
 onMounted(fetchDetail);
 </script>
