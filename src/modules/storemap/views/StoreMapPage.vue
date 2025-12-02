@@ -14,9 +14,10 @@
       <!-- floor image -->
       <div class="image-wrapper">
         <img
-          class="map-image"
+          ref="imageRef"
           :src="reloadSrc"
           usemap="#store-map"
+          class="map-image"
           @load="handleImageLoad"
         />
 
@@ -32,7 +33,7 @@
               maxWidth: area.maxWidth + 'px'
             }"
           >
-            {{ area.name }}
+            {{ area.displayName }}
           </div>
         </div>
       </div>
@@ -61,7 +62,7 @@
 import { ref, computed, watch, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import BrandDetailModal from "@/modules/storemap/views/BrandDetailModal.vue";
-import { fetchStoreNames } from "@/apis/storemap";   // ★ 추가된 부분
+import { fetchStoreNames } from "@/apis/storemap";
 
 /* 이미지/좌표 파일 */
 import floorB1Img from "@/assets/images/floorB1.png";
@@ -75,6 +76,7 @@ import floor3FMap from "@/assets/floormaps/floorF3map.json";
 import floor4FImg from "@/assets/images/floorF4.png";
 import floor4FMap from "@/assets/floormaps/floorF4map.json";
 
+/* 층 설정 */
 const floorConfig = {
   B1: { img: floorB1Img, areas: floorB1Map },
   "1F": { img: floor1FImg, areas: floor1FMap },
@@ -87,24 +89,6 @@ const route = useRoute();
 const currentLevel = computed(() => route.params.level || "B1");
 const currentFloor = computed(() => floorConfig[currentLevel.value]);
 
-/* ---- DB 매장명 불러오기 ---- */
-const storeNames = ref({}); // { 1: "나이키 A-102점" }
-
-async function loadStoreNames() {
-  try {
-    const res = await fetchStoreNames();
-    storeNames.value = Object.fromEntries(
-      res.data.map(s => [s.storeId, s.storeDisplayName])
-    );
-  } catch (e) {
-    console.error("매장명 불러오기 실패:", e);
-  }
-}
-
-onMounted(() => {
-  loadStoreNames(); // ★ 페이지 로드시 DB 매장명 먼저 로드
-});
-
 /* 이미지 reload */
 const reloadSrc = ref("");
 watch(
@@ -113,18 +97,49 @@ watch(
   { immediate: true }
 );
 
-/* 좌표 스케일링 */
+/* ---------------------------
+   storeNamesMap (DB 매장 이름)
+----------------------------*/
+const storeNamesMap = ref(new Map());
+
+async function loadStoreNames() {
+  try {
+    const res = await fetchStoreNames();
+    const map = new Map();
+    res.data.forEach(s => {
+      map.set(s.storeId, s.storeDisplayName);
+    });
+    storeNamesMap.value = map;
+  } catch (e) {
+    console.error("❌ Failed to load store names", e);
+  }
+}
+
+onMounted(loadStoreNames);
+
+/* ---------------------------
+   이미지 로드 이후 렌더링 다시 실행
+----------------------------*/
+const imageRef = ref(null);
+
+watch(storeNamesMap, () => {
+  if (imageRef.value) {
+    handleImageLoad({ target: imageRef.value });
+  }
+});
+
+/* ---------------------------
+   좌표 스케일링
+----------------------------*/
 const renderedAreas = ref([]);
 
 watch(currentLevel, () => {
   renderedAreas.value = [];
 });
 
-/* poly / rect 공통 bounding */
 function getAreaBox(originalCoords, scaleX, scaleY) {
   const nums = originalCoords.split(",").map(Number);
-  const xs = [];
-  const ys = [];
+  const xs = [], ys = [];
 
   for (let i = 0; i < nums.length; i += 2) {
     xs.push(nums[i] * scaleX);
@@ -132,12 +147,7 @@ function getAreaBox(originalCoords, scaleX, scaleY) {
   }
 
   return {
-    left: Math.min(...xs),
-    right: Math.max(...xs),
-    top: Math.min(...ys),
-    bottom: Math.max(...ys),
     width: Math.max(...xs) - Math.min(...xs),
-    height: Math.max(...ys) - Math.min(...ys),
   };
 }
 
@@ -149,43 +159,39 @@ function scaleCoords(original, scaleX, scaleY) {
     .join(",");
 }
 
-/* ---- 핵심: handleImageLoad는 storeNames 로딩 후에만 실행 ---- */
+/* ---------------------------
+   이미지 로딩 시 오버레이 적용
+----------------------------*/
 function handleImageLoad(event) {
   const img = event.target;
-
-  if (!storeNames.value || Object.keys(storeNames.value).length === 0) {
-    console.warn("❗ storeNames not loaded yet → 렌더링 보류");
-    return;
-  }
 
   const scaleX = img.clientWidth / img.naturalWidth;
   const scaleY = img.clientHeight / img.naturalHeight;
 
   renderedAreas.value = currentFloor.value.areas.map(a => {
-    const box = getAreaBox(a.coords, scaleX, scaleY);
     const sid = a.storeId ?? Number(a.id);
+
+    const storeName = storeNamesMap.value.get(sid);
+    const displayName =
+      storeName && storeName.trim() !== "" ? storeName : "공실";
+
+    const box = getAreaBox(a.coords, scaleX, scaleY);
 
     return {
       ...a,
       storeId: sid,
-      name: storeNames.value[sid] ?? a.name, // ★ JSON 이름 → DB 이름으로 변경
       scaledCoords: scaleCoords(a.coords, scaleX, scaleY),
       textX: a.x * scaleX,
       textY: a.y * scaleY,
       maxWidth: box.width * 0.9,
+      displayName
     };
   });
 }
 
-/* DB 매장명이 로딩된 후 자동으로 재렌더링 */
-watch(storeNames, () => {
-  const img = document.querySelector(".map-image");
-  if (img && img.complete) {
-    handleImageLoad({ target: img });
-  }
-});
-
-/* 모달 */
+/* ---------------------------
+   모달
+----------------------------*/
 const dialog = ref(false);
 const selectedStoreId = ref(null);
 
@@ -194,7 +200,9 @@ function openModal(area) {
   dialog.value = true;
 }
 
-/* zoom + pan */
+/* ---------------------------
+   zoom + pan
+----------------------------*/
 const zoomLevel = ref(1);
 const translateX = ref(0);
 const translateY = ref(0);

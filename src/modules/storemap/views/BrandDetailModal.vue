@@ -44,7 +44,7 @@
               <v-col cols="12">
                 <v-text-field
                   label="입주명"
-                  :model-value="brand.storeDisplayName"
+                  :model-value="brand.storeDisplayName || '공실'"
                   variant="outlined"
                   readonly
                 />
@@ -182,14 +182,14 @@
 </template>
 
 <script setup>
-import { ref, watch } from "vue";
+import { ref, watch, computed } from "vue";
 import { fetchStoreDetailStats } from "@/apis/storemap";   
 /* -----------------------------
       Props & Emits
 ----------------------------- */
 const props = defineProps({
   modelValue: { type: Boolean, required: true },
-  storeId: { type: Number, required: true },     
+  storeId: { type: Number, required: false, default: null },     
 });
 
 const emit = defineEmits(["update:modelValue"]);
@@ -213,6 +213,13 @@ const brand = ref({});
 const loading = ref(false);
 const error = ref(null);
 const tab = ref("info");
+
+const displayName = computed(() =>
+  brand.value.storeDisplayName &&
+  brand.value.storeDisplayName.trim() !== ""
+    ? brand.value.storeDisplayName
+    : "공실"
+);
 
 /* -----------------------------
       storeId 변경 시 API 호출
