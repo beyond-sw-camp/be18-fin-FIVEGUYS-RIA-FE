@@ -38,7 +38,7 @@
             </v-list-item>
           </v-list>
         </v-menu>
-        <v-btn text to="/vipmember">VIP 회원</v-btn>
+        <!-- <v-btn text to="/vipmember">VIP 회원</v-btn> -->
 
     <!-- 변경: VIP 드롭다운 메뉴 -->
     <v-menu>
