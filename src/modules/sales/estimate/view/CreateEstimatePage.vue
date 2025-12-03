@@ -373,13 +373,13 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, watch } from "vue";
+import { ref, reactive, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 
 import { createEstimate } from "@/apis/estimate";
 import { getFloors, getSpaces } from "@/apis/storemap";
-import { getProjectTitles, getProjectMeta } from "@/apis/project";
 import { getProposalsByProject, getProposalDetail } from "@/apis/proposal";
+import { getProjectsWithPipelines, getProjectMeta } from "@/apis/project";
 import {
   getSimpleClientCompanies,
   getSimpleClientsByCompany,
@@ -388,19 +388,22 @@ import {
 const router = useRouter();
 
 /* ------------ 옵션들 ------------ */
-const projectOptions = ref([]);
-const proposalOptions = ref([]);
-
-const companyList = ref([]);
-const clientList = ref([]);
-
-const floorOptions = ref([]);
-const spaceStoreOptions = ref([[]]); // ← 에러 발생하던 부분 수정됨!
-
 const paymentOptions = ref([
   { label: "선불", value: "PREPAY" },
   { label: "후불", value: "POSTPAY" },
 ]);
+
+const projectOptions = ref([]);
+const proposalOptions = ref([]);
+const companyList = ref([]);
+const clientList = ref([]);
+
+const floorOptions = ref([]);
+const spaceStoreOptions = ref([]);
+
+/* ------------ Date menu ------------ */
+const estimateMenu = ref(false);
+const deliveryMenu = ref(false);
 
 /* ------------ FORM ------------ */
 const form = reactive({
@@ -428,53 +431,124 @@ const form = reactive({
   ],
 });
 
-/* ------------ 모달 UI ------------ */
+/* ------------ UI ------------ */
+const selectedCompanyName = ref("");
+const selectedClientName = ref("");
+
 const companyDialog = ref(false);
 const clientDialog = ref(false);
 
 const companySearch = ref("");
 const clientSearch = ref("");
-
-const companyFilter = ref("ALL"); // ALL / CLIENT / LEAD
-
-/* ------------ 이름 표시용 ------------ */
-const selectedCompanyName = ref("");
-const selectedClientName = ref("");
+const companyFilter = ref("ALL");
 
 /* ------------ Snackbar ------------ */
 const snackbar = ref(false);
 const snackbarColor = ref("red");
 const snackbarMessage = ref("");
 
-const showError = (err, fallback = "저장 실패") => {
-  const msg =
-    err?.response?.data?.message ||
-    err?.response?.data?.errorMessage ||
-    fallback;
-
+const showError = (msg) => {
   snackbarMessage.value = msg;
   snackbarColor.value = "red";
   snackbar.value = true;
 };
-
 const showSuccess = (msg) => {
   snackbarMessage.value = msg;
   snackbarColor.value = "green";
   snackbar.value = true;
 };
 
-/* ------------ 고객사 로딩 ------------ */
+/* ------------ Utils ------------ */
+const formatDate = (date) => {
+  if (!date) return null;
+  return new Date(date).toISOString().substring(0, 10);
+};
+
+/* ------------ 프로젝트 불러오기 ------------ */
+const loadProjects = async () => {
+  const res = await getProjectsWithPipelines({
+    myProject: true,
+    page: 1,
+    size: 100,
+  });
+
+  projectOptions.value = res.data.content.map((p) => ({
+    projectId: p.projectId,
+    projectTitle: p.title,
+  }));
+};
+
+/* ====================================================================== */
+/*                           프로젝트 변경 (정리됨)                         */
+/* ====================================================================== */
+const onProjectChange = async (projectId) => {
+  form.proposalId = null;
+  proposalOptions.value = [];
+
+  if (!projectId) return;
+
+  const { data } = await getProjectMeta(projectId);
+
+  /* 🔥 1) 이름 우선 세팅 */
+  selectedCompanyName.value = data.clientCompanyName || "";
+  selectedClientName.value = data.clientName || "";
+
+  /* 🔥 2) 회사 자동 매칭 */
+  const company = companyList.value.find(
+    (c) => c.companyName === data.clientCompanyName
+  );
+  form.clientCompanyId = company ? company.companyId : null;
+
+  /* 🔥 3) 클라이언트 자동 매칭 */
+  if (form.clientCompanyId) {
+    await loadClients(form.clientCompanyId);
+    const client = clientList.value.find((c) => c.name === data.clientName);
+    form.clientId = client ? client.id : null;
+  } else {
+    form.clientId = null;
+  }
+
+  /* 🔥 4) 해당 프로젝트의 제안 로딩 */
+  const proposals = await getProposalsByProject(projectId);
+  proposalOptions.value = proposals.data.map((p) => ({
+    id: p.id,
+    title: p.title,
+  }));
+
+  console.log("onProjectChange 후 form:", form);
+};
+
+/* ====================================================================== */
+/*                           제안 선택 시 자동 세팅                        */
+/* ====================================================================== */
+const onProposalChange = async (proposalId) => {
+  if (!proposalId) return;
+
+  const { data } = await getProposalDetail(proposalId);
+
+  selectedCompanyName.value = data.clientCompanyName;
+  selectedClientName.value = data.clientName;
+
+  /* 동일하게 자동 매칭 */
+  const company = companyList.value.find(
+    (c) => c.companyName === data.clientCompanyName
+  );
+  form.clientCompanyId = company ? company.companyId : null;
+
+  if (form.clientCompanyId) {
+    await loadClients(form.clientCompanyId);
+    const client = clientList.value.find((c) => c.name === data.clientName);
+    form.clientId = client ? client.id : null;
+  } else {
+    form.clientId = null;
+  }
+};
+
+/* ====================================================================== */
+/*                           고객사 / 고객 선택                            */
+/* ====================================================================== */
 const loadCompanies = async () => {
-  const params = { page: 1, size: 100 };
-
-  if (companyFilter.value !== "ALL") {
-    params.type = companyFilter.value;
-  }
-  if (companySearch.value.trim()) {
-    params.keyword = companySearch.value.trim();
-  }
-
-  const res = await getSimpleClientCompanies(params);
+  const res = await getSimpleClientCompanies({ page: 1, size: 100 });
   companyList.value = res.data.content.map((c) => ({
     companyId: c.id,
     companyName: c.name,
@@ -488,37 +562,6 @@ const filteredCompanyList = computed(() =>
   )
 );
 
-watch([companyFilter, companySearch, companyDialog], (values) => {
-  if (companyDialog.value) loadCompanies();
-});
-
-/* ------------ 담당자 로딩 ------------ */
-const loadClients = async (companyId) => {
-  if (!companyId) return;
-
-  const params = { page: 1, size: 100 };
-  if (clientSearch.value.trim()) {
-    params.keyword = clientSearch.value.trim();
-  }
-
-  const res = await getSimpleClientsByCompany(companyId, params);
-  clientList.value = res.data.content.map((c) => ({
-    id: c.id,
-    name: c.name,
-  }));
-};
-
-const filteredClientList = computed(() =>
-  clientList.value.filter((p) => p.name.includes(clientSearch.value.trim()))
-);
-
-watch([clientDialog, clientSearch], () => {
-  if (clientDialog.value && form.clientCompanyId) {
-    loadClients(form.clientCompanyId);
-  }
-});
-
-/* ------------ 회사 선택 ------------ */
 const selectCompany = (c) => {
   selectedCompanyName.value = c.companyName;
   form.clientCompanyId = c.companyId;
@@ -530,55 +573,32 @@ const selectCompany = (c) => {
   companyDialog.value = false;
 };
 
-/* ------------ 담당자 선택 ------------ */
+const loadClients = async (companyId) => {
+  if (!companyId) return;
+  const res = await getSimpleClientsByCompany(companyId, {
+    page: 1,
+    size: 100,
+  });
+
+  clientList.value = res.data.content.map((c) => ({
+    id: c.id,
+    name: c.name,
+  }));
+};
+
+const filteredClientList = computed(() =>
+  clientList.value.filter((c) => c.name.includes(clientSearch.value.trim()))
+);
+
 const selectClient = (p) => {
   selectedClientName.value = p.name;
   form.clientId = p.id;
   clientDialog.value = false;
 };
 
-/* ------------ 프로젝트 선택 ------------ */
-const onProjectChange = async (projectId) => {
-  form.proposalId = null;
-  proposalOptions.value = [];
-
-  if (!projectId) return;
-
-  const { data } = await getProjectMeta(projectId);
-
-  form.clientCompanyId = data.clientCompanyId;
-  selectedCompanyName.value = data.clientCompanyName;
-
-  form.clientId = data.clientId;
-  selectedClientName.value = data.clientName;
-
-  await loadCompanies();
-  await loadClients(data.clientCompanyId);
-
-  const res = await getProposalsByProject(projectId);
-  proposalOptions.value = res.data.map((p) => ({
-    id: p.id,
-    title: p.title,
-  }));
-};
-
-/* ------------ 제안 선택 ------------ */
-const onProposalChange = async (proposalId) => {
-  if (!proposalId) return;
-
-  const { data } = await getProposalDetail(proposalId);
-
-  form.clientCompanyId = data.clientCompanyId;
-  selectedCompanyName.value = data.clientCompanyName;
-
-  form.clientId = data.clientId;
-  selectedClientName.value = data.clientName;
-
-  await loadCompanies();
-  await loadClients(data.clientCompanyId);
-};
-
-/* ------------ 층 선택 ------------ */
+/* ====================================================================== */
+/*                           매장 / 공간                                   */
+/* ====================================================================== */
 const loadFloors = async () => {
   const { data } = await getFloors(1);
   floorOptions.value = data.floors.map((f) => ({
@@ -587,22 +607,14 @@ const loadFloors = async () => {
   }));
 };
 
-/* ------------ 매장 선택 ------------ */
 const onFloorChange = async (idx) => {
   const floorId = form.spaces[idx].floorId;
   if (!floorId) return;
 
-  form.spaces[idx].storeId = null;
-
   const { data } = await getSpaces(floorId);
+  spaceStoreOptions.value[idx] = data.stores;
 
-  spaceStoreOptions.value[idx] = data.stores.map((s) => ({
-    storeId: s.storeId,
-    storeNumber: s.storeNumber,
-    rentPrice: s.rentPrice,
-    areaSize: s.areaSize,
-    description: s.description,
-  }));
+  form.spaces[idx].storeId = null;
 };
 
 const onStoreChange = (idx) => {
@@ -618,7 +630,6 @@ const onStoreChange = (idx) => {
   sp.description = selected.description;
 };
 
-/* ------------ 공간 추가 ------------ */
 const addSpace = () => {
   form.spaces.push({
     floorId: null,
@@ -629,18 +640,18 @@ const addSpace = () => {
     discountAmount: 0,
     description: "",
   });
-  spaceStoreOptions.value.push([]); // ← 추가된 공간의 매장 옵션 배열 생성
+  spaceStoreOptions.value.push([]);
 };
 
-/* ------------ 공간 삭제 ------------ */
 const removeSpace = (idx) => {
   if (form.spaces.length <= 1) return;
-
   form.spaces.splice(idx, 1);
   spaceStoreOptions.value.splice(idx, 1);
 };
 
-/* ------------ 총 금액 ------------ */
+/* ====================================================================== */
+/*                           총 금액                                      */
+/* ====================================================================== */
 const totalPrice = computed(() =>
   form.spaces.reduce(
     (sum, sp) =>
@@ -652,62 +663,56 @@ const totalPrice = computed(() =>
   )
 );
 
-/* ------------ 날짜 ------------ */
-const estimateMenu = ref(false);
-const deliveryMenu = ref(false);
-
-const formatDate = (date) => {
-  if (!date) return "";
-  return new Date(date).toISOString().substring(0, 10);
-};
-
-/* ------------ 저장 ------------ */
+/* ====================================================================== */
+/*                           저장                                         */
+/* ====================================================================== */
 const saveEstimate = async () => {
+  if (!form.clientCompanyId) return showError("고객사를 선택해주세요!");
+  if (!form.clientId) return showError("고객 담당자를 선택해주세요!");
+
+  const payload = {
+    title: form.title,
+    projectId: form.projectId,
+    proposalId: form.proposalId,
+    clientCompanyId: form.clientCompanyId,
+    clientId: form.clientId,
+    estimateDate: formatDate(form.estimateDate),
+    deliveryDate: formatDate(form.deliveryDate),
+    paymentCondition: form.paymentCondition,
+    remark: form.remark || null,
+
+    spaces: form.spaces.map((sp) => ({
+      storeId: sp.storeId,
+      additionalFee: sp.additionalFee,
+      discountAmount: sp.discountAmount,
+      description: sp.description,
+    })),
+  };
+
+  console.log("📌 최종 payload:", payload);
+
   try {
-    const payload = {
-      title: form.title,
-      clientCompanyId: form.clientCompanyId,
-      clientId: form.clientId,
-
-      projectId: form.projectId,
-      proposalId: form.proposalId,
-
-      estimateDate: formatDate(form.estimateDate),
-      deliveryDate: formatDate(form.deliveryDate),
-      paymentCondition: form.paymentCondition,
-      remark: form.remark || null,
-
-      spaces: form.spaces.map((sp) => ({
-        storeId: sp.storeId,
-        additionalFee: sp.additionalFee,
-        discountAmount: sp.discountAmount,
-        description: sp.description || "",
-      })),
-    };
-
     await createEstimate(payload);
     showSuccess("견적이 생성되었습니다.");
-
     router.push({ name: "Estimate" });
   } catch (err) {
-    showError(err, "견적을 저장할 수 없습니다.");
+    showError(err?.response?.data?.message || "생성 실패");
   }
 };
 
-/* ------------ Mount ------------ */
-onMounted(() => {
-  loadFloors();
-  loadCompanies();
-  loadProjects();
-});
+/* ====================================================================== */
+/*                           MOUNT                                        */
+/* ====================================================================== */
+onMounted(async () => {
+  await loadProjects();
+  await loadCompanies();
+  await loadFloors();
 
-const loadProjects = async () => {
-  const res = await getProjectTitles();
-  projectOptions.value = res.data.map((p) => ({
-    projectId: p.projectId,
-    projectTitle: p.projectTitle,
-  }));
-};
+  spaceStoreOptions.value = Array.from(
+    { length: form.spaces.length },
+    () => []
+  );
+});
 </script>
 
 <style scoped>

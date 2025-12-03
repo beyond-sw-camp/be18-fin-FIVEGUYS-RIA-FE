@@ -266,7 +266,11 @@
 import { reactive, ref, computed, watch } from "vue";
 import { useRouter } from "vue-router";
 import { createProposal } from "@/apis/proposal";
-import { getProjectTitles, getProjectMeta } from "@/apis/project";
+import {
+  getProjectTitles,
+  getProjectMeta,
+  getProjectsWithPipelines,
+} from "@/apis/project";
 import {
   getSimpleClientCompanies,
   getSimpleClientsByCompany,
@@ -411,24 +415,21 @@ const filteredClientPersons = computed(() => clientPersonList.value);
 
 /** 영업 기회 로딩 */
 const loadOpportunities = async () => {
-  const { data } = await getProjectTitles(opportunitySearch.value || "");
-  opportunityList.value = data.map((p) => ({
+  const res = await getProjectsWithPipelines({
+    myProject: true,
+    page: 1,
+    size: 100,
+  });
+
+  opportunityList.value = res.data.content.map((p) => ({
     id: p.projectId,
-    name: p.projectTitle,
+    name: p.title,
   }));
 };
 
 watch(opportunityDialog, (open) => {
-  if (open) {
-    opportunitySearch.value = "";
-    loadOpportunities();
-  }
-});
-
-watch(opportunitySearch, () => {
-  if (opportunityDialog.value) {
-    loadOpportunities();
-  }
+  if (!open) return;
+  loadOpportunities();
 });
 
 const filteredOpportunities = computed(() =>
@@ -457,21 +458,40 @@ const selectClientPerson = (p) => {
 };
 
 const selectOpportunity = async (o) => {
+  // 1) 영업 기회 기본 세팅
   form.projectId = o.id;
   form.projectType = o.name;
 
+  // 2) 메타 데이터 조회
   const { data } = await getProjectMeta(o.id);
 
-  form.projectId = data.projectId;
-  form.projectType = data.projectName;
-  form.clientCompanyId = data.clientCompanyId;
-  form.clientCompany = data.clientCompanyName;
-  form.clientId = data.clientId;
-  form.client = data.clientName;
+  if (data.projectId) form.projectId = data.projectId;
+  if (data.projectName) form.projectType = data.projectName;
 
-  clientPersonList.value = [];
-  if (data.clientCompanyId) {
-    await loadClientPersons(data.clientCompanyId);
+  // 3) 프로젝트에 연결된 고객사/고객을 별도로 조회 (이게 핵심)
+  const clientRes = await getSimpleClientCompanies({
+    projectId: data.projectId,
+  });
+
+  // projectId에 연결된 고객사가 1개인 구조라면
+  const company = clientRes.data.content?.[0];
+
+  if (company) {
+    form.clientCompanyId = company.id;
+    form.clientCompany = company.name;
+
+    // 고객 담당자 로딩
+    const personRes = await getSimpleClientsByCompany(company.id, {
+      page: 1,
+      size: 50,
+    });
+
+    const person = personRes.data.content?.[0];
+
+    if (person) {
+      form.clientId = person.id;
+      form.client = person.name;
+    }
   }
 
   opportunityDialog.value = false;
