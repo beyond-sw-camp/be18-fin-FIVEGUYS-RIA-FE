@@ -4,7 +4,9 @@
       <v-card class="users-card" elevation="0">
         <!-- 상단 -->
         <div class="users-card-header">
-          <h2 class="users-card-title">사용자 목록</h2>
+          <div>
+            <h2 class="users-card-title">사용자 목록</h2>
+          </div>
 
           <div class="users-toolbar">
             <v-text-field
@@ -53,8 +55,14 @@
               label="모든 상태"
             />
 
-            <v-btn color="primary" class="toolbar-add-btn" @click="openDialog">
-              + 사용자 추가
+            <v-btn
+              color="primary"
+              class="toolbar-add-btn"
+              rounded="xl"
+              @click="openDialog"
+            >
+              <v-icon start>mdi-account-plus-outline</v-icon>
+              사용자 추가
             </v-btn>
           </div>
         </div>
@@ -77,7 +85,9 @@
         <!-- 테이블 바디 -->
         <div class="table-body">
           <div v-for="user in pagedUsers" :key="user.id" class="table-row">
-            <span class="td th-name">{{ user.name }}</span>
+            <span class="td th-name">
+              <span class="user-name">{{ user.name }}</span>
+            </span>
             <span class="td th-emp">{{ user.employeeNo }}</span>
             <span class="td th-dept">{{ user.department }}</span>
             <span class="td th-position">{{ user.position }}</span>
@@ -96,10 +106,11 @@
             <span class="td th-actions">
               <v-btn
                 size="small"
-                color="error"
-                variant="outlined"
+                variant="text"
+                class="delete-btn"
                 @click="openDeleteDialog(user)"
               >
+                <v-icon start>mdi-trash-can-outline</v-icon>
                 삭제
               </v-btn>
             </span>
@@ -114,101 +125,221 @@
 
         <!-- 페이지네이션 -->
         <div class="table-footer">
-          <v-btn
-            variant="outlined"
-            size="small"
-            class="footer-btn"
-            :disabled="page === 1"
-            @click="page--"
-          >
-            이전
-          </v-btn>
+          <div class="footer-left">
+            <span class="footer-count"> 총 {{ filteredUsers.length }}명 </span>
+          </div>
 
-          <span class="page-info">페이지 {{ page }} / {{ totalPages }}</span>
+          <div class="footer-center">
+            <!-- 첫 페이지 -->
+            <v-btn
+              variant="outlined"
+              size="small"
+              class="footer-btn"
+              :disabled="page === 1"
+              @click="goFirst"
+            >
+              «
+            </v-btn>
 
-          <v-btn
-            variant="outlined"
-            size="small"
-            class="footer-btn"
-            :disabled="page === totalPages"
-            @click="page++"
-          >
-            다음
-          </v-btn>
+            <!-- -10 페이지 -->
+            <v-btn
+              variant="outlined"
+              size="small"
+              class="footer-btn"
+              :disabled="page === 1"
+              @click="jumpPrevBlock"
+            >
+              -10
+            </v-btn>
+
+            <!-- 이전 1페이지 -->
+            <v-btn
+              variant="outlined"
+              size="small"
+              class="footer-btn"
+              :disabled="page === 1"
+              @click="page--"
+            >
+              이전
+            </v-btn>
+
+            <span class="page-info">페이지 {{ page }} / {{ totalPages }}</span>
+
+            <!-- 다음 1페이지 -->
+            <v-btn
+              variant="outlined"
+              size="small"
+              class="footer-btn"
+              :disabled="page === totalPages"
+              @click="page++"
+            >
+              다음
+            </v-btn>
+
+            <!-- +10 페이지 -->
+            <v-btn
+              variant="outlined"
+              size="small"
+              class="footer-btn"
+              :disabled="page === totalPages"
+              @click="jumpNextBlock"
+            >
+              +10
+            </v-btn>
+
+            <!-- 마지막 페이지 -->
+            <v-btn
+              variant="outlined"
+              size="small"
+              class="footer-btn"
+              :disabled="page === totalPages"
+              @click="goLast"
+            >
+              »
+            </v-btn>
+          </div>
+
+          <div class="footer-right" />
         </div>
       </v-card>
     </section>
 
     <!-- 추가 모달 -->
-    <v-dialog v-model="showDialog" max-width="600">
-      <v-card>
-        <v-card-title class="dialog-title">사용자 추가</v-card-title>
+    <v-dialog v-model="showDialog" max-width="640">
+      <v-card class="user-add-card" rounded="xl">
+        <!-- 상단 헤더 -->
+        <v-card-title
+          class="d-flex align-center justify-space-between user-add-header"
+        >
+          <div>
+            <div class="user-add-title">사용자 추가</div>
+            <div class="user-add-subtitle">
+              조직에 새 계정을 추가하고 기본 정보를 설정합니다.
+            </div>
+          </div>
 
-        <v-card-text class="dialog-body">
-          <v-text-field
-            v-model="form.employeeNo"
-            label="사번"
-            variant="outlined"
-            class="mb-3"
-          />
-          <v-text-field
-            v-model="form.name"
-            label="이름"
-            variant="outlined"
-            class="mb-3"
-          />
-          <v-text-field
-            v-model="form.password"
-            type="password"
-            label="비밀번호"
-            variant="outlined"
-            class="mb-3"
-          />
+          <v-btn icon variant="text" @click="closeDialog" :disabled="saving">
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+        </v-card-title>
 
-          <v-select
-            v-model="form.roleId"
-            :items="roleSelectOptions"
-            item-title="label"
-            item-value="value"
-            label="권한"
-            variant="outlined"
-            class="mb-3"
-          />
+        <v-divider />
 
-          <v-text-field
-            v-model="form.email"
-            label="이메일"
-            variant="outlined"
-            class="mb-3"
-          />
+        <!-- 폼 영역 -->
+        <v-card-text class="user-add-body">
+          <!-- 섹션: 기본 정보 -->
+          <div class="user-add-section">
+            <div class="user-add-section-title">기본 정보</div>
 
-          <!-- 부서: 드롭다운 (ADMIN, SALES) -->
-          <v-select
-            v-model="form.department"
-            :items="departmentOptions"
-            item-title="label"
-            item-value="value"
-            label="부서"
-            variant="outlined"
-            class="mb-3"
-          />
+            <v-row dense>
+              <v-col cols="12" md="6">
+                <v-text-field
+                  v-model="form.employeeNo"
+                  label="사번"
+                  variant="outlined"
+                  density="comfortable"
+                  hide-details="auto"
+                />
+              </v-col>
+              <v-col cols="12" md="6">
+                <v-text-field
+                  v-model="form.name"
+                  label="이름"
+                  variant="outlined"
+                  density="comfortable"
+                  hide-details="auto"
+                />
+              </v-col>
+            </v-row>
 
-          <!-- 직책: 드롭다운 (시스템 관리자, 영업팀장, 영업팀원) -->
-          <v-select
-            v-model="form.position"
-            :items="positionOptions"
-            item-title="label"
-            item-value="value"
-            label="직책"
-            variant="outlined"
-            class="mb-1"
-          />
+            <v-row dense class="mt-1">
+              <v-col cols="12" md="6">
+                <v-text-field
+                  v-model="form.password"
+                  type="password"
+                  label="비밀번호"
+                  variant="outlined"
+                  density="comfortable"
+                  hide-details="auto"
+                />
+              </v-col>
+              <v-col cols="12" md="6">
+                <v-select
+                  v-model="form.roleId"
+                  :items="roleSelectOptions"
+                  item-title="label"
+                  item-value="value"
+                  label="권한"
+                  variant="outlined"
+                  density="comfortable"
+                  hide-details="auto"
+                />
+              </v-col>
+            </v-row>
+          </div>
+
+          <!-- 섹션: 조직 정보 -->
+          <div class="user-add-section mt-4">
+            <div class="user-add-section-title">조직 정보</div>
+
+            <v-row dense>
+              <v-col cols="12">
+                <v-text-field
+                  v-model="form.email"
+                  label="이메일"
+                  variant="outlined"
+                  density="comfortable"
+                  hide-details="auto"
+                />
+              </v-col>
+            </v-row>
+
+            <v-row dense class="mt-1">
+              <v-col cols="12" md="6">
+                <v-select
+                  v-model="form.department"
+                  :items="departmentOptions"
+                  item-title="label"
+                  item-value="value"
+                  label="부서"
+                  variant="outlined"
+                  density="comfortable"
+                  hide-details="auto"
+                />
+              </v-col>
+              <v-col cols="12" md="6">
+                <v-select
+                  v-model="form.position"
+                  :items="positionOptions"
+                  item-title="label"
+                  item-value="value"
+                  label="직책"
+                  variant="outlined"
+                  density="comfortable"
+                  hide-details="auto"
+                />
+              </v-col>
+            </v-row>
+          </div>
         </v-card-text>
 
-        <v-card-actions>
+        <!-- 하단 버튼 -->
+        <v-card-actions class="user-add-actions">
           <v-spacer />
-          <v-btn variant="text" @click="closeDialog">취소</v-btn>
-          <v-btn color="primary" :loading="saving" @click="createUser">
+          <v-btn
+            variant="text"
+            class="user-add-cancel"
+            @click="closeDialog"
+            :disabled="saving"
+          >
+            취소
+          </v-btn>
+          <v-btn
+            class="user-add-save"
+            color="primary"
+            :loading="saving"
+            @click="createUser"
+          >
             저장
           </v-btn>
         </v-card-actions>
@@ -217,17 +348,20 @@
 
     <!-- 삭제 모달 -->
     <v-dialog v-model="deleteDialog" max-width="400">
-      <v-card>
-        <v-card-title class="dialog-title">사용자 삭제</v-card-title>
+      <v-card class="user-delete-card" rounded="xl">
+        <v-card-title class="dialog-title"> 사용자 삭제 </v-card-title>
 
-        <v-card-text>
-          <p>
-            <strong>{{ deleteTargetUser?.name }}</strong> 사용자를
-            삭제하시겠습니까?
+        <v-card-text class="dialog-body">
+          <p class="dialog-text">
+            <span class="dialog-user-name">
+              {{ deleteTargetUser?.name }}
+            </span>
+            사용자를 삭제하시겠습니까?
           </p>
+          <p class="dialog-subtext">삭제된 사용자는 복구할 수 없습니다.</p>
         </v-card-text>
 
-        <v-card-actions>
+        <v-card-actions class="dialog-actions">
           <v-spacer />
           <v-btn variant="text" @click="closeDeleteDialog">취소</v-btn>
           <v-btn color="error" @click="confirmDeleteUser">삭제</v-btn>
@@ -363,9 +497,27 @@ const totalPages = computed(() => {
   return len === 0 ? 1 : Math.ceil(len / pageSize);
 });
 
+/* 필터 변경 시 1페이지로 */
 watch([searchText, selectedTeam, selectedRole, selectedStatus], () => {
   page.value = 1;
 });
+
+/* 페이지 블럭 이동 (-10 / +10) */
+const jumpPrevBlock = () => {
+  page.value = Math.max(1, page.value - 10);
+};
+
+const jumpNextBlock = () => {
+  page.value = Math.min(totalPages.value, page.value + 10);
+};
+
+const goFirst = () => {
+  page.value = 1;
+};
+
+const goLast = () => {
+  page.value = totalPages.value;
+};
 
 onMounted(fetchUsers);
 
@@ -462,60 +614,274 @@ const createUser = async () => {
 <style scoped>
 .admin-users-page {
   padding: 24px 40px 32px;
-  background-color: #f5f5f5;
   min-height: 100%;
   box-sizing: border-box;
 }
+
 .users-section {
   display: flex;
   justify-content: center;
 }
+
 .users-card {
   width: 100%;
   max-width: 960px;
-  border-radius: 16px;
+  border-radius: 18px;
   background-color: #ffffff;
-  border: 1px solid #e5e5e5;
+  border: 1px solid #e5e7eb;
   padding: 20px 24px 12px;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.16);
 }
+
+/* 상단 영역 */
 .users-card-header {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
+  margin-bottom: 4px;
 }
+
+.users-card-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.users-card-subtitle {
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin: 0;
+}
+
 .users-toolbar {
   display: flex;
   align-items: center;
   gap: 8px;
   white-space: nowrap;
 }
+
 .toolbar-search {
   flex: 1 1 auto;
   min-width: 250px;
 }
+
 .toolbar-select {
   flex: 0 0 150px;
 }
+
+.toolbar-add-btn {
+  text-transform: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding-inline: 14px;
+}
+
+/* 테이블 */
 .table-header-row {
   display: grid;
   grid-template-columns: 1.5fr 1fr 1fr 1.2fr 2fr 0.8fr 0.8fr;
   padding: 10px 4px;
   font-size: 13px;
   font-weight: 600;
-  color: #777;
+  color: #6b7280;
 }
+
+.th {
+  display: flex;
+  align-items: center;
+}
+
+.table-body {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #f3f4f6;
+  background-color: #f9fafb;
+}
+
 .table-row {
   display: grid;
   grid-template-columns: 1.5fr 1fr 1fr 1.2fr 2fr 0.8fr 0.8fr;
-  padding: 10px 4px;
+  padding: 10px 8px;
+  font-size: 0.9rem;
+  background-color: #ffffff;
+  border-bottom: 1px solid #f3f4f6;
+  transition: background-color 0.15s ease, transform 0.08s ease;
 }
+
+.table-row:nth-child(2n) {
+  background-color: #fdfdfd;
+}
+
+.table-row:hover {
+  background-color: #f3f4ff;
+  transform: translateY(-1px);
+}
+
+.td {
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-name {
+  font-weight: 600;
+  color: #111827;
+}
+
 .table-empty {
   padding: 24px;
   text-align: center;
+  color: #9ca3af;
+  background-color: #ffffff;
 }
+
+/* 삭제 버튼 */
+.delete-btn {
+  text-transform: none;
+  font-size: 0.8rem;
+  color: #b91c1c;
+}
+
+/* 하단 푸터 */
 .table-footer {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
   padding: 12px 0 4px;
+  font-size: 0.85rem;
+}
+
+.footer-left {
+  display: flex;
+  align-items: center;
+}
+
+.footer-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.footer-right {
+  /* 오른쪽 여백용 */
+}
+
+.footer-count {
+  color: #6b7280;
+}
+
+.footer-btn {
+  text-transform: none;
+  font-size: 0.8rem;
+  min-width: 40px;
+}
+
+.page-info {
+  color: #4b5563;
+}
+
+/* 사용자 추가 모달 */
+.user-add-card {
+  background: rgba(248, 250, 252, 0.96);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.22);
+  border-radius: 24px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.user-add-header {
+  padding: 16px 22px 12px;
+}
+
+.user-add-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.user-add-subtitle {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+.user-add-body {
+  padding: 16px 22px 8px;
+}
+
+/* 섹션 박스 */
+.user-add-section {
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(229, 231, 235, 0.9);
+}
+
+.user-add-section-title {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 8px;
+}
+
+/* 하단 버튼 영역 */
+.user-add-actions {
+  padding: 10px 22px 18px;
+}
+
+.user-add-cancel {
+  text-transform: none;
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.user-add-save {
+  text-transform: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  min-width: 96px;
+  border-radius: 999px;
+}
+
+/* 삭제 모달 */
+.user-delete-card {
+  border-radius: 20px;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.22);
+}
+
+.dialog-title {
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 14px 18px 4px;
+}
+
+.dialog-body {
+  padding: 4px 18px 6px;
+}
+
+.dialog-text {
+  font-size: 0.9rem;
+  color: #374151;
+  margin-bottom: 4px;
+}
+
+.dialog-user-name {
+  font-weight: 600;
+}
+
+.dialog-subtext {
+  font-size: 0.8rem;
+  color: #9ca3af;
+}
+
+.dialog-actions {
+  padding: 8px 16px 12px;
 }
 </style>

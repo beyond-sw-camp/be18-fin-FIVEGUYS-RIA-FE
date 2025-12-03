@@ -2,9 +2,9 @@
   <div class="admin-log-page">
     <section class="logs-section">
       <v-card class="logs-card" elevation="0">
-        <!-- 필터 영역 -->
+        <!-- 🔹 필터 영역 -->
         <div class="filter-section">
-          <h2 class="section-title">로그 필터</h2>
+          <h2 class="logs-card-title">로그 필터</h2>
 
           <div class="filter-row">
             <!-- 시작 날짜 -->
@@ -45,7 +45,7 @@
               />
             </div>
 
-            <!-- 작업 유형 (경로 기준 도메인) -->
+            <!-- 작업 유형 -->
             <div class="filter-item">
               <div class="filter-label">작업 유형</div>
               <v-select
@@ -59,7 +59,7 @@
               />
             </div>
 
-            <!-- 키워드 -->
+            <!-- 검색 -->
             <div class="filter-item filter-search">
               <div class="filter-label">검색</div>
               <v-text-field
@@ -80,11 +80,11 @@
 
         <v-divider class="mt-4 mb-2" />
 
-        <!-- 활동 로그 -->
+        <!-- 🔹 활동 로그 영역 -->
         <div class="logs-section-body">
           <div class="logs-header">
             <div class="logs-title-group">
-              <h2 class="section-title">활동 로그</h2>
+              <h2 class="logs-card-title">활동 로그</h2>
               <span class="logs-count">
                 총 {{ totalElements }}개의 로그를 찾았습니다.
               </span>
@@ -117,7 +117,7 @@
 
               <!-- 이름 -->
               <span class="td th-name">
-                {{ log.userName || "-" }}
+                <span class="user-name">{{ log.userName || "-" }}</span>
               </span>
 
               <!-- 사번 -->
@@ -154,9 +154,14 @@
             </div>
           </div>
 
-          <!-- 페이지네이션 -->
+          <!-- 🔹 페이지네이션 -->
           <div class="table-footer">
-            <div class="pagination-wrapper">
+            <div class="footer-left">
+              <span class="footer-count">총 {{ totalElements }}개</span>
+            </div>
+
+            <div class="footer-center">
+              <!-- 첫 페이지 -->
               <v-btn
                 variant="outlined"
                 size="small"
@@ -167,6 +172,18 @@
                 «
               </v-btn>
 
+              <!-- -10 페이지 -->
+              <v-btn
+                variant="outlined"
+                size="small"
+                class="footer-btn"
+                :disabled="page === 1"
+                @click="jumpPrevBlock"
+              >
+                -10
+              </v-btn>
+
+              <!-- 이전 1페이지 -->
               <v-btn
                 variant="outlined"
                 size="small"
@@ -181,6 +198,7 @@
                 페이지 {{ page }} / {{ totalPages }}
               </span>
 
+              <!-- 다음 1페이지 -->
               <v-btn
                 variant="outlined"
                 size="small"
@@ -191,6 +209,18 @@
                 다음
               </v-btn>
 
+              <!-- +10 페이지 -->
+              <v-btn
+                variant="outlined"
+                size="small"
+                class="footer-btn"
+                :disabled="page === totalPages"
+                @click="jumpNextBlock"
+              >
+                +10
+              </v-btn>
+
+              <!-- 마지막 페이지 -->
               <v-btn
                 variant="outlined"
                 size="small"
@@ -201,6 +231,8 @@
                 »
               </v-btn>
             </div>
+
+            <div class="footer-right" />
           </div>
         </div>
       </v-card>
@@ -223,14 +255,14 @@ const selectedAction = ref("ALL");
 const keyword = ref("");
 
 /* ---------- 로그 & 페이지네이션 ---------- */
-const logs = ref([]);
+const logs = ref([]); // ✅ 기본값 배열
 const page = ref(1);
 const size = ref(10);
 
 /* ---------- 사용자 옵션 ---------- */
 const userOptions = ref([{ label: "모든 사용자", value: "ALL" }]);
 
-/* ---------- 작업 유형 옵션 (경로 기준 도메인) ---------- */
+/* ---------- 작업 유형 옵션 ---------- */
 const actionOptions = [
   { label: "모든 작업", value: "ALL" },
   { label: "관리자 (admin)", value: "admin" },
@@ -301,16 +333,14 @@ const fetchUsersForFilter = async () => {
   }
 };
 
-/* ---------- 필터링 로직 ---------- */
+/* ---------- 필터링 ---------- */
 const filteredLogs = computed(() =>
-  logs.value.filter((log) => {
+  (logs.value ?? []).filter((log) => {
     const createdDate = log.createdAt ? log.createdAt.slice(0, 10) : null;
 
-    // 날짜 필터
     if (startDate.value && createdDate < startDate.value) return false;
     if (endDate.value && createdDate > endDate.value) return false;
 
-    // 사용자 필터
     const empNo = log.employeeNo ?? null;
     if (
       selectedUser.value !== "ALL" &&
@@ -319,18 +349,12 @@ const filteredLogs = computed(() =>
       return false;
     }
 
-    // 작업 유형 필터 (경로 기준)
     if (selectedAction.value !== "ALL") {
       const path = (log.resource ?? "").toLowerCase();
       const key = String(selectedAction.value).toLowerCase();
-
-      // 예: /api/admin/users, /admin/users, /auth/login 등
-      if (!path.includes(`/${key}`)) {
-        return false;
-      }
+      if (!path.includes(`/${key}`)) return false;
     }
 
-    // 키워드 필터
     const kw = keyword.value.trim();
     if (kw) {
       const target = `${log.logName ?? ""} ${log.resource ?? ""} ${
@@ -343,7 +367,7 @@ const filteredLogs = computed(() =>
   })
 );
 
-/* ---------- 페이지 보정 ---------- */
+/* ---------- 페이지 계산 ---------- */
 const totalPages = computed(() => {
   const count = filteredLogs.value.length;
   return count === 0 ? 1 : Math.ceil(count / size.value);
@@ -355,13 +379,23 @@ watch(filteredLogs, () => {
 
 /* ---------- 페이지네이션 ---------- */
 const pagedLogs = computed(() => {
+  const list = filteredLogs.value;
   const start = (page.value - 1) * size.value;
-  return filteredLogs.value.slice(start, start + size.value);
+  return list.slice(start, start + size.value);
 });
 
 const totalElements = computed(() => filteredLogs.value.length);
 
-/* ---------- 필터 이벤트 ---------- */
+/* ---------- 페이지 블럭 이동 (-10 / +10) ---------- */
+const jumpPrevBlock = () => {
+  page.value = Math.max(1, page.value - 10);
+};
+
+const jumpNextBlock = () => {
+  page.value = Math.min(totalPages.value, page.value + 10);
+};
+
+/* ---------- 필터/페이지 제어 ---------- */
 const resetFilter = () => {
   startDate.value = "";
   endDate.value = "";
@@ -384,47 +418,38 @@ onMounted(async () => {
 .admin-log-page {
   padding: 24px 40px 32px;
   background: #f5f5f5;
-  min-height: 100vh;
+  min-height: 100%;
   box-sizing: border-box;
 }
 
-.page-header {
-  margin-bottom: 24px;
-}
-
-.page-title {
-  font-size: 24px;
-  font-weight: 700;
-}
-
-.page-desc {
-  margin-top: 4px;
-  font-size: 13px;
-  color: #777;
-}
-
+/* 가운데 카드 정렬 */
 .logs-section {
   display: flex;
   justify-content: center;
 }
 
+/* 카드 스타일 (users-card와 맞춤) */
 .logs-card {
   width: 100%;
   max-width: 1080px;
-  padding: 24px;
-  border-radius: 16px;
-  background: #fff;
-  border: 1px solid #e5e5e5;
+  padding: 20px 24px 16px;
+  border-radius: 18px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.16);
 }
 
-/* 필터 */
+/* 사용자 목록이랑 동일한 타이틀 */
+.logs-card-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 8px 0;
+}
+
+/* 필터 영역 */
 .filter-section {
   margin-bottom: 12px;
-}
-
-.section-title {
-  font-size: 16px;
-  font-weight: 600;
 }
 
 .filter-row {
@@ -455,7 +480,7 @@ onMounted(async () => {
   gap: 8px;
 }
 
-/* 로그 영역 */
+/* 로그 헤더 */
 .logs-section-body {
   margin-top: 4px;
 }
@@ -478,18 +503,49 @@ onMounted(async () => {
   color: #777;
 }
 
-/* 테이블 공통 */
-.table-header-row,
+/* 테이블 */
+.table-header-row {
+  display: grid;
+  grid-template-columns: 1.6fr 1.1fr 0.8fr 1.6fr 2.4fr 0.8fr;
+  padding: 10px 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.th {
+  display: flex;
+  align-items: center;
+}
+
+/* 바디 */
+.table-body {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #f3f4f6;
+  background-color: #f9fafb;
+}
+
 .table-row {
   display: grid;
   grid-template-columns: 1.6fr 1.1fr 0.8fr 1.6fr 2.4fr 0.8fr;
   padding: 10px 8px;
-  font-size: 14px;
-  align-items: flex-start;
+  font-size: 0.9rem;
+  background-color: #ffffff;
+  border-bottom: 1px solid #f3f4f6;
+  transition: background-color 0.15s ease, transform 0.08s ease;
 }
 
-/* 모든 셀 공통 */
-.th,
+.table-row:nth-child(2n) {
+  background-color: #fdfdfd;
+}
+
+.table-row:hover {
+  background-color: #f3f4ff;
+  transform: translateY(-1px);
+}
+
+/* 셀 공통 */
 .td {
   padding: 4px 8px;
   display: flex;
@@ -505,14 +561,13 @@ onMounted(async () => {
   font-variant-numeric: tabular-nums;
 }
 
-/* 헤더 스타일 */
-.table-header-row .th {
-  font-size: 13px;
+/* 이름 강조 */
+.user-name {
   font-weight: 600;
-  color: #777;
+  color: #111827;
 }
 
-/* 작업명 셀: 여러 줄 허용 + 전체 보이기 */
+/* 작업명 여러 줄 허용 */
 .td.th-action {
   white-space: normal;
   overflow: visible;
@@ -529,23 +584,42 @@ onMounted(async () => {
   padding: 24px;
   text-align: center;
   color: #888;
+  background-color: #ffffff;
 }
 
-/* 페이지네이션 */
+/* 하단 페이지네이션 (users 스타일) */
 .table-footer {
   margin-top: 12px;
-  display: flex;
-  justify-content: flex-end;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  font-size: 0.85rem;
 }
 
-.pagination-wrapper {
+.footer-left {
   display: flex;
-  gap: 8px;
   align-items: center;
+}
+
+.footer-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.footer-right {
+  /* 오른쪽 여백용 */
+}
+
+.footer-count {
+  color: #6b7280;
 }
 
 .footer-btn {
   min-width: 40px;
+  text-transform: none;
+  font-size: 0.8rem;
 }
 
 .page-info {
