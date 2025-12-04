@@ -11,13 +11,8 @@
       </div>
 
       <nav class="menu">
-        <RouterLink
-          v-for="item in menuItems"
-          :key="item.name"
-          :to="item.to"
-          class="menu-item"
-          :class="{ active: route.name === item.name }"
-        >
+        <RouterLink v-for="item in menuItems" :key="item.name" :to="item.to" class="menu-item"
+          :class="{ active: route.name === item.name }">
           <div class="menu-pill">
             <v-icon class="menu-icon" :icon="item.icon" />
             <span class="menu-label">{{ item.label }}</span>
@@ -35,13 +30,7 @@
         </h1>
 
         <div class="admin-header-actions">
-          <v-btn
-            icon
-            variant="text"
-            elevation="0"
-            class="logout-btn"
-            @click="logoutHandler"
-          >
+          <v-btn icon variant="text" elevation="0" class="logout-btn" @click="logoutHandler">
             <v-icon>mdi-logout</v-icon>
           </v-btn>
         </div>
@@ -63,8 +52,7 @@
 import { useRoute, useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import { logout as logoutApi } from "@/apis/auth";
-import logoSrc from "/Users/joyongju/git/be18-fin-FIVEGUYS-RIA-FE/src/assets/로고.png";
-
+import logoSrc from "@/assets/로고.png";
 const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
@@ -266,7 +254,8 @@ const logoutHandler = async () => {
   flex: 1;
   padding: 24px 32px;
   overflow: auto;
-  background: transparent; /* 각 페이지에서 카드가 떠 보이도록 */
+  background: transparent;
+  /* 각 페이지에서 카드가 떠 보이도록 */
 }
 
 /* 푸터 */
