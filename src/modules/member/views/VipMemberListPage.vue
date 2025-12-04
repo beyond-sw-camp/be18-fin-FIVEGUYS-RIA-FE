@@ -3,9 +3,6 @@
     <!-- 상단 타이틀 영역 -->
     <div class="mb-6">
       <h2 class="page-title">VIP 회원 목록</h2>
-      <p class="page-subtitle">
-        가장 소중한 고객인 VIP 회원의 상세 정보를 확인하고 관리합니다.
-      </p>
     </div>
 
     <!-- VIP 회원 KPI 카드 영역 -->
@@ -161,8 +158,8 @@
                   {{ aiVipName || "VIP 미선택" }}
                 </div>
                 <div class="vip-summary-desc">
-                  이 VIP 고객의 구매 내역을 분석하여 브랜드 / 상품 / 카테고리
-                  추천을 제공합니다.
+                  VIP 고객의 구매 내역을 분석하여 브랜드 / 상품 추천을
+                  제공합니다.
                 </div>
               </div>
             </v-col>
@@ -213,16 +210,10 @@
                     :key="rec.recoId ?? idx"
                     class="ai-result-item"
                   >
-                    <v-list-item-title class="ai-result-target">
-                      {{ rec.targetName }}
-                    </v-list-item-title>
-                    <v-list-item-subtitle class="ai-result-meta">
-                      유형: {{ rec.recoType }} / 매출액:
-                      {{ rec.score.toLocaleString?.() ?? rec.score }}
-                    </v-list-item-subtitle>
-                    <div class="text-caption mt-1 ai-result-reason">
-                      {{ rec.reason }}
-                    </div>
+                    <div
+                      class="ai-result-reason-only"
+                      v-html="rec.reason"
+                    ></div>
                   </v-list-item>
                 </v-list>
               </div>
@@ -597,4 +588,19 @@ onMounted(async () => {
 .ai-result-reason {
   color: #6b7280;
 }
+.ai-result-item {
+  border-radius: 12px;
+  margin-bottom: 10px;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  padding: 16px;
+}
+
+.ai-result-reason-only {
+  font-size: 0.9rem;
+  color: #374151;
+  white-space: pre-line;
+  line-height: 1.45;
+}
 </style>
+<!-- ㅇㅇ -->
