@@ -1,22 +1,20 @@
 <template>
     <v-container fluid class="pa-0 full-height main-container">
         <v-row no-gutters class="full-height">
-            <!-- 좌측 사이드바 (검색 + 필터) -->
-            <!-- 사이드바: 즐겨찾기를 검색 위로 이동 -->
+            <!-- 좌측 사이드바 -->
             <v-col cols="12" md="2" class="pa-4 sidebar">
                 <v-card class="sidebar-card pa-6" flat>
-
-                    <!-- ⭐ 즐겨찾기 버튼 (최상단) -->
+                    <!-- 즐겨찾기 버튼 (최상단) -->
                     <div class="d-flex justify-end mb-4">
                         <v-btn small class="favorite-toggle-btn" @click="showFavoritesOnly = !showFavoritesOnly"
                             elevation="1">
                             <v-icon :color="showFavoritesOnly ? '#FFD60A' : '#8e8e93'">
-                                {{ showFavoritesOnly ? "mdi-star" : "mdi-star-outline" }}
+                                {{ showFavoritesOnly ? 'mdi-star' : 'mdi-star-outline' }}
                             </v-icon>
                         </v-btn>
                     </div>
 
-                    <!-- 🔍 검색 -->
+                    <!-- 검색 -->
                     <v-text-field v-model="keyword" append-inner-icon="mdi-magnify" placeholder="판매 이름 또는 고객사 검색..."
                         variant="outlined" hide-details density="comfortable" class="mb-6" />
 
@@ -31,16 +29,13 @@
                     <!-- 담당자 -->
                     <v-select v-model="managerFilter" :items="managerOptions" label="담당자" variant="outlined"
                         density="comfortable" hide-details class="mb-6" />
-
                 </v-card>
             </v-col>
-
 
             <!-- 메인 컨텐츠 -->
             <v-col cols="12" md="10" class="pa-6 main-content">
                 <v-row dense>
-                    <v-col v-for="sale in filteredSales" :key="sale.id" cols="12" sm="6" md="3" rounded="xl"
-                        class="proposal-col">
+                    <v-col v-for="sale in filteredSales" :key="sale.id" cols="12" sm="6" md="3" class="proposal-col">
                         <v-card outlined class="proposal-card" elevation="2" rounded="xl">
                             <!-- 즐겨찾기 버튼 -->
                             <v-btn small class="favorite-btn" @click.stop="toggleFavorite(sale)" elevation="0">
@@ -59,32 +54,41 @@
                             <v-card-text class="pa-0">
                                 <v-row dense class="info-row">
                                     <v-col cols="5" class="label">고객사</v-col>
-                                    <v-col cols="7" class="value-col">{{ sale.clientCompany }}</v-col>
+                                    <v-col cols="7" class="value-col">
+                                        {{ sale.clientCompany }}
+                                    </v-col>
                                 </v-row>
 
                                 <v-row dense class="info-row">
                                     <v-col cols="5" class="label">계약기간</v-col>
                                     <v-col cols="7" class="value-col">
-                                        {{ formatPeriod(sale.contractStartDay, sale.contractEndDay) }}
+                                        <span class="period-badge">
+                                            {{ sale.contractStartDay }}<br />{{ sale.contractEndDay }}
+                                        </span>
                                     </v-col>
                                 </v-row>
 
                                 <v-row dense class="info-row">
                                     <v-col cols="5" class="label">담당자</v-col>
-                                    <v-col cols="7" class="value-col">{{ sale.salesManager }}</v-col>
+                                    <v-col cols="7" class="value-col">
+                                        {{ sale.salesManager }}
+                                    </v-col>
                                 </v-row>
                             </v-card-text>
 
                             <v-divider class="my-2" />
 
-                            <!-- 하단 정보 (제안 카드 디자인 동일 적용) -->
+                            <!-- 하단 정보 -->
                             <v-card-text class="pa-0 d-flex justify-space-between align-center">
                                 <span class="sidebar-text sale-type-badge">
                                     {{ sale.saleType }}
                                 </span>
 
                                 <span class="period-text d-flex flex-column">
-                                    <span>최근 정산: {{ formatYearMonth(sale.settlementYear, sale.settlementMonth) }}</span>
+                                    <span>
+                                        최근 정산:
+                                        {{ formatYearMonth(sale.settlementYear, sale.settlementMonth) }}
+                                    </span>
                                     <span>금액: {{ formatPrice(sale.saleAmount) }}</span>
                                 </span>
                             </v-card-text>
@@ -115,7 +119,7 @@ const managerFilter = ref('전체')
 const saleTypeOptions = ['전체', '임대', '팝업', '전시회']
 const dateSortOptions = ['날짜 최신순', '날짜 오래된순']
 
-const page = ref(1)
+const page = ref(1) // UI 1-based
 const size = ref(12)
 const totalPages = ref(0)
 const totalElements = ref(0)
@@ -129,25 +133,19 @@ const mapStoreTypeToLabel = type => {
     return type || '-'
 }
 
-const formatPeriod = (s, e) => {
-    if (!s && !e) return '-'
-    if (!s) return `~ ${e}`
-    if (!e) return `${s} ~`
-    return `${s} ~ ${e}`
-}
-
 const loadSales = async (reset = false) => {
     if (reset) page.value = 1
 
     const res = await fetchRevenueList({
-        page: page.value - 1,
-        size: size.value,
+        page: page.value - 1, // 서버는 0-based
+        size: size.value
     })
 
     const data = res.data || {}
-    const content = Array.isArray(data.content) ? data.content : []
 
-    sales.value = content.map(item => ({
+    const items = Array.isArray(data.data) ? data.data : []
+
+    sales.value = items.map(item => ({
         id: item.revenueId,
         productName: item.contractTitle,
         clientCompany: item.clientCompanyName,
@@ -161,8 +159,11 @@ const loadSales = async (reset = false) => {
         isFavorite: false
     }))
 
-    totalPages.value = data.totalPages || 0
-    totalElements.value = data.totalElements || 0
+    const totalCount = Number(data.totalCount ?? 0)
+    const pageSize = Number((data.size ?? size.value) || 1)
+
+    totalElements.value = totalCount
+    totalPages.value = totalCount > 0 ? Math.ceil(totalCount / pageSize) : 0
 }
 
 onMounted(() => loadSales(true))
@@ -173,7 +174,9 @@ const managerOptions = computed(() => {
     return base.concat(names)
 })
 
-const toggleFavorite = sale => sale.isFavorite = !sale.isFavorite
+const toggleFavorite = sale => {
+    sale.isFavorite = !sale.isFavorite
+}
 
 const filteredSales = computed(() => {
     let list = sales.value.slice()
@@ -185,23 +188,45 @@ const filteredSales = computed(() => {
         )
     }
 
-    if (showFavoritesOnly.value) list = list.filter(s => s.isFavorite)
-    if (saleType.value !== '전체') list = list.filter(s => s.saleType === saleType.value)
-    if (managerFilter.value !== '전체') list = list.filter(s => s.salesManager === managerFilter.value)
+    if (showFavoritesOnly.value) {
+        list = list.filter(s => s.isFavorite)
+    }
+
+    if (saleType.value !== '전체') {
+        list = list.filter(s => s.saleType === saleType.value)
+    }
+
+    if (managerFilter.value !== '전체') {
+        list = list.filter(s => s.salesManager === managerFilter.value)
+    }
 
     if (dateSort.value === '날짜 최신순') {
-        list.sort((a, b) => b.settlementYear * 100 + b.settlementMonth - (a.settlementYear * 100 + a.settlementMonth))
+        list.sort(
+            (a, b) =>
+                b.settlementYear * 100 +
+                b.settlementMonth -
+                (a.settlementYear * 100 + a.settlementMonth)
+        )
     } else {
-        list.sort((a, b) => a.settlementYear * 100 + a.settlementMonth - (b.settlementYear * 100 + b.settlementMonth))
+        list.sort(
+            (a, b) =>
+                a.settlementYear * 100 +
+                a.settlementMonth -
+                (b.settlementYear * 100 + b.settlementMonth)
+        )
     }
 
     return list
 })
 
 const formatPrice = p => Math.floor(p).toLocaleString() + '원'
-const formatYearMonth = (y, m) => (!y || !m) ? '-' : `${y}-${String(m).padStart(2, '0')}`
 
-const onPageChange = () => loadSales(false)
+const formatYearMonth = (y, m) =>
+    !y || !m ? '-' : `${y}-${String(m).padStart(2, '0')}`
+
+const onPageChange = () => {
+    loadSales(false)
+}
 </script>
 
 <style scoped>
@@ -210,7 +235,7 @@ const onPageChange = () => loadSales(false)
     min-height: 100vh;
 }
 
-/* ─── 사이드바 ───────────────────────────── */
+/* 사이드바 */
 .sidebar-card {
     border-radius: 16px;
     border: 1px solid rgba(0, 0, 0, 0.12);
@@ -218,7 +243,6 @@ const onPageChange = () => loadSales(false)
     background-color: #ffffff;
 }
 
-/* 제안과 동일한 즐겨찾기 버튼 스타일 */
 .favorite-toggle-btn {
     margin-top: 12px;
     border-radius: 8px;
@@ -231,14 +255,14 @@ const onPageChange = () => loadSales(false)
     font-size: 1.2rem;
 }
 
-/* ─── 카드 리스트 정렬 동일화 ───────────── */
+/* 카드 리스트 정렬 (제안 페이지와 동일) */
 .proposal-col {
     padding-left: 10px;
     padding-right: 10px;
     margin-bottom: 18px;
 }
 
-/* ─── 카드 디자인 ───────────────────────── */
+/* 카드 디자인 (제안 페이지와 동일) */
 .proposal-card {
     position: relative;
     padding: 16px;
@@ -271,17 +295,7 @@ const onPageChange = () => loadSales(false)
     font-size: 1.1rem;
 }
 
-/* 폰트 통일 */
-.proposal-card * {
-    font-size: 0.78rem !important;
-}
-
-.label {
-    font-size: 0.7rem;
-    color: #8e8e93;
-}
-
-/* 행 간격 통일 */
+/* 행 간격 (제안 페이지와 비슷하게) */
 .info-row {
     margin-bottom: 2px;
 }
@@ -301,7 +315,12 @@ const onPageChange = () => loadSales(false)
     color: #333;
 }
 
-/* 하단 스타일 (제안 디자인 동일 적용) */
+/* 라벨/텍스트 사이즈 제안 페이지와 통일 */
+.label {
+    font-size: 0.7rem;
+    color: #8e8e93;
+}
+
 .sidebar-text {
     font-size: 0.75rem;
     font-weight: 500;
@@ -321,8 +340,19 @@ const onPageChange = () => loadSales(false)
 }
 
 .proposal-title {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     font-weight: 600;
     margin-bottom: 4px;
+}
+
+/* 계약기간 배지 */
+.period-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 6px;
+    background-color: #f2f2f7;
+    font-size: 0.72rem;
+    color: #555;
+    line-height: 1.2;
 }
 </style>
