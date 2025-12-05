@@ -36,7 +36,7 @@
             <v-col cols="12" md="10" class="pa-6 main-content">
                 <v-row dense>
                     <v-col v-for="sale in filteredSales" :key="sale.id" cols="12" sm="6" md="3" class="proposal-col">
-                        <v-card outlined class="proposal-card" elevation="2" rounded="xl">
+                        <v-card outlined class="proposal-card" elevation="2" rounded="xl" @click="goDetail(sale)">
                             <!-- 즐겨찾기 버튼 -->
                             <v-btn small class="favorite-btn" @click.stop="toggleFavorite(sale)" elevation="0">
                                 <v-icon :color="sale.isFavorite ? '#FFD60A' : '#8e8e93'">
@@ -107,7 +107,10 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { fetchRevenueList } from '@/apis/revenue'
+
+const router = useRouter()
 
 const keyword = ref('')
 const showFavoritesOnly = ref(false)
@@ -126,7 +129,7 @@ const totalElements = ref(0)
 
 const sales = ref([])
 
-const mapStoreTypeToLabel = type => {
+const mapStoreTypeToLabel = (type) => {
     if (type === 'REGULAR') return '임대'
     if (type === 'POPUP') return '팝업'
     if (type === 'EXHIBITION') return '전시회'
@@ -145,7 +148,7 @@ const loadSales = async (reset = false) => {
 
     const items = Array.isArray(data.data) ? data.data : []
 
-    sales.value = items.map(item => ({
+    sales.value = items.map((item) => ({
         id: item.revenueId,
         productName: item.contractTitle,
         clientCompany: item.clientCompanyName,
@@ -170,11 +173,13 @@ onMounted(() => loadSales(true))
 
 const managerOptions = computed(() => {
     const base = ['전체']
-    const names = [...new Set(sales.value.map(s => s.salesManager).filter(Boolean))]
+    const names = [
+        ...new Set(sales.value.map((s) => s.salesManager).filter(Boolean))
+    ]
     return base.concat(names)
 })
 
-const toggleFavorite = sale => {
+const toggleFavorite = (sale) => {
     sale.isFavorite = !sale.isFavorite
 }
 
@@ -183,21 +188,21 @@ const filteredSales = computed(() => {
 
     const kw = keyword.value.trim()
     if (kw) {
-        list = list.filter(s =>
-            [s.productName, s.clientCompany].some(v => v?.includes(kw))
+        list = list.filter((s) =>
+            [s.productName, s.clientCompany].some((v) => v?.includes(kw))
         )
     }
 
     if (showFavoritesOnly.value) {
-        list = list.filter(s => s.isFavorite)
+        list = list.filter((s) => s.isFavorite)
     }
 
     if (saleType.value !== '전체') {
-        list = list.filter(s => s.saleType === saleType.value)
+        list = list.filter((s) => s.saleType === saleType.value)
     }
 
     if (managerFilter.value !== '전체') {
-        list = list.filter(s => s.salesManager === managerFilter.value)
+        list = list.filter((s) => s.salesManager === managerFilter.value)
     }
 
     if (dateSort.value === '날짜 최신순') {
@@ -219,13 +224,21 @@ const filteredSales = computed(() => {
     return list
 })
 
-const formatPrice = p => Math.floor(p).toLocaleString() + '원'
+const formatPrice = (p) => Math.floor(p).toLocaleString() + '원'
 
 const formatYearMonth = (y, m) =>
     !y || !m ? '-' : `${y}-${String(m).padStart(2, '0')}`
 
 const onPageChange = () => {
     loadSales(false)
+}
+
+const goDetail = (sale) => {
+    if (!sale?.id) return
+    router.push({
+        name: 'RevenueDetail', // router/index.js 에서 정의한 이름과 일치
+        params: { id: sale.id }
+    })
 }
 </script>
 
