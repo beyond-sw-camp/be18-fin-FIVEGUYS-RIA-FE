@@ -1,7 +1,13 @@
 <template>
 
+  <!--  오류 스낵바 -->
   <div v-if="errorMessage" class="toast-error">
     {{ errorMessage }}
+  </div>
+
+  <!--  성공 스낵바 -->
+  <div v-if="successMessage" class="toast-success">
+    {{ successMessage }}
   </div>
 
   <div class="calendar-container">
@@ -105,7 +111,7 @@
     <!--   오른쪽: 메모 패널     -->
     <!-- ====================== -->
     <transition name="slide-panel">
-      <div v-if="showPopup" class="memo-side-panel">
+      <div v-if="showPopup" class="memo-side-panel" :key="panelRefreshKey">
         <div class="popup-content panel-popup-content">
           <h3 class="memo-title">
             {{ selectedMemo.id ? "메모 수정" : "새 메모" }}
@@ -164,7 +170,6 @@ const BLOCKED_IDS = [
   "928924a55a86b48bc19f2c175a0642",
 ];
 
-
 export default {
   data() {
     return {
@@ -180,9 +185,31 @@ export default {
       removeEmail: "",
       users: [],
       activeUserEmail: null,
+
+      /*  기존 오류 스낵바 */
       errorMessage: null,
       errorTimer: null,
+
+      /*  새로 추가된 성공 스낵바 */
+      successMessage: null,
+      successTimer: null,
+
+      panelRefreshKey: 0,
     };
+  },
+
+  async mounted() {
+    try {
+      this.memos = await CalendarAPI.getEvents();
+      this.users = (await CalendarAPI.getUsers()).filter(
+        (u) =>
+          typeof u.email === "string" &&
+          u.email.includes("@") &&
+          !u.email.includes("gserviceaccount")
+      );
+    } catch (e) {
+      this.showError(e.response?.data?.message || e.message);
+    }
   },
 
   computed: {
@@ -222,27 +249,24 @@ export default {
     },
   },
 
-  async mounted() {
-    try {
-      this.memos = await CalendarAPI.getEvents();
-      this.users = (await CalendarAPI.getUsers()).filter(
-        (u) =>
-          typeof u.email === "string" &&
-          u.email.includes("@") &&
-          !u.email.includes("gserviceaccount")
-      );
-    } catch (e) {
-      this.showError(e.response?.data?.message || e.message);
-    }
-  },
-
   methods: {
+    /*  오류 스낵바 */
     showError(msg) {
       this.errorMessage = msg;
       if (this.errorTimer) clearTimeout(this.errorTimer);
 
       this.errorTimer = setTimeout(() => {
         this.errorMessage = null;
+      }, 3000);
+    },
+
+    /*  성공 스낵바 */
+    showSuccess(msg) {
+      this.successMessage = msg;
+      if (this.successTimer) clearTimeout(this.successTimer);
+
+      this.successTimer = setTimeout(() => {
+        this.successMessage = null;
       }, 3000);
     },
 
@@ -295,12 +319,14 @@ export default {
     openMemoPopup(date) {
       this.selectedDate = date;
       this.selectedMemo = { date, color: "#b3e5fc" };
+      this.panelRefreshKey++;
       this.showPopup = true;
     },
 
     editMemo(memo) {
       this.selectedMemo = { ...memo };
       this.selectedDate = new Date(memo.startDateTime);
+      this.panelRefreshKey++;
       this.showPopup = true;
     },
 
@@ -309,9 +335,6 @@ export default {
       this.showPopup = false;
     },
 
-    // ========================================
-    //  패치: 예외 메시지 표시 처리 포함
-    // ========================================
     async saveMemo() {
       if (!this.selectedMemo.summary && !this.selectedMemo.description)
         return this.showError("내용을 입력해주세요!");
@@ -359,7 +382,10 @@ export default {
 
       try {
         await CalendarAPI.addUser(this.inviteEmail, this.inviteRole);
-        alert("초대 완료");
+
+        /* 🔵 alert → 스낵바 */
+        this.showSuccess("초대 완료");
+
         this.inviteEmail = "";
       } catch (e) {
         this.showError(e.response?.data?.message || e.message);
@@ -371,7 +397,10 @@ export default {
 
       try {
         await CalendarAPI.removeUser(this.removeEmail);
-        alert("사용자 삭제 완료");
+
+        /* 🔵 alert → 스낵바 */
+        this.showSuccess("사용자 삭제 완료");
+
         this.removeEmail = "";
       } catch (e) {
         this.showError(e.response?.data?.message || e.message);
@@ -381,26 +410,22 @@ export default {
 };
 </script>
 
-
 <style scoped>
-/* ===========================
-   전체 레이아웃 
+/* ===========================  
+   전체 레이아웃
 =========================== */
 .calendar-container {
   display: flex;
-  justify-content: flex-start; /* 왼쪽 정렬 */
+  justify-content: flex-start;
   align-items: flex-start;
-
-  /* 왼쪽 여백 + 내부 간격 */
-  padding: 40px 40px 40px 40px; /* 왼쪽을 40px로 적당히 띄움 */
-
-  gap: 80px; /* 사이드바 ↔ 달력 간격 넓힘 */
-
+  padding: 40px;
+  gap: 80px;
   background: white;
   width: 100%;
   box-sizing: border-box;
 }
-/* ===========================
+
+/* ===========================  
    좌측 / 우측 사이드바
 =========================== */
 .left-sidebar {
@@ -413,7 +438,7 @@ export default {
   flex-shrink: 0;
 }
 
-/* 공통 카드 스타일 (좌/우 모두 사용) */
+/* 카드 스타일 */
 .card {
   background: #ffffff;
   border-radius: 12px;
@@ -428,9 +453,7 @@ export default {
   margin-bottom: 10px;
 }
 
-/* ===========================
-   검색 영역 (왼쪽 카드 내부)
-=========================== */
+/* 검색 */
 .search-input {
   width: 100%;
   padding: 8px 10px;
@@ -440,7 +463,6 @@ export default {
   font-size: 14px;
 }
 
-/* 검색 결과 */
 .search-item {
   padding: 8px 10px;
   margin-bottom: 6px;
@@ -466,10 +488,7 @@ export default {
   color: #666;
 }
 
-/* ===========================
-   오른쪽 사용자 영역
-   (목록/초대/삭제 모두 이 카드 안에)
-=========================== */
+/* 사용자 목록 */
 .user-list-item {
   padding: 8px;
   border-radius: 6px;
@@ -493,7 +512,7 @@ export default {
   color: #555;
 }
 
-/* 섹션 제목 (사용자 목록 / 사용자 초대 / 사용자 삭제) */
+/* 섹션 제목 */
 .card-section-title {
   margin: 16px 0 8px;
   font-weight: 700;
@@ -536,9 +555,7 @@ export default {
   color: white;
 }
 
-/* ===========================
-   달력 (기존 코드 그대로)
-=========================== */
+/* 달력 */
 .calendar {
   width: 700px;
 }
@@ -586,139 +603,42 @@ export default {
   margin-top: 2px;
 }
 
-/* ===========================
-   메모 팝업 (원본 그대로)
-=========================== */
-.memo-popup {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.memo-popup .popup-content {
-  background: #fff;
-  padding: 24px;
-  border-radius: 20px;
-  width: 320px;
-  height: 480px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.memo-popup input,
-.memo-popup textarea {
-  width: 100%;
-  padding: 12px 14px;
-  border-radius: 12px;
-  border: 1.5px solid #ccc;
-  font-size: 14px;
-}
-
-.memo-popup textarea {
-  height: 800px;
-  resize: vertical;
-}
-
-.color-select {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.color-options {
-  display: flex;
-  gap: 8px;
-}
-
-.color-circle {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  cursor: pointer;
-  border: 2px solid transparent;
-}
-
-.color-circle.selected {
-  border-color: #333;
-}
-
-.popup-buttons {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 12px;
-}
-
-.popup-buttons button {
-  padding: 10px 18px;
-  border-radius: 10px;
-  border: none;
-  cursor: pointer;
-  font-weight: 600;
-}
-
-.popup-buttons button:first-child {
-  background: #1976d2;
-  color: white;
-}
-
-.popup-buttons button:nth-child(2) {
-  background: #f44336;
-  color: white;
-}
-
-.popup-buttons button:last-child {
-  background: #9e9e9e;
-  color: white;
-}
-
-/* 패널 애니메이션 */
-.slide-panel-enter-active,
-.slide-panel-leave-active {
-  transition: all 0.35s ease;
-}
-
-.slide-panel-enter-from,
-.slide-panel-leave-to {
-  transform: translateX(40px);
-  opacity: 0;
-}
-
-/* ===========================
-   오른쪽 패널 (슬라이드)
-=========================== */
+/* 메모 패널 */
 .memo-side-panel {
   position: fixed;
-  top: 50px;              /* 상단 네비와 자연스럽게 */
-  right: 20px;            /* 오른쪽 벽과 20px 띄우기 */
+  top: 50px;
+  right: 20px;
   width: 360px;
   height: calc(100vh - 70px);
   background: #fff;
-  
-  border-radius: 16px;    /* 카드 느낌 */
-  box-shadow: 0 4px 18px rgba(0,0,0,0.12); /* 카드 그림자 */
-  
+  border-radius: 16px;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.12);
   padding: 20px;
   z-index: 2000;
   overflow-y: auto;
-
   display: flex;
-  justify-content: flex-start;
-  align-items: flex-start;
   flex-direction: column;
+  will-change: transform, opacity;
+  transform: translateX(0);
+  animation: reopen 0.25s ease;
 }
 
+.slide-panel-enter-active,
+.slide-panel-leave-active {
+  transition: transform 0.35s ease, opacity 0.35s ease;
+}
 
-/* 기존 모달 UI를 패널용으로 살짝 수정 */
+.slide-panel-enter-from {
+  opacity: 0;
+  transform: translateX(40px);
+}
+
+.slide-panel-leave-to {
+  opacity: 0;
+  transform: translateX(40px);
+}
+
+/* 패널 내부 */
 .panel-popup-content {
   width: 100%;
   display: flex;
@@ -741,12 +661,11 @@ export default {
   resize: vertical;
 }
 
-
+/* 색상 선택 */
 .color-select {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 10px;
 }
 
 .color-options {
@@ -766,6 +685,7 @@ export default {
   border-color: #333;
 }
 
+/* 버튼 */
 .popup-buttons {
   display: flex;
   justify-content: flex-end;
@@ -793,6 +713,10 @@ export default {
 .popup-buttons button:last-child {
   background: #9ca3af;
 }
+
+/* =======================
+    오류 스낵바
+======================= */
 .toast-error {
   position: fixed;
   top: 60px;
@@ -808,9 +732,26 @@ export default {
   animation: fadein 0.3s ease;
 }
 
+/* =======================
+    성공 스낵바 (추가됨)
+======================= */
+.toast-success {
+  position: fixed;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);  
+  background: #4a8cff;
+  color: white;
+  padding: 12px 18px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 9999;
+  font-weight: 600;
+  animation: fadein 0.3s ease;
+}
+
 @keyframes fadein {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
-
 </style>
