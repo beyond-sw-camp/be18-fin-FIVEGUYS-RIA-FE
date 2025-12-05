@@ -6,13 +6,39 @@
       </v-toolbar-title>
     </router-link>
 
-    <v-btn text to="/calendar">캘린더</v-btn>
-    <v-btn text to="/project">프로젝트</v-btn>
-    <v-btn text to="/floor">배치도</v-btn>
+        <v-btn text to="/calendar">캘린더</v-btn>
+        <v-btn text to="/project">프로젝트</v-btn>
+        <v-menu>
+        <template #activator="{ props }">
+          <v-btn text v-bind="props">
+            배치도
+            <v-icon>mdi-menu-down</v-icon>
+          </v-btn>
+        </template>
 
-    <!-- 기존: VIP 회원 버튼
-    <v-btn text to="/vipmember">VIP 회원</v-btn>
-    -->
+        <v-list>
+        <v-list-item :to="{ name: 'Floor', params: { level: 'B1' } }">
+          <v-list-item-title>B1 HIGH JEWELRY & WATCH</v-list-item-title>
+        </v-list-item>
+
+        <v-list-item :to="{ name: 'Floor', params: { level: '1F' } }">
+          <v-list-item-title>1F LUXURY BOUTIQUE & COSMETICS</v-list-item-title>
+        </v-list-item>
+
+        <v-list-item :to="{ name: 'Floor', params: { level: '2F' } }">
+          <v-list-item-title>2F LUXURY BOUTIQUE & WOMEN'S COLLECTION</v-list-item-title>
+        </v-list-item>
+
+        <v-list-item :to="{ name: 'Floor', params: { level: '3F' } }">
+          <v-list-item-title>3F WOMEN'S COLLECTION</v-list-item-title>
+        </v-list-item>
+
+        <v-list-item :to="{ name: 'Floor', params: { level: '4F' } }">
+          <v-list-item-title>4F MEN'S LUXURY BOUTIQUE</v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </v-menu>
+        <!-- <v-btn text to="/vipmember">VIP 회원</v-btn> -->
 
     <!-- 변경: VIP 드롭다운 메뉴 -->
     <v-menu>

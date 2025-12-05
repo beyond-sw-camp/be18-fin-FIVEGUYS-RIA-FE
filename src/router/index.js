@@ -47,7 +47,7 @@ const routes = [
     component: CreateProjectPage,
   },
   { path: "/project/:id", name: "ProjectDetail", component: ProjectDetailPage },
-  { path: "/floor", name: "Floor", component: FloorPage },
+  {path: '/floor/:level',name: 'Floor',component: FloorPage,},
   { path: "/vipmember", name: "VipMember", component: VipMemberPage },
   {
     path: "/vipmemberlist",
