@@ -1,6 +1,6 @@
 import api from "@/apis/http";
 
-// 📌 Controller Base URL
+//  Controller Base URL
 const API_URL = "/api/calendars";
 
 export const CalendarAPI = {
