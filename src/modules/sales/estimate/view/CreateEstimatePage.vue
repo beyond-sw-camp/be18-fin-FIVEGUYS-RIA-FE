@@ -7,20 +7,20 @@
     <!-- 페이지 타이틀 -->
     <div class="page-title">견적 작성</div>
 
-    <!-- 카드 -->
     <v-card elevation="1" class="estimate-card">
+      <!-- ---------------- 견적 정보 ---------------- -->
       <div class="section-title">견적 정보</div>
 
-      <v-row dense class="container">
+      <v-row dense>
         <!-- 견적 제목 -->
         <v-col cols="12" md="6">
           <div class="input-label">견적 제목</div>
           <v-text-field
             v-model="form.title"
-            placeholder="예: 팝업 스토어 견적"
-            variant="outlined"
             class="input-field"
+            variant="outlined"
             hide-details
+            placeholder="예: 팝업 스토어 견적"
           />
         </v-col>
 
@@ -30,12 +30,12 @@
           <v-select
             :items="projectOptions"
             v-model="form.projectId"
+            class="input-field"
             item-title="projectTitle"
             item-value="projectId"
             placeholder="프로젝트 선택"
             variant="outlined"
             hide-details
-            class="input-field"
             clearable
             @update:modelValue="onProjectChange"
           />
@@ -44,22 +44,21 @@
         <!-- 제안 -->
         <v-col cols="12" md="6">
           <div class="input-label">제안</div>
-
           <v-select
             :items="proposalOptions"
             v-model="form.proposalId"
+            class="input-field"
             item-title="title"
             item-value="id"
             placeholder="제안 선택"
             variant="outlined"
             hide-details
-            class="input-field"
             clearable
             :no-data-text="
               !form.projectId
                 ? '프로젝트를 먼저 선택하세요'
                 : proposalOptions.length === 0
-                ? '연결할 수 있는 제안이 없습니다'
+                ? '연결 가능한 제안이 없습니다'
                 : ''
             "
             @update:modelValue="onProposalChange"
@@ -71,117 +70,28 @@
           <div class="input-label">고객사</div>
           <v-text-field
             v-model="selectedCompanyName"
-            placeholder="고객사 선택"
-            variant="outlined"
             class="input-field"
+            variant="outlined"
             hide-details
             readonly
+            placeholder="고객사 선택"
             @click="companyDialog = true"
           />
         </v-col>
-
-        <!-- 고객사 선택 모달 -->
-        <v-dialog v-model="companyDialog" width="500">
-          <v-card class="pa-4">
-            <div class="dialog-title mb-2">고객사 선택</div>
-
-            <!-- 필터 버튼 -->
-            <div class="mb-3 d-flex">
-              <v-chip
-                class="mr-2"
-                :color="companyFilter === 'ALL' ? 'orange darken-2' : undefined"
-                :text-color="companyFilter === 'ALL' ? 'white' : undefined"
-                @click="companyFilter = 'ALL'"
-              >
-                전체
-              </v-chip>
-
-              <v-chip
-                class="mr-2"
-                :color="
-                  companyFilter === 'CLIENT' ? 'orange darken-2' : undefined
-                "
-                :text-color="companyFilter === 'CLIENT' ? 'white' : undefined"
-                @click="companyFilter = 'CLIENT'"
-              >
-                고객사
-              </v-chip>
-
-              <v-chip
-                :color="
-                  companyFilter === 'LEAD' ? 'orange darken-2' : undefined
-                "
-                :text-color="companyFilter === 'LEAD' ? 'white' : undefined"
-                @click="companyFilter = 'LEAD'"
-              >
-                잠재고객사
-              </v-chip>
-            </div>
-
-            <!-- 검색 -->
-            <v-text-field
-              v-model="companySearch"
-              placeholder="고객사 검색"
-              prepend-inner-icon="mdi-magnify"
-              variant="outlined"
-              hide-details
-              class="mb-3"
-            />
-
-            <!-- 리스트 -->
-            <v-list>
-              <v-list-item
-                v-for="c in filteredCompanyList"
-                :key="c.companyId"
-                @click="selectCompany(c)"
-                class="dialog-item"
-              >
-                {{ c.companyName }}
-              </v-list-item>
-            </v-list>
-          </v-card>
-        </v-dialog>
 
         <!-- 고객 담당자 -->
         <v-col cols="12" md="6">
           <div class="input-label">고객 담당자</div>
           <v-text-field
             v-model="selectedClientName"
-            placeholder="담당자 선택"
-            variant="outlined"
             class="input-field"
+            variant="outlined"
             hide-details
             readonly
+            placeholder="담당자 선택"
             @click="clientDialog = true"
           />
         </v-col>
-
-        <!-- 담당자 선택 모달 -->
-        <v-dialog v-model="clientDialog" width="500">
-          <v-card class="pa-4">
-            <div class="dialog-title mb-3">담당자 선택</div>
-
-            <v-text-field
-              v-model="clientSearch"
-              placeholder="검색"
-              prepend-inner-icon="mdi-magnify"
-              variant="outlined"
-              hide-details
-              class="mb-4"
-            />
-
-            <v-list>
-              <v-list-item
-                v-for="p in filteredClientList"
-                :key="p.id"
-                @click="selectClient(p)"
-                class="dialog-item"
-              >
-                {{ p.name }}
-              </v-list-item>
-            </v-list>
-          </v-card>
-        </v-dialog>
 
         <!-- 견적일 -->
         <v-col cols="12" md="3">
@@ -190,10 +100,10 @@
             <template #activator="{ props }">
               <v-text-field
                 :model-value="formatDate(form.estimateDate)"
+                class="input-field"
                 readonly
                 placeholder="YYYY-MM-DD"
                 variant="outlined"
-                class="input-field"
                 hide-details
                 v-bind="props"
               />
@@ -212,10 +122,10 @@
             <template #activator="{ props }">
               <v-text-field
                 :model-value="formatDate(form.deliveryDate)"
+                class="input-field"
                 readonly
                 placeholder="YYYY-MM-DD"
                 variant="outlined"
-                class="input-field"
                 hide-details
                 v-bind="props"
               />
@@ -233,11 +143,11 @@
           <v-select
             :items="paymentOptions"
             v-model="form.paymentCondition"
+            class="input-field"
             item-title="label"
             item-value="value"
             variant="outlined"
             hide-details
-            class="input-field"
           />
         </v-col>
 
@@ -246,11 +156,11 @@
           <div class="input-label">비고</div>
           <v-textarea
             v-model="form.remark"
-            placeholder="비고 입력"
+            class="textarea-field"
             variant="outlined"
             hide-details
-            class="textarea-field"
             rows="3"
+            placeholder="비고 입력"
           />
         </v-col>
       </v-row>
@@ -264,93 +174,109 @@
         :key="idx"
       >
         <v-row dense>
-          <!-- 층 -->
           <v-col cols="12" md="3">
             <div class="input-label">층 선택</div>
             <v-select
               :items="floorOptions"
               v-model="sp.floorId"
+              class="input-field"
               item-title="label"
               item-value="id"
+              hide-details
               @update:modelValue="onFloorChange(idx)"
             />
           </v-col>
 
-          <!-- 매장 -->
           <v-col cols="12" md="3">
             <div class="input-label">매장(호수)</div>
             <v-select
               :items="spaceStoreOptions[idx]"
               v-model="sp.storeId"
+              class="input-field"
               item-title="storeNumber"
               item-value="storeId"
+              hide-details
+              :no-data-text="!sp.floorId ? '층을 먼저 선택해주세요' : ''"
               @update:modelValue="onStoreChange(idx)"
             />
           </v-col>
 
-          <!-- 임대료 -->
           <v-col cols="12" md="3">
             <div class="input-label">임대료</div>
             <v-text-field
               :model-value="
                 sp.rentPrice ? sp.rentPrice.toLocaleString() + '원' : ''
               "
+              class="input-field"
               readonly
+              hide-details
             />
           </v-col>
 
-          <!-- 면적 -->
           <v-col cols="12" md="3">
             <div class="input-label">면적</div>
             <v-text-field
               :model-value="sp.areaSize ? sp.areaSize + '㎡' : ''"
+              class="input-field"
               readonly
+              hide-details
             />
           </v-col>
 
-          <!-- 추가비용 -->
           <v-col cols="12" md="3">
             <div class="input-label">추가 비용</div>
-            <v-text-field v-model.number="sp.additionalFee" type="number" />
+            <v-text-field
+              v-model.number="sp.additionalFee"
+              class="input-field"
+              type="number"
+              hide-details
+            />
           </v-col>
 
-          <!-- 할인 -->
           <v-col cols="12" md="3">
             <div class="input-label">할인 금액</div>
-            <v-text-field v-model.number="sp.discountAmount" type="number" />
+            <v-text-field
+              v-model.number="sp.discountAmount"
+              class="input-field"
+              type="number"
+              hide-details
+            />
           </v-col>
         </v-row>
 
-        <!-- 공간 설명 (추가) -->
         <v-col cols="12">
           <div class="input-label">공간 설명</div>
           <v-textarea
-            :model-value="sp.description"
-            readonly
-            variant="outlined"
-            hide-details
+            v-model="sp.description"
             class="textarea-field"
+            hide-details
+            rows="2"
           />
         </v-col>
 
         <v-btn
           color="red"
           variant="outlined"
-          @click="removeSpace(idx)"
           class="mt-2"
+          @click="removeSpace(idx)"
         >
           공간 삭제
         </v-btn>
       </v-card>
 
-      <!-- 공간 추가 -->
+      <!-- 공간 추가 버튼 (수정 화면 동일) -->
       <div class="actions-row mb-4">
-        <v-btn color="blue" variant="outlined" @click="addSpace">
+        <v-btn
+          class="space-add-btn"
+          variant="outlined"
+          color="blue"
+          @click="addSpace"
+        >
           + 공간 추가
         </v-btn>
       </div>
 
-      <!-- 총 금액 표시 -->
+      <!-- 총 금액 -->
       <v-card class="total-card pa-4">
         <div class="total-title">총 견적 금액</div>
         <div class="total-price">₩{{ totalPrice.toLocaleString() }}</div>

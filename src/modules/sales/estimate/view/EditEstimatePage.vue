@@ -7,6 +7,7 @@
     <!-- 페이지 타이틀 -->
     <div class="page-title">견적 수정</div>
 
+    <!-- ========== 견적 수정 화면 (생성 화면 동일 스타일 적용) ========== -->
     <v-card elevation="1" class="estimate-card">
       <!-- ---------------- 견적 정보 ---------------- -->
       <div class="section-title">견적 정보</div>
@@ -15,22 +16,27 @@
         <!-- 제목 -->
         <v-col cols="12" md="6">
           <div class="input-label">견적 제목</div>
-          <v-text-field v-model="form.title" variant="outlined" hide-details />
+          <v-text-field
+            v-model="form.title"
+            class="input-field"
+            variant="outlined"
+            hide-details
+          />
         </v-col>
 
         <!-- 프로젝트 -->
         <v-col cols="12" md="6">
           <div class="input-label">프로젝트</div>
           <v-select
-            :key="JSON.stringify(projectOptions)"
             :items="projectOptions"
             v-model="form.projectId"
+            class="input-field"
             item-title="projectTitle"
             item-value="projectId"
             placeholder="프로젝트 선택"
             variant="outlined"
-            clearable
             hide-details
+            clearable
             @update:modelValue="onProjectChange"
           />
         </v-col>
@@ -41,20 +47,15 @@
           <v-select
             :items="proposalOptions"
             v-model="form.proposalId"
+            class="input-field"
             item-title="title"
             item-value="id"
+            label=" "
             placeholder="제안 선택"
             variant="outlined"
-            clearable
             hide-details
-            :no-data-text="
-              !form.projectId
-                ? '프로젝트를 먼저 선택하세요'
-                : proposalOptions.length === 0
-                ? '연결할 수 있는 제안이 없습니다'
-                : ''
-            "
-            @update:modelValue="onProposalChange"
+            clearable
+            persistent-placeholder
           />
         </v-col>
 
@@ -63,6 +64,7 @@
           <div class="input-label">고객사</div>
           <v-text-field
             v-model="selectedCompanyName"
+            class="input-field"
             readonly
             variant="outlined"
             hide-details
@@ -70,38 +72,12 @@
           />
         </v-col>
 
-        <!-- 고객사 선택 모달 -->
-        <v-dialog v-model="companyDialog" width="500">
-          <v-card class="pa-4">
-            <div class="dialog-title mb-2">고객사 선택</div>
-
-            <v-text-field
-              v-model="companySearch"
-              placeholder="검색"
-              prepend-inner-icon="mdi-magnify"
-              variant="outlined"
-              hide-details
-              class="mb-3"
-            />
-
-            <v-list>
-              <v-list-item
-                v-for="c in filteredCompanyList"
-                :key="c.companyId"
-                @click="selectCompany(c)"
-                class="dialog-item"
-              >
-                {{ c.companyName }}
-              </v-list-item>
-            </v-list>
-          </v-card>
-        </v-dialog>
-
         <!-- 고객 담당자 -->
         <v-col cols="12" md="6">
           <div class="input-label">고객 담당자</div>
           <v-text-field
             v-model="selectedClientName"
+            class="input-field"
             readonly
             variant="outlined"
             hide-details
@@ -109,41 +85,14 @@
           />
         </v-col>
 
-        <!-- 담당자 선택 모달 -->
-        <v-dialog v-model="clientDialog" width="500">
-          <v-card class="pa-4">
-            <div class="dialog-title mb-3">담당자 선택</div>
-
-            <v-text-field
-              v-model="clientSearch"
-              prepend-inner-icon="mdi-magnify"
-              placeholder="검색"
-              variant="outlined"
-              hide-details
-              class="mb-4"
-            />
-
-            <v-list>
-              <v-list-item
-                v-for="p in filteredClientList"
-                :key="p.id"
-                @click="selectClient(p)"
-                class="dialog-item"
-              >
-                {{ p.name }}
-              </v-list-item>
-            </v-list>
-          </v-card>
-        </v-dialog>
-
         <!-- 견적일 -->
         <v-col cols="12" md="3">
           <div class="input-label">견적일</div>
-
           <v-menu v-model="estimateMenu" :close-on-content-click="false">
             <template #activator="{ props }">
               <v-text-field
                 :model-value="formatDate(form.estimateDate)"
+                class="input-field"
                 readonly
                 placeholder="YYYY-MM-DD"
                 variant="outlined"
@@ -151,7 +100,6 @@
                 v-bind="props"
               />
             </template>
-
             <v-date-picker
               v-model="form.estimateDate"
               @update:model-value="estimateMenu = false"
@@ -162,11 +110,11 @@
         <!-- 납기일 -->
         <v-col cols="12" md="3">
           <div class="input-label">납기일</div>
-
           <v-menu v-model="deliveryMenu" :close-on-content-click="false">
             <template #activator="{ props }">
               <v-text-field
                 :model-value="formatDate(form.deliveryDate)"
+                class="input-field"
                 readonly
                 placeholder="YYYY-MM-DD"
                 variant="outlined"
@@ -174,7 +122,6 @@
                 v-bind="props"
               />
             </template>
-
             <v-date-picker
               v-model="form.deliveryDate"
               @update:model-value="deliveryMenu = false"
@@ -185,10 +132,10 @@
         <!-- 결제 조건 -->
         <v-col cols="12" md="6">
           <div class="input-label">결제 조건</div>
-
           <v-select
             :items="paymentOptions"
             v-model="form.paymentCondition"
+            class="input-field"
             item-title="label"
             item-value="value"
             variant="outlined"
@@ -201,6 +148,7 @@
           <div class="input-label">비고</div>
           <v-textarea
             v-model="form.remark"
+            class="textarea-field"
             rows="3"
             variant="outlined"
             hide-details
@@ -208,76 +156,92 @@
         </v-col>
       </v-row>
 
-      <!-- ---------------- 공간 정보 ---------------- -->
+      <!-- =============== 공간 정보 영역 =============== -->
       <div class="section-title mt-6">공간 정보</div>
 
       <v-card
-        class="space-card pa-3 mb-3"
         v-for="(sp, idx) in form.spaces"
         :key="idx"
+        class="space-card pa-3 mb-3"
       >
         <v-row dense>
-          <!-- 층 -->
           <v-col cols="12" md="3">
             <div class="input-label">층 선택</div>
             <v-select
               :items="floorOptions"
               v-model="sp.floorId"
+              class="input-field"
               item-title="label"
               item-value="id"
+              hide-details
               @update:modelValue="onFloorChange(idx)"
             />
           </v-col>
 
-          <!-- 매장 -->
           <v-col cols="12" md="3">
             <div class="input-label">매장(호수)</div>
             <v-select
               :items="spaceStoreOptions[idx]"
               v-model="sp.storeId"
+              class="input-field"
               item-title="storeName"
               item-value="storeId"
+              hide-details
+              :no-data-text="!sp.floorId ? '층을 먼저 선택해주세요' : ''"
               @update:modelValue="onStoreChange(idx)"
             />
           </v-col>
 
-          <!-- 임대료 -->
           <v-col cols="12" md="3">
             <div class="input-label">임대료</div>
             <v-text-field
               :model-value="toComma(sp.rentPrice)"
+              class="input-field"
               readonly
               hide-details
             />
           </v-col>
 
-          <!-- 면적 -->
           <v-col cols="12" md="3">
             <div class="input-label">면적</div>
             <v-text-field
               :model-value="sp.areaSize + '㎡'"
+              class="input-field"
               readonly
               hide-details
             />
           </v-col>
 
-          <!-- 추가 비용 -->
           <v-col cols="12" md="3">
             <div class="input-label">추가 비용</div>
-            <v-text-field v-model.number="sp.additionalFee" type="number" />
+            <v-text-field
+              v-model.number="sp.additionalFee"
+              type="number"
+              class="input-field"
+              hide-details
+            />
           </v-col>
 
-          <!-- 할인 -->
           <v-col cols="12" md="3">
             <div class="input-label">할인 금액</div>
-            <v-text-field v-model.number="sp.discountAmount" type="number" />
+            <v-text-field
+              v-model.number="sp.discountAmount"
+              type="number"
+              class="input-field"
+              hide-details
+            />
           </v-col>
         </v-row>
 
         <!-- 공간 설명 -->
         <v-col cols="12">
           <div class="input-label">공간 설명</div>
-          <v-textarea v-model="sp.description" rows="2" />
+          <v-textarea
+            v-model="sp.description"
+            class="textarea-field"
+            rows="2"
+            hide-details
+          />
         </v-col>
 
         <v-btn color="red" class="mt-2" @click="removeSpace(idx)">
@@ -285,11 +249,14 @@
         </v-btn>
       </v-card>
 
-      <v-btn block class="mb-4" variant="outlined" @click="addSpace">
-        + 공간 추가
-      </v-btn>
+      <!-- 공간 추가 버튼 (생성 화면 동일) -->
+      <div class="actions-row">
+        <v-btn class="space-add-btn" variant="outlined" @click="addSpace">
+          + 공간 추가
+        </v-btn>
+      </div>
 
-      <!-- 총 견적 금액 -->
+      <!-- 총 금액 -->
       <v-card class="total-card pa-4">
         <div class="total-title">총 견적 금액</div>
         <div class="total-price">₩{{ totalPrice.toLocaleString() }}</div>
@@ -697,13 +664,13 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+/* ===== 페이지 / 카드 공통 ===== */
 .page-wrapper {
   background: #fafafa;
   min-height: 100vh;
   padding: 8px 16px;
 }
 
-/* 페이지 타이틀 */
 .page-title {
   max-width: 1100px;
   margin: 4px auto 10px;
@@ -712,7 +679,6 @@ onMounted(async () => {
   color: #111;
 }
 
-/* 카드 Wrapper */
 .estimate-card {
   max-width: 1100px;
   margin: 0 auto 10px;
@@ -722,7 +688,6 @@ onMounted(async () => {
   padding: 8px 14px 20px;
 }
 
-/* 섹션 타이틀 */
 .section-title {
   font-size: 0.95rem;
   font-weight: 600;
@@ -730,7 +695,6 @@ onMounted(async () => {
   margin-bottom: 12px;
 }
 
-/* 라벨 */
 .input-label {
   font-size: 0.9rem;
   font-weight: 600;
@@ -738,6 +702,60 @@ onMounted(async () => {
   margin-bottom: 4px;
 }
 
+/* v-col padding (생성 화면과 동일) */
+.estimate-card :deep(.v-col) {
+  padding-top: 1px !important;
+  padding-bottom: 1px !important;
+}
+
+/* ===== 입력 박스 공통 ===== */
+.input-field {
+  border-radius: 6px !important;
+  font-size: 0.8rem !important;
+}
+
+.input-field :deep(.v-field) {
+  min-height: 32px !important;
+  height: 32px !important;
+  border-radius: 6px !important;
+}
+
+.input-field :deep(.v-field__input) {
+  font-size: 0.8rem !important;
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+  min-height: 32px !important;
+  height: 32px !important;
+}
+
+.input-field :deep(.v-field__append-inner),
+.input-field :deep(.v-field__suffix),
+.input-field :deep(.v-field__prepend-inner) {
+  font-size: 0.8rem !important;
+  padding: 0 !important;
+  align-items: center !important;
+}
+
+/* ===== textarea (비고 / 공간설명) ===== */
+.textarea-field :deep(.v-field) {
+  min-height: 65px !important;
+  border-radius: 6px !important;
+}
+
+.textarea-field :deep(.v-field__input) {
+  padding-top: 14px !important;
+  padding-bottom: 6px !important;
+  font-size: 0.8rem !important;
+  align-items: flex-start !important;
+}
+
+.textarea-field :deep(textarea) {
+  min-height: 50px !important;
+  line-height: 1.25 !important;
+  resize: none !important;
+}
+
+/* ===== 공간 카드 ===== */
 .space-card {
   border: 1px solid #eee;
   border-radius: 10px;
@@ -746,7 +764,21 @@ onMounted(async () => {
   margin-bottom: 8px;
 }
 
-/* 총 금액 */
+/* ===== 공간 추가 버튼 (생성화면 동일 스타일) ===== */
+.space-add-btn {
+  border: 1px solid #1976d2;
+  color: #1976d2;
+  font-size: 0.8rem;
+  padding: 6px 0;
+  width: 120px;
+  float: right;
+  margin-top: 10px;
+  margin-bottom: 15px;
+  border-radius: 6px;
+  background: white;
+}
+
+/* ===== 총 금액 카드 ===== */
 .total-card {
   border: 1px solid #eee;
   border-radius: 10px;
@@ -766,13 +798,14 @@ onMounted(async () => {
   margin-top: 4px;
 }
 
+/* ===== 저장 버튼 ===== */
 .actions-row {
   display: flex;
   justify-content: flex-end;
   margin-top: 10px;
 }
 
-/* 모달 */
+/* ===== 모달 ===== */
 .dialog-title {
   font-size: 0.9rem;
   font-weight: 600;
@@ -786,5 +819,95 @@ onMounted(async () => {
 
 .dialog-item:hover {
   background: #fff3e0;
+}
+
+/* 추가비용 / 할인 금액 number 필드의 스핀 버튼 제거 */
+.input-field :deep(input[type="number"])::-webkit-inner-spin-button,
+.input-field :deep(input[type="number"])::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.input-field :deep(input[type="number"]) {
+  -moz-appearance: textfield; /* Firefox */
+}
+
+/* v-select 박스 높이 통일 */
+.input-field :deep(.v-field.v-field--select) {
+  min-height: 32px !important;
+  height: 32px !important;
+}
+
+/* v-select 내부 인풋 정렬 */
+.input-field :deep(.v-field.v-field--select .v-field__input) {
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+  align-items: center !important;
+}
+
+/* v-select placeholder 정렬 */
+.input-field :deep(.v-select__selection-text) {
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+  display: flex !important;
+  align-items: center !important;
+  font-size: 0.8rem !important;
+}
+
+.input-field :deep(.v-select__selection) {
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* placeholder (v-field-label) */
+:deep(.v-field-label) {
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+}
+
+/* 선택된 값이 들어가는 input 영역 */
+:deep(.v-field__input) {
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* v-select 텍스트 수직 가운데 정렬 강제 */
+.input-field :deep(.v-field__input),
+.input-field :deep(.v-select__selection),
+.input-field :deep(.v-select__selection-text),
+.input-field :deep(.v-field__placeholder) {
+  display: flex !important;
+  align-items: center !important;
+  height: 32px !important; /* 인풋 높이에 맞춤 */
+  line-height: 1 !important;
+}
+
+/* ===== v-select 및 v-text-field 텍스트 정렬 완전 강제 ===== */
+.input-field :deep(.v-field__input),
+.input-field :deep(.v-select__selection),
+.input-field :deep(.v-select__selection-text),
+.input-field :deep(.v-field__append-inner),
+.input-field :deep(.v-field__prefix),
+.input-field :deep(.v-field__suffix),
+.input-field :deep(.v-field__placeholder) {
+  align-items: center !important;
+  display: flex !important;
+  line-height: normal !important;
+  height: 32px !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+/* v-select / text-field 내부 input 영역 높이 강제 */
+.input-field :deep(.v-field__input) {
+  min-height: 32px !important;
+  height: 32px !important;
+}
+
+:deep(.v-field-label--active) {
+  top: 50% !important;
+  transform: translateY(-50%) !important;
 }
 </style>

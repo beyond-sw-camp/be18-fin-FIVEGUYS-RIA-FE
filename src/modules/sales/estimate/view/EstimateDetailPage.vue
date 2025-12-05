@@ -12,6 +12,7 @@
           <div class="input-label">견적 제목</div>
           <v-text-field
             v-model="form.estimateTitle"
+            class="input-field"
             variant="outlined"
             hide-details
             :readonly="!editMode"
@@ -22,6 +23,7 @@
         <v-col cols="12" md="6">
           <div class="input-label">프로젝트</div>
           <v-text-field
+            class="input-field"
             v-model="form.projectTitle"
             variant="outlined"
             hide-details
@@ -33,6 +35,7 @@
         <v-col cols="12" md="6">
           <div class="input-label">제안</div>
           <v-text-field
+            class="input-field"
             v-model="form.proposalTitle"
             variant="outlined"
             hide-details
@@ -44,6 +47,7 @@
         <v-col cols="12" md="6">
           <div class="input-label">고객사</div>
           <v-text-field
+            class="input-field"
             v-model="form.clientCompanyName"
             variant="outlined"
             hide-details
@@ -55,6 +59,7 @@
         <v-col cols="12" md="6">
           <div class="input-label">고객</div>
           <v-text-field
+            class="input-field"
             v-model="form.clientName"
             variant="outlined"
             hide-details
@@ -66,6 +71,7 @@
         <v-col cols="12" md="6">
           <div class="input-label">담당자</div>
           <v-text-field
+            class="input-field"
             v-model="form.createdUserName"
             variant="outlined"
             hide-details
@@ -77,6 +83,7 @@
         <v-col cols="12" md="6">
           <div class="input-label">견적일</div>
           <v-text-field
+            class="input-field"
             v-model="form.estimateDate"
             variant="outlined"
             hide-details
@@ -88,6 +95,7 @@
         <v-col cols="12" md="6">
           <div class="input-label">결제 조건</div>
           <v-text-field
+            class="input-field"
             v-model="form.paymentCondition"
             variant="outlined"
             hide-details
@@ -100,9 +108,12 @@
           <div class="input-label">비고</div>
           <v-textarea
             v-model="form.remark"
+            placeholder="비고를 입력하세요"
             variant="outlined"
+            class="textarea-field"
             hide-details
             :readonly="!editMode"
+            rows="4"
           />
         </v-col>
       </v-row>
@@ -321,8 +332,86 @@ onMounted(fetchDetail);
 }
 
 .input-label {
+  font-size: 0.9rem;
   font-weight: 600;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
+}
+
+/* =========================
+   입력 박스 공통 스타일
+========================= */
+.input-field {
+  border-radius: 6px !important;
+  font-size: 0.8rem !important;
+}
+
+.input-field :deep(.v-field) {
+  min-height: 32px !important;
+  height: 32px !important;
+  border-radius: 6px !important;
+}
+
+.input-field :deep(.v-field__input) {
+  font-size: 0.8rem !important;
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+  min-height: 32px !important;
+  height: 32px !important;
+}
+
+/* =========================
+   textarea (비고) — 확장 & 정상 작동 버전
+========================= */
+
+/* 바깥 wrapper */
+.textarea-field :deep(.v-field) {
+  min-height: 90px !important; /* 비고 박스 높이 증가 */
+  border-radius: 6px !important;
+  height: 30px !important; /* Vuetify 자동 높이 조절 허용 */
+}
+
+/* wrapper 내부 */
+.textarea-field :deep(.v-field__input) {
+  min-height: 90px !important;
+  height: 30px !important;
+  padding-top: 12px !important; /* 텍스트 위에서 보이게 */
+  align-items: flex-start !important;
+  font-size: 0.85rem !important;
+}
+
+/* 실제 textarea */
+.textarea-field :deep(textarea) {
+  min-height: 130px !important;
+  height: auto !important;
+  padding: 10 !important;
+  margin: 0 !important;
+  font-size: 0.85rem !important;
+  line-height: 1.25 !important;
+  resize: none !important;
+}
+
+/* overlay 제거 */
+.textarea-field :deep(.v-field__overlay) {
+  display: none !important;
+}
+
+/* readonly일 때 흐려짐 방지 */
+.v-input--readonly .v-field__input,
+.v-input--readonly textarea {
+  color: #000 !important;
+  -webkit-text-fill-color: #000 !important;
+  opacity: 1 !important;
+}
+
+/* =========================
+   테이블 + 버튼 스타일
+========================= */
+
+.actions-row {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
 }
 
 .space-table thead th {
@@ -347,11 +436,5 @@ onMounted(fetchDetail);
 .total-price {
   font-size: 1.4rem;
   font-weight: 800;
-}
-
-.actions-row {
-  margin-top: 20px;
-  display: flex;
-  justify-content: flex-end;
 }
 </style>
