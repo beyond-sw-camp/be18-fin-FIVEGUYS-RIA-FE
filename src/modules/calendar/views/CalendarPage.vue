@@ -383,7 +383,7 @@ export default {
       try {
         await CalendarAPI.addUser(this.inviteEmail, this.inviteRole);
 
-        /* 🔵 alert → 스낵바 */
+        /*  alert → 스낵바 */
         this.showSuccess("초대 완료");
 
         this.inviteEmail = "";
@@ -398,7 +398,7 @@ export default {
       try {
         await CalendarAPI.removeUser(this.removeEmail);
 
-        /* 🔵 alert → 스낵바 */
+        /*  alert → 스낵바 */
         this.showSuccess("사용자 삭제 완료");
 
         this.removeEmail = "";
