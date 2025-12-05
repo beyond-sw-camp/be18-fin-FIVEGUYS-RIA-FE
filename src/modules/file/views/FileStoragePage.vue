@@ -105,7 +105,7 @@
           </div>
 
           <div
-            v-for="file in filteredDocs"
+            v-for="file in pagedDocs"
             :key="file.fileId"
             class="docs-table-row"
           >
@@ -170,12 +170,80 @@
             </span>
           </div>
 
-          <div v-if="!loading && filteredDocs.length === 0" class="table-empty">
+          <div v-if="!loading && pagedDocs.length === 0" class="table-empty">
             조건에 맞는 문서가 없습니다.
           </div>
         </div>
       </div>
+
+      <!-- ⭐ 페이지네이션 -->
+      <div class="d-flex justify-center mt-4" v-if="totalPages > 1">
+        <v-pagination v-model="page" :length="totalPages" :total-visible="5" />
+      </div>
     </section>
+
+    <!-- 🧨 파일 삭제 확인 모달 -->
+    <v-dialog v-model="deleteDialog" max-width="480">
+      <v-card class="del-card" rounded="xl">
+        <v-card-title
+          class="d-flex align-center justify-space-between del-header"
+        >
+          <div>
+            <div class="del-title">파일 삭제</div>
+            <div class="del-subtitle">
+              선택한 파일을 영구적으로 삭제합니다. 이 작업은 되돌릴 수 없습니다.
+            </div>
+          </div>
+          <v-btn
+            icon
+            variant="text"
+            @click="closeDeleteDialog"
+            :disabled="deleting"
+          >
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+        </v-card-title>
+
+        <v-divider />
+
+        <v-card-text class="pt-4">
+          <div class="del-body">
+            <div class="del-warning">
+              <v-icon size="20" class="mr-2">mdi-alert-outline</v-icon>
+              <div class="del-warning-text">정말 삭제하시겠습니까?</div>
+            </div>
+
+            <div v-if="deleteTargetFile" class="del-file-box">
+              <div class="del-file-name">
+                {{ deleteTargetFile.originalName }}
+              </div>
+              <div class="del-file-meta">
+                <span>크기: {{ formatSize(deleteTargetFile.size) }}</span>
+                <span>
+                  업로드: {{ formatDate(deleteTargetFile.createdAt) }}
+                </span>
+                <span>사번: {{ deleteTargetFile.employeeNo || "-" }}</span>
+              </div>
+            </div>
+          </div>
+        </v-card-text>
+
+        <v-card-actions class="del-actions">
+          <v-spacer />
+          <v-btn variant="text" @click="closeDeleteDialog" :disabled="deleting">
+            취소
+          </v-btn>
+          <v-btn
+            color="red"
+            variant="flat"
+            @click="confirmDeleteFile"
+            :loading="deleting"
+          >
+            삭제
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -193,6 +261,10 @@ const activeUploadType = ref("CONTRACT");
 /** 데이터 */
 const docs = ref([]);
 const loading = ref(false);
+
+/* 페이지네이션 상태 (프론트 전용) */
+const page = ref(1); // 1-based
+const size = ref(10);
 
 /* 필터 */
 const searchKeyword = ref("");
@@ -217,6 +289,11 @@ const isDragOver = ref(false);
 const uploading = ref(false);
 const fileInputRef = ref(null);
 
+/* 삭제 모달 상태 */
+const deleteDialog = ref(false);
+const deleteTargetFile = ref(null);
+const deleting = ref(false);
+
 /* 문서 조회 */
 const fetchDocs = async () => {
   loading.value = true;
@@ -224,6 +301,7 @@ const fetchDocs = async () => {
     const endpoint =
       uploaderFilter.value === "MY" ? "/api/storages/my" : "/api/storages";
 
+    // 백엔드: 최대 100개 가져오기
     const res = await api.get(endpoint, {
       params: { page: 0, size: 100 },
     });
@@ -239,7 +317,11 @@ const fetchDocs = async () => {
 
 onMounted(fetchDocs);
 
-watch(uploaderFilter, () => fetchDocs());
+/* 업로더 필터 바뀔 때 */
+watch(uploaderFilter, () => {
+  page.value = 1;
+  fetchDocs();
+});
 
 /* MIME 카테고리 매칭 */
 const matchesMimeCategory = (mime, category) => {
@@ -270,7 +352,7 @@ const matchesMimeCategory = (mime, category) => {
   }
 };
 
-/* 필터링 적용 */
+/* 필터링 적용 (전체 리스트 기준) */
 const filteredDocs = computed(() => {
   return docs.value.filter((d) => {
     if (
@@ -286,6 +368,18 @@ const filteredDocs = computed(() => {
 
     return true;
   });
+});
+
+/* 🔥 10개씩 잘라서 보여줄 리스트 */
+const pagedDocs = computed(() => {
+  const start = (page.value - 1) * size.value;
+  const end = start + size.value;
+  return filteredDocs.value.slice(start, end);
+});
+
+/* 총 페이지 수 */
+const totalPages = computed(() => {
+  return Math.max(1, Math.ceil(filteredDocs.value.length / size.value));
 });
 
 /* 업로드 Input Open */
@@ -360,17 +454,35 @@ const downloadFile = async (file) => {
   }
 };
 
-/* 삭제 */
-const deleteFile = async (file) => {
+/* 삭제: 모달 열기 */
+const deleteFile = (file) => {
   if (!file.canDelete) return;
-  if (!confirm("정말 삭제하시겠습니까?")) return;
+  deleteTargetFile.value = file;
+  deleteDialog.value = true;
+};
+
+/* 삭제 모달 닫기 */
+const closeDeleteDialog = () => {
+  if (deleting.value) return;
+  deleteDialog.value = false;
+  deleteTargetFile.value = null;
+};
+
+/* 삭제 확정 */
+const confirmDeleteFile = async () => {
+  if (!deleteTargetFile.value) return;
 
   try {
-    await api.delete(`/api/storages/${file.fileId}`);
+    deleting.value = true;
+    await api.delete(`/api/storages/${deleteTargetFile.value.fileId}`);
     await fetchDocs();
     snackbar.show("파일 삭제 완료", "success");
   } catch (e) {
     snackbar.show("파일 삭제 실패", "error");
+  } finally {
+    deleting.value = false;
+    deleteDialog.value = false;
+    deleteTargetFile.value = null;
   }
 };
 
@@ -583,5 +695,68 @@ const simplifyMime = (mime) => {
   height: 28px;
   min-width: 28px;
   padding: 0;
+}
+
+/* 🔥 삭제 모달 스타일 */
+.del-card {
+  background: linear-gradient(135deg, #f9fafb, #ffffff);
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.16);
+}
+
+.del-header {
+  padding: 16px 20px;
+}
+
+.del-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.del-subtitle {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+.del-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.del-warning {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background-color: #fef2f2;
+  color: #b91c1c;
+  font-size: 0.85rem;
+}
+
+.del-file-box {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background-color: #f3f4f6;
+}
+
+.del-file-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 4px;
+}
+
+.del-file-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  font-size: 0.78rem;
+  color: #6b7280;
+}
+
+.del-actions {
+  padding: 8px 20px 14px;
 }
 </style>

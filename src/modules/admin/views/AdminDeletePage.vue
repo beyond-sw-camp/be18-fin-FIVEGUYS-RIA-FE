@@ -2,11 +2,17 @@
   <div class="danger-page">
     <section class="danger-section">
       <v-card class="danger-card" elevation="0">
-        <!-- 제목 -->
-        <h2 class="title">문서 목록</h2>
+        <!-- 상단 헤더 -->
+        <div class="danger-card-header">
+          <div class="danger-card-title-wrap">
+            <div class="title-left">
+              <h2 class="title">문서 목록</h2>
+            </div>
+          </div>
+        </div>
 
         <!-- 검색/필터 영역 -->
-        <div class="search-row">
+        <div class="search-row glass-toolbar">
           <!-- 이름 검색 -->
           <v-text-field
             v-model="searchKeyword"
@@ -43,37 +49,51 @@
           />
         </div>
 
-        <v-divider />
+        <v-divider class="divider-soft" />
 
         <!-- 테이블 헤더 -->
-        <div class="table-header-row">
+        <div class="table-header-row glass-header">
           <span class="th th-name">이름</span>
-          <span class="th th-type">형식</span>
+          <span class="th th-type hide-on-md">형식</span>
           <span class="th th-emp">업로더 사번</span>
           <span class="th th-size">크기</span>
-          <span class="th th-date">생성일</span>
-          <span class="th th-actions">삭제</span>
+          <span class="th th-date hide-on-md">생성일</span>
+          <span class="th th-actions">관리</span>
         </div>
-
-        <v-divider />
 
         <!-- 테이블 바디 -->
         <div class="table-body">
           <div v-for="file in pagedData" :key="file.fileId" class="table-row">
-            <span class="td th-name">{{ file.originalName }}</span>
-            <span class="td th-type">{{ file.mimeType }}</span>
+            <span class="td th-name">
+              <div class="file-cell">
+                <div class="file-icon">
+                  <v-icon size="18">mdi-file-outline</v-icon>
+                </div>
+                <div class="file-text">
+                  <span class="file-name">{{ file.originalName }}</span>
+                  <span class="file-sub">
+                    {{ file.mimeType || "알 수 없는 형식" }}
+                  </span>
+                </div>
+              </div>
+            </span>
+
+            <span class="td th-type hide-on-md">{{ file.mimeType }}</span>
             <span class="td th-emp">{{ file.employeeNo || "-" }}</span>
             <span class="td th-size">{{ formatSize(file.size) }}</span>
-            <span class="td th-date">{{ formatDate(file.createdAt) }}</span>
+            <span class="td th-date hide-on-md">
+              {{ formatDate(file.createdAt) }}
+            </span>
 
             <span class="td th-actions">
               <v-btn
                 size="small"
-                color="error"
-                variant="outlined"
+                variant="text"
+                class="delete-btn pill-btn-danger"
                 :disabled="!file.canDelete"
                 @click="askDelete(file.fileId)"
               >
+                <v-icon start size="16">mdi-trash-can-outline</v-icon>
                 삭제
               </v-btn>
             </span>
@@ -84,45 +104,102 @@
           </div>
         </div>
 
-        <v-divider />
+        <v-divider class="divider-soft" />
 
         <!-- 페이지네이션 -->
         <div class="table-footer">
-          <v-btn
-            variant="outlined"
-            size="small"
-            class="footer-btn"
-            :disabled="page === 1"
-            @click="page--"
-          >
-            이전
-          </v-btn>
+          <div class="footer-left">
+            <span class="footer-count">총 {{ filteredFiles.length }}건</span>
+          </div>
 
-          <span class="page-info">페이지 {{ page }} / {{ totalPages }}</span>
+          <div class="footer-center">
+            <!-- 첫 페이지 -->
+            <v-btn
+              variant="text"
+              size="small"
+              class="footer-btn pill-btn"
+              :disabled="page === 1"
+              @click="goFirst"
+            >
+              «
+            </v-btn>
 
-          <v-btn
-            variant="outlined"
-            size="small"
-            class="footer-btn"
-            :disabled="page === totalPages"
-            @click="page++"
-          >
-            다음
-          </v-btn>
+            <!-- -10 페이지 -->
+            <v-btn
+              variant="text"
+              size="small"
+              class="footer-btn pill-btn"
+              :disabled="page === 1"
+              @click="jumpPrevBlock"
+            >
+              -10
+            </v-btn>
+
+            <!-- 이전 1페이지 -->
+            <v-btn
+              variant="text"
+              size="small"
+              class="footer-btn pill-btn"
+              :disabled="page === 1"
+              @click="page--"
+            >
+              이전
+            </v-btn>
+
+            <span class="page-info">
+              페이지 <strong>{{ page }}</strong> / {{ totalPages }}
+            </span>
+
+            <!-- 다음 1페이지 -->
+            <v-btn
+              variant="text"
+              size="small"
+              class="footer-btn pill-btn"
+              :disabled="page === totalPages"
+              @click="page++"
+            >
+              다음
+            </v-btn>
+
+            <!-- +10 페이지 -->
+            <v-btn
+              variant="text"
+              size="small"
+              class="footer-btn pill-btn"
+              :disabled="page === totalPages"
+              @click="jumpNextBlock"
+            >
+              +10
+            </v-btn>
+
+            <!-- 마지막 페이지 -->
+            <v-btn
+              variant="text"
+              size="small"
+              class="footer-btn pill-btn"
+              :disabled="page === totalPages"
+              @click="goLast"
+            >
+              »
+            </v-btn>
+          </div>
+
+          <div class="footer-right" />
         </div>
       </v-card>
     </section>
 
     <!-- 삭제 확인 다이얼로그 -->
     <v-dialog v-model="deleteDialog" max-width="400">
-      <v-card>
+      <v-card class="user-delete-card" rounded="xl">
         <v-card-title class="dialog-title">파일 삭제</v-card-title>
 
-        <v-card-text>
-          <p>정말 이 파일을 삭제하시겠습니까?</p>
+        <v-card-text class="dialog-body">
+          <p class="dialog-text">정말 이 파일을 삭제하시겠습니까?</p>
+          <p class="dialog-subtext">삭제된 파일은 복구할 수 없습니다.</p>
         </v-card-text>
 
-        <v-card-actions>
+        <v-card-actions class="dialog-actions">
           <v-spacer />
           <v-btn variant="text" @click="closeDeleteDialog">취소</v-btn>
           <v-btn color="error" @click="confirmDelete">삭제</v-btn>
@@ -284,6 +361,23 @@ watch(
   }
 );
 
+// 페이지 블럭 이동 (-10 / +10)
+const jumpPrevBlock = () => {
+  page.value = Math.max(1, page.value - 10);
+};
+
+const jumpNextBlock = () => {
+  page.value = Math.min(totalPages.value, page.value + 10);
+};
+
+const goFirst = () => {
+  page.value = 1;
+};
+
+const goLast = () => {
+  page.value = totalPages.value;
+};
+
 // 삭제 다이얼로그 오픈
 const askDelete = (fileId) => {
   deleteTargetFileId.value = fileId;
@@ -329,104 +423,352 @@ onMounted(fetchFiles);
 </script>
 
 <style scoped>
+/* === 전체 레이아웃 === */
 .danger-page {
-  padding: 24px 40px 32px;
-  background: #f5f5f5;
+  padding: 32px 40px 40px;
   min-height: 100vh;
   box-sizing: border-box;
+  background: radial-gradient(circle at top left, #e0f2fe 0, transparent 45%),
+    radial-gradient(circle at bottom right, #e5e7eb 0, transparent 40%),
+    linear-gradient(135deg, #f9fafb, #eef2ff);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 }
 
 .danger-section {
   display: flex;
   justify-content: center;
+  width: 100%;
 }
 
 .danger-card {
   width: 100%;
-  max-width: 960px;
-  border-radius: 16px;
-  background-color: #ffffff;
-  border: 1px solid #e5e5e5;
-  padding: 20px 24px 12px;
+  max-width: 1120px;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  padding: 22px 24px 16px;
+  box-shadow: 0 22px 60px rgba(15, 23, 42, 0.18);
+  backdrop-filter: blur(18px);
+}
+
+/* === 제목 & 헤더 === */
+.danger-card-header {
+  margin-bottom: 12px;
+}
+
+.danger-card-title-wrap {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.title-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .title {
-  font-size: 22px;
+  font-size: 1.4rem;
   font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.03em;
+  margin: 0;
 }
 
-/* 검색 영역 */
-.search-row {
-  margin-top: 12px;
+.subtitle {
+  font-size: 0.9rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.title-right {
   display: flex;
-  gap: 8px;
+  align-items: center;
+}
+
+/* ▶︎ 위험 느낌은 뱃지 색으로만 */
+.badge-pill {
+  border-radius: 999px;
+  background: #fef2f2;
+  color: #dc2626;
+  font-weight: 500;
+  padding-inline: 12px;
+}
+
+/* === 검색 영역 === */
+.search-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   white-space: nowrap;
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  border-radius: 16px;
+}
+
+.glass-toolbar {
+  background: rgba(248, 250, 252, 0.85);
+  border: 1px solid rgba(226, 232, 240, 0.9);
 }
 
 .search-input {
   flex: 1 1 auto;
-  min-width: 250px;
+  min-width: 240px;
 }
 
 .search-select {
   flex: 0 0 160px;
 }
 
-/* 테이블 헤더/바디 */
+/* 부드러운 divider */
+.divider-soft {
+  margin: 10px 0 10px;
+  opacity: 0.8;
+}
+
+/* === 테이블 헤더 === */
 .table-header-row {
   display: grid;
-  grid-template-columns: 2fr 1.2fr 1fr 1fr 1.2fr 0.8fr;
-  padding: 10px 4px;
-  font-size: 13px;
+  grid-template-columns: 2.4fr 1.4fr 1.2fr 1fr 1.4fr 0.9fr;
+  padding: 10px 12px;
+  font-size: 12px;
   font-weight: 600;
-  color: #777;
+  color: #6b7280;
+  border-radius: 14px;
+  margin-bottom: 4px;
+}
+
+.glass-header {
+  background: linear-gradient(
+    135deg,
+    rgba(248, 250, 252, 0.96),
+    rgba(239, 246, 255, 0.9)
+  );
+  border: 1px solid rgba(226, 232, 240, 0.9);
+}
+
+.th {
+  display: flex;
+  align-items: center;
+}
+
+/* === 테이블 바디 === */
+.table-body {
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(229, 231, 235, 0.9);
+  background-color: rgba(249, 250, 251, 0.7);
 }
 
 .table-row {
   display: grid;
-  grid-template-columns: 2fr 1.2fr 1fr 1fr 1.2fr 0.8fr;
-  padding: 10px 4px;
-  font-size: 14px;
-  border-bottom: 1px solid #f0f0f0;
+  grid-template-columns: 2.4fr 1.4fr 1.2fr 1fr 1.4fr 0.9fr;
+  padding: 10px 12px;
+  font-size: 0.9rem;
+  background-color: #ffffff;
+  border-bottom: 1px solid rgba(243, 244, 246, 0.9);
+  transition: background-color 0.18s ease, transform 0.08s ease,
+    box-shadow 0.16s ease;
 }
 
-.table-row:last-of-type {
-  border-bottom: none;
+/* zebra */
+.table-row:nth-child(2n) {
+  background-color: #fbfbff;
 }
 
-.th,
+/* hover */
+.table-row:hover {
+  background-color: #eef2ff;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(129, 140, 248, 0.16);
+}
+
 .td {
-  white-space: nowrap;
+  display: flex;
+  align-items: center;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.table-empty {
-  padding: 24px;
-  text-align: center;
-  color: #888;
-}
-
-/* 페이지네이션 */
-.table-footer {
+/* 파일 셀 */
+.file-cell {
   display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.file-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  background: linear-gradient(135deg, #e5edff, #eff6ff);
+  display: flex;
+  align-items: center;
   justify-content: center;
-  gap: 12px;
+}
+
+.file-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.file-name {
+  font-weight: 600;
+  color: #111827;
+  font-size: 0.9rem;
+}
+
+.file-sub {
+  font-size: 0.78rem;
+  color: #9ca3af;
+}
+
+/* === Empty message === */
+.table-empty {
+  padding: 26px 8px;
+  text-align: center;
+  color: #9ca3af;
+  background-color: #ffffff;
+}
+
+/* === 삭제 버튼 === */
+.delete-btn {
+  text-transform: none;
+  font-size: 0.8rem;
+  color: #b91c1c;
+}
+
+.pill-btn-danger {
+  border-radius: 999px;
+  padding-inline: 10px;
+}
+
+/* === 페이지네이션 === */
+.table-footer {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
   padding: 12px 0 4px;
+  font-size: 0.85rem;
+}
+
+.footer-left {
+  display: flex;
   align-items: center;
 }
 
+.footer-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.footer-right {
+  /* 오른쪽 여백용 */
+}
+
+.footer-count {
+  color: #6b7280;
+}
+
 .footer-btn {
-  min-width: 56px;
+  text-transform: none;
+  font-size: 0.8rem;
+  min-width: 40px;
+}
+
+.pill-btn {
+  border-radius: 999px;
+  padding-inline: 10px;
+  background: transparent;
+  color: #4b5563;
+}
+
+.pill-btn:hover:not(:disabled) {
+  background: rgba(226, 232, 240, 0.9);
 }
 
 .page-info {
+  color: #4b5563;
   font-size: 13px;
-  color: #555;
+  padding-inline: 8px;
 }
 
-/* 다이얼로그 제목 */
+/* 다이얼로그 */
+.user-delete-card {
+  border-radius: 20px;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.22);
+}
+
 .dialog-title {
-  font-weight: 600;
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 14px 18px 4px;
+}
+
+.dialog-body {
+  padding: 4px 18px 6px;
+}
+
+.dialog-text {
+  font-size: 0.9rem;
+  color: #374151;
+  margin-bottom: 4px;
+}
+
+.dialog-subtext {
+  font-size: 0.8rem;
+  color: #9ca3af;
+}
+
+.dialog-actions {
+  padding: 8px 16px 12px;
+}
+
+/* 반응형 */
+@media (max-width: 1000px) {
+  .danger-page {
+    padding: 20px 16px 28px;
+  }
+
+  .danger-card {
+    padding-inline: 18px;
+  }
+
+  .danger-card-title-wrap {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .search-row {
+    flex-wrap: wrap;
+  }
+
+  .search-input {
+    min-width: 100%;
+  }
+
+  .search-select {
+    flex: 1 1 50%;
+  }
+
+  .table-header-row,
+  .table-row {
+    grid-template-columns: 2.8fr 1.4fr 1.4fr 1.2fr;
+  }
+
+  .hide-on-md {
+    display: none;
+  }
 }
 </style>
