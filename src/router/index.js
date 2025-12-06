@@ -13,7 +13,10 @@ import ClientPage from "@/modules/client/views/ClientPage.vue";
 import ContractPage from "@/modules/sales/contract/view/ContractPage.vue";
 import CreateProjectPage from "@/modules/project/views/CreateProjectPage.vue";
 import CreateProposalPage from "@/modules/sales/proposal/view/CreateProposalPage.vue";
+import CreateEstimatePage from "@/modules/sales/estimate/view/CreateEstimatePage.vue";
 import EstimatePage from "@/modules/sales/estimate/view/EstimatePage.vue";
+import EstimateDetailPage from "@/modules/sales/estimate/view/EstimateDetailPage.vue";
+import EditEstimatePage from "@/modules/sales/estimate/view/EditEstimatePage.vue";
 import FileStoragePage from "@/modules/file/views/FileStoragePage.vue";
 import FloorPage from "@/modules/storemap/views/StoreMapPage.vue";
 import LoginPage from "@/views/LoginPage.vue";
@@ -84,6 +87,23 @@ const routes = [
     props: true,
   },
   { path: "/estimate", name: "Estimate", component: EstimatePage },
+  {
+    path: "/estimate/create",
+    name: "CreateEstimate",
+    component: CreateEstimatePage,
+  },
+  {
+    path: "/estimate/:id",
+    name: "EstimateDetail",
+    component: EstimateDetailPage,
+    props: true,
+  },
+  {
+    path: "/estimate/:id/edit",
+    name: "EstimateEdit",
+    component: EditEstimatePage,
+    props: true,
+  },
   { path: "/contract", name: "Contract", component: ContractPage },
   { path: "/revenue", name: "Revenue", component: RevenuePage },
   { path: "/filestorage", name: "FileStorage", component: FileStoragePage },
