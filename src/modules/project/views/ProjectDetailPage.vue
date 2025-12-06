@@ -465,7 +465,7 @@ const translateType = (type) => {
     case 'EXHIBITION':
       return '전시회'
     case 'RENTAL':
-      return '임대'
+      return '입점'
     default:
       return type
   }
@@ -477,7 +477,7 @@ const mapSalesTypeToEnum = (label) => {
       return 'POPUP'
     case '전시회':
       return 'EXHIBITION'
-    case '임대':
+    case '입점':
       return 'RENTAL'
     default:
       return null

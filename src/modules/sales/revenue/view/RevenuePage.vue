@@ -119,7 +119,7 @@ const saleType = ref('전체')
 const dateSort = ref('날짜 최신순')
 const managerFilter = ref('전체')
 
-const saleTypeOptions = ['전체', '임대', '팝업', '전시회']
+const saleTypeOptions = ['전체', '입점', '팝업', '전시회']
 const dateSortOptions = ['날짜 최신순', '날짜 오래된순']
 
 const page = ref(1) // UI 1-based
@@ -130,7 +130,7 @@ const totalElements = ref(0)
 const sales = ref([])
 
 const mapStoreTypeToLabel = (type) => {
-    if (type === 'REGULAR') return '임대'
+    if (type === 'REGULAR') return '입점'
     if (type === 'POPUP') return '팝업'
     if (type === 'EXHIBITION') return '전시회'
     return type || '-'
