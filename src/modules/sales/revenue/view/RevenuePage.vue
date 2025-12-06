@@ -106,7 +106,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { fetchRevenueList } from '@/apis/revenue'
 
@@ -136,16 +136,28 @@ const mapStoreTypeToLabel = (type) => {
     return type || '-'
 }
 
+const mapLabelToStoreType = (label) => {
+    if (label === '입점') return 'REGULAR'
+    if (label === '팝업') return 'POPUP'
+    if (label === '전시회') return 'EXHIBITION'
+    return null
+}
+
 const loadSales = async (reset = false) => {
-    if (reset) page.value = 1
+    if (reset) {
+        page.value = 1
+    }
 
     const res = await fetchRevenueList({
         page: page.value - 1, // 서버는 0-based
-        size: size.value
+        size: size.value,
+        keyword: keyword.value.trim() || null,
+        storeType: mapLabelToStoreType(saleType.value),
+        manager: managerFilter.value === '전체' ? null : managerFilter.value,
+        sort: dateSort.value === '날짜 최신순' ? 'LATEST' : 'OLDEST'
     })
 
     const data = res.data || {}
-
     const items = Array.isArray(data.data) ? data.data : []
 
     sales.value = items.map((item) => ({
@@ -171,6 +183,10 @@ const loadSales = async (reset = false) => {
 
 onMounted(() => loadSales(true))
 
+watch([saleType, dateSort, managerFilter, keyword], () => {
+    loadSales(true)
+})
+
 const managerOptions = computed(() => {
     const base = ['전체']
     const names = [
@@ -186,39 +202,8 @@ const toggleFavorite = (sale) => {
 const filteredSales = computed(() => {
     let list = sales.value.slice()
 
-    const kw = keyword.value.trim()
-    if (kw) {
-        list = list.filter((s) =>
-            [s.productName, s.clientCompany].some((v) => v?.includes(kw))
-        )
-    }
-
     if (showFavoritesOnly.value) {
         list = list.filter((s) => s.isFavorite)
-    }
-
-    if (saleType.value !== '전체') {
-        list = list.filter((s) => s.saleType === saleType.value)
-    }
-
-    if (managerFilter.value !== '전체') {
-        list = list.filter((s) => s.salesManager === managerFilter.value)
-    }
-
-    if (dateSort.value === '날짜 최신순') {
-        list.sort(
-            (a, b) =>
-                b.settlementYear * 100 +
-                b.settlementMonth -
-                (a.settlementYear * 100 + a.settlementMonth)
-        )
-    } else {
-        list.sort(
-            (a, b) =>
-                a.settlementYear * 100 +
-                a.settlementMonth -
-                (b.settlementYear * 100 + b.settlementMonth)
-        )
     }
 
     return list
@@ -236,7 +221,7 @@ const onPageChange = () => {
 const goDetail = (sale) => {
     if (!sale?.id) return
     router.push({
-        name: 'RevenueDetail', // router/index.js 에서 정의한 이름과 일치
+        name: 'RevenueDetail',
         params: { id: sale.id }
     })
 }
@@ -268,14 +253,14 @@ const goDetail = (sale) => {
     font-size: 1.2rem;
 }
 
-/* 카드 리스트 정렬 (제안 페이지와 동일) */
+/* 카드 리스트 정렬 */
 .proposal-col {
     padding-left: 10px;
     padding-right: 10px;
     margin-bottom: 18px;
 }
 
-/* 카드 디자인 (제안 페이지와 동일) */
+/* 카드 디자인 */
 .proposal-card {
     position: relative;
     padding: 16px;
@@ -308,7 +293,7 @@ const goDetail = (sale) => {
     font-size: 1.1rem;
 }
 
-/* 행 간격 (제안 페이지와 비슷하게) */
+/* 행 간격 */
 .info-row {
     margin-bottom: 2px;
 }
@@ -328,7 +313,7 @@ const goDetail = (sale) => {
     color: #333;
 }
 
-/* 라벨/텍스트 사이즈 제안 페이지와 통일 */
+/* 라벨/텍스트 */
 .label {
     font-size: 0.7rem;
     color: #8e8e93;

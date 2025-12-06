@@ -80,11 +80,19 @@
             </v-row>
           </v-card-text>
 
-          <!-- 누적 매출 요약 -->
+          <!-- 누적 매출 / 누적 수익 요약 -->
           <v-card-actions class="summary-row">
-            <div class="summary-label">누적 매출</div>
-            <div class="summary-value">
-              {{ formattedTotalSalesAccumulated }}
+            <div class="summary-item">
+              <div class="summary-label">누적 매출액</div>
+              <div class="summary-value">
+                {{ formattedAccumulatedSales }}
+              </div>
+            </div>
+            <div class="summary-item">
+              <div class="summary-label">누적 수익</div>
+              <div class="summary-value">
+                {{ formattedAccumulatedRevenue }}
+              </div>
             </div>
           </v-card-actions>
         </v-card>
@@ -409,9 +417,15 @@ const formattedBaseRent = computed(() => formatNumber(detail.baseRentSnapshot))
 const formattedContractCommissionRate = computed(() =>
   formatNumber(detail.commissionRate),
 )
-const formattedTotalSalesAccumulated = computed(() =>
+
+// 누적 매출액(총 매출) / 누적 수익(임대료+수수료)
+const formattedAccumulatedSales = computed(() =>
   withWon(detail.totalSalesAccumulated),
 )
+const formattedAccumulatedRevenue = computed(() =>
+  withWon(detail.finalRevenueAccumulated),
+)
+
 const formattedLatestTotalSales = computed(() =>
   formatNumber(detail.latestTotalSalesAmount),
 )
@@ -758,20 +772,29 @@ onMounted(loadDetail)
   content: '%';
 }
 
-/* 좌측 카드 하단 누적 매출 */
+/* 좌측 카드 하단 누적 매출/수익 */
 .summary-row {
   padding-top: 8px;
   border-top: 1px solid #f0f0f0;
   margin-top: 8px;
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: stretch;
+  gap: 16px;
+}
+
+.summary-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding-left: 8px;
 }
 
 .summary-label {
   font-size: 0.82rem;
   color: #555;
   font-weight: 600;
+  margin-bottom: 2px;
 }
 
 .summary-value {
