@@ -4,16 +4,14 @@
       {{ snackbarMessage }}
     </v-snackbar>
 
-    <!-- 페이지 타이틀 -->
     <div class="page-title">견적 수정</div>
 
-    <!-- ========== 견적 수정 화면 (생성 화면 동일 스타일 적용) ========== -->
+    <!-- ===================== 견적 정보 ===================== -->
     <v-card elevation="1" class="estimate-card">
-      <!-- ---------------- 견적 정보 ---------------- -->
       <div class="section-title">견적 정보</div>
 
       <v-row dense>
-        <!-- 제목 -->
+        <!-- 견적 제목 -->
         <v-col cols="12" md="6">
           <div class="input-label">견적 제목</div>
           <v-text-field
@@ -27,35 +25,26 @@
         <!-- 프로젝트 -->
         <v-col cols="12" md="6">
           <div class="input-label">프로젝트</div>
-          <v-select
-            :items="projectOptions"
-            v-model="form.projectId"
+          <v-text-field
+            v-model="selectedProjectName"
+            readonly
             class="input-field"
-            item-title="projectTitle"
-            item-value="projectId"
-            placeholder="프로젝트 선택"
             variant="outlined"
             hide-details
-            clearable
-            @update:modelValue="onProjectChange"
+            @click="projectDialog = true"
           />
         </v-col>
 
         <!-- 제안 -->
         <v-col cols="12" md="6">
           <div class="input-label">제안</div>
-          <v-select
-            :items="proposalOptions"
-            v-model="form.proposalId"
+          <v-text-field
+            v-model="selectedProposalName"
+            readonly
             class="input-field"
-            item-title="title"
-            item-value="id"
-            label=" "
-            placeholder="제안 선택"
             variant="outlined"
             hide-details
-            clearable
-            persistent-placeholder
+            @click="proposalDialog = true"
           />
         </v-col>
 
@@ -64,8 +53,8 @@
           <div class="input-label">고객사</div>
           <v-text-field
             v-model="selectedCompanyName"
-            class="input-field"
             readonly
+            class="input-field"
             variant="outlined"
             hide-details
             @click="companyDialog = true"
@@ -77,8 +66,8 @@
           <div class="input-label">고객 담당자</div>
           <v-text-field
             v-model="selectedClientName"
-            class="input-field"
             readonly
+            class="input-field"
             variant="outlined"
             hide-details
             @click="clientDialog = true"
@@ -92,12 +81,11 @@
             <template #activator="{ props }">
               <v-text-field
                 :model-value="formatDate(form.estimateDate)"
-                class="input-field"
                 readonly
-                placeholder="YYYY-MM-DD"
+                class="input-field"
+                v-bind="props"
                 variant="outlined"
                 hide-details
-                v-bind="props"
               />
             </template>
             <v-date-picker
@@ -114,12 +102,11 @@
             <template #activator="{ props }">
               <v-text-field
                 :model-value="formatDate(form.deliveryDate)"
-                class="input-field"
                 readonly
-                placeholder="YYYY-MM-DD"
+                class="input-field"
+                v-bind="props"
                 variant="outlined"
                 hide-details
-                v-bind="props"
               />
             </template>
             <v-date-picker
@@ -148,15 +135,15 @@
           <div class="input-label">비고</div>
           <v-textarea
             v-model="form.remark"
-            class="textarea-field"
             rows="3"
+            class="textarea-field"
             variant="outlined"
             hide-details
           />
         </v-col>
       </v-row>
 
-      <!-- =============== 공간 정보 영역 =============== -->
+      <!-- ===================== 공간 정보 ===================== -->
       <div class="section-title mt-6">공간 정보</div>
 
       <v-card
@@ -165,53 +152,57 @@
         class="space-card pa-3 mb-3"
       >
         <v-row dense>
+          <!-- 층 선택 -->
           <v-col cols="12" md="3">
             <div class="input-label">층 선택</div>
             <v-select
               :items="floorOptions"
               v-model="sp.floorId"
-              class="input-field"
               item-title="label"
               item-value="id"
+              class="input-field"
               hide-details
               @update:modelValue="onFloorChange(idx)"
             />
           </v-col>
 
+          <!-- 호수 선택 -->
           <v-col cols="12" md="3">
             <div class="input-label">매장(호수)</div>
             <v-select
               :items="spaceStoreOptions[idx]"
               v-model="sp.storeId"
-              class="input-field"
               item-title="storeName"
               item-value="storeId"
+              class="input-field"
               hide-details
-              :no-data-text="!sp.floorId ? '층을 먼저 선택해주세요' : ''"
               @update:modelValue="onStoreChange(idx)"
             />
           </v-col>
 
+          <!-- 임대료 -->
           <v-col cols="12" md="3">
             <div class="input-label">임대료</div>
             <v-text-field
               :model-value="toComma(sp.rentPrice)"
-              class="input-field"
               readonly
+              class="input-field"
               hide-details
             />
           </v-col>
 
+          <!-- 면적 -->
           <v-col cols="12" md="3">
             <div class="input-label">면적</div>
             <v-text-field
               :model-value="sp.areaSize + '㎡'"
-              class="input-field"
               readonly
+              class="input-field"
               hide-details
             />
           </v-col>
 
+          <!-- 추가 비용 -->
           <v-col cols="12" md="3">
             <div class="input-label">추가 비용</div>
             <v-text-field
@@ -222,6 +213,7 @@
             />
           </v-col>
 
+          <!-- 할인 -->
           <v-col cols="12" md="3">
             <div class="input-label">할인 금액</div>
             <v-text-field
@@ -233,13 +225,13 @@
           </v-col>
         </v-row>
 
-        <!-- 공간 설명 -->
+        <!-- 설명 -->
         <v-col cols="12">
           <div class="input-label">공간 설명</div>
           <v-textarea
             v-model="sp.description"
-            class="textarea-field"
             rows="2"
+            class="textarea-field"
             hide-details
           />
         </v-col>
@@ -249,7 +241,7 @@
         </v-btn>
       </v-card>
 
-      <!-- 공간 추가 버튼 (생성 화면 동일) -->
+      <!-- 공간 추가 버튼 -->
       <div class="actions-row">
         <v-btn class="space-add-btn" variant="outlined" @click="addSpace">
           + 공간 추가
@@ -265,7 +257,7 @@
       <!-- 저장 버튼 -->
       <div class="actions-row">
         <v-btn
-          color="orange darken-2"
+          color="orange-darken-2"
           class="white--text px-6"
           rounded="lg"
           elevation="2"
@@ -275,16 +267,151 @@
         </v-btn>
       </div>
     </v-card>
+
+    <!-- ===================== 모달들 ===================== -->
+
+    <!-- 프로젝트 선택 -->
+    <v-dialog v-model="projectDialog" width="500">
+      <v-card class="pa-4">
+        <div class="dialog-title mb-4">프로젝트 선택</div>
+        <v-text-field
+          v-model="projectSearch"
+          placeholder="검색"
+          prepend-inner-icon="mdi-magnify"
+          variant="outlined"
+          class="mb-4"
+        />
+        <v-list>
+          <v-list-item
+            v-for="p in filteredProjects"
+            :key="p.projectId"
+            @click="selectProject(p)"
+            class="dialog-item"
+          >
+            {{ p.projectTitle }}
+          </v-list-item>
+        </v-list>
+      </v-card>
+    </v-dialog>
+
+    <!-- 제안 선택 -->
+    <v-dialog v-model="proposalDialog" width="500">
+      <v-card class="pa-4">
+        <div class="dialog-title mb-4">제안 선택</div>
+        <v-text-field
+          v-model="proposalSearch"
+          placeholder="검색"
+          prepend-inner-icon="mdi-magnify"
+          variant="outlined"
+          class="mb-4"
+        />
+        <v-list>
+          <v-list-item
+            v-for="p in filteredProposals"
+            :key="p.id"
+            @click="selectProposal(p)"
+            class="dialog-item"
+          >
+            {{ p.title }}
+          </v-list-item>
+        </v-list>
+      </v-card>
+    </v-dialog>
+
+    <!-- 고객사 선택 -->
+    <v-dialog v-model="companyDialog" width="500">
+      <v-card class="pa-4">
+        <v-card-text>
+          <div class="dialog-title mb-3">고객사 선택</div>
+
+          <div class="mb-3 d-flex">
+            <v-chip
+              class="mr-2"
+              :color="
+                companyTypeFilter === 'ALL' ? 'orange darken-2' : undefined
+              "
+              :text-color="companyTypeFilter === 'ALL' ? 'white' : undefined"
+              @click="companyTypeFilter = 'ALL'"
+            >
+              전체
+            </v-chip>
+
+            <v-chip
+              class="mr-2"
+              :color="
+                companyTypeFilter === 'CLIENT' ? 'orange darken-2' : undefined
+              "
+              :text-color="companyTypeFilter === 'CLIENT' ? 'white' : undefined"
+              @click="companyTypeFilter = 'CLIENT'"
+            >
+              고객사
+            </v-chip>
+
+            <v-chip
+              :color="
+                companyTypeFilter === 'LEAD' ? 'orange darken-2' : undefined
+              "
+              :text-color="companyTypeFilter === 'LEAD' ? 'white' : undefined"
+              @click="companyTypeFilter = 'LEAD'"
+            >
+              잠재고객사
+            </v-chip>
+          </div>
+
+          <v-text-field
+            v-model="companySearch"
+            placeholder="검색"
+            prepend-inner-icon="mdi-magnify"
+            variant="outlined"
+            class="mb-4"
+          />
+
+          <v-list>
+            <v-list-item
+              v-for="c in filteredCompanies"
+              :key="c.companyId"
+              @click="selectCompany(c)"
+              class="dialog-item"
+            >
+              {{ c.companyName }}
+            </v-list-item>
+          </v-list>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+
+    <!-- 담당자 선택 -->
+    <v-dialog v-model="clientDialog" width="500">
+      <v-card class="pa-4">
+        <div class="dialog-title mb-4">고객 담당자 선택</div>
+        <v-text-field
+          v-model="clientSearch"
+          placeholder="검색"
+          variant="outlined"
+          class="mb-4"
+        />
+        <v-list>
+          <v-list-item
+            v-for="cl in filteredClientList"
+            :key="cl.id"
+            @click="selectClient(cl)"
+            class="dialog-item"
+          >
+            {{ cl.name }}
+          </v-list-item>
+        </v-list>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from "vue";
+import { ref, reactive, computed, onMounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import { updateEstimate, getEstimateDetail } from "@/apis/estimate";
 import { getFloors, getSpaces } from "@/apis/storemap";
-import { getProjectMeta, getProjectsWithPipelines } from "@/apis/project";
+import { getProjectsWithPipelines, getProjectMeta } from "@/apis/project";
 import { getProposalsByProject, getProposalDetail } from "@/apis/proposal";
 import {
   getSimpleClientCompanies,
@@ -294,20 +421,15 @@ import {
 const route = useRoute();
 const router = useRouter();
 
-/* ---------------- 기본 ---------------- */
-const toComma = (v) => {
-  if (v === undefined || v === null || v === "") return "0";
-  const num = Number(v);
-  if (Number.isNaN(num)) return "0";
-  return num.toLocaleString();
-};
-
+/* ===================== 옵션 ===================== */
 const paymentOptions = [
   { label: "선불", value: "PREPAY" },
   { label: "후불", value: "POSTPAY" },
 ];
 
-/* ---------------- form ---------------- */
+const toComma = (v) => Number(v || 0).toLocaleString();
+
+/* ===================== FORM ===================== */
 const form = reactive({
   title: "",
   projectId: null,
@@ -321,42 +443,50 @@ const form = reactive({
   spaces: [],
 });
 
-/* ---------------- state ---------------- */
+/* ===================== UI 표시 이름 ===================== */
+const selectedProjectName = ref("");
+const selectedProposalName = ref("");
 const selectedCompanyName = ref("");
 const selectedClientName = ref("");
 
-const detailProjectTitle = ref("");
-
+/* ===================== 옵션 리스트 ===================== */
 const projectOptions = ref([]);
 const proposalOptions = ref([]);
+const floorOptions = ref([]);
+const spaceStoreOptions = ref([]);
 
 const companyList = ref([]);
 const clientList = ref([]);
 
-const floorOptions = ref([]);
-const spaceStoreOptions = ref([]);
+const companyTypeFilter = ref("ALL");
 
-const companyDialog = ref(false);
-const clientDialog = ref(false);
-
+/* ===================== 검색 ===================== */
+const projectSearch = ref("");
+const proposalSearch = ref("");
 const companySearch = ref("");
 const clientSearch = ref("");
 
+/* ===================== 모달 ===================== */
+const projectDialog = ref(false);
+const proposalDialog = ref(false);
+const companyDialog = ref(false);
+const clientDialog = ref(false);
+
+/* ===================== 날짜 메뉴 ===================== */
+const estimateMenu = ref(false);
+const deliveryMenu = ref(false);
+
+/* ===================== 스낵바 ===================== */
 const snackbar = ref(false);
 const snackbarColor = ref("");
 const snackbarMessage = ref("");
 
-const estimateMenu = ref(false);
-const deliveryMenu = ref(false);
-
-/* ---------------- snackbar ---------------- */
 const showError = (err) => {
   console.error(err);
   snackbarColor.value = "red";
   snackbarMessage.value =
     err?.response?.data?.message ||
     err?.response?.data?.errorMessage ||
-    err?.message ||
     "오류 발생";
   snackbar.value = true;
 };
@@ -367,18 +497,122 @@ const showSuccess = (msg) => {
   snackbar.value = true;
 };
 
-/* ---------------- date ---------------- */
-const formatDate = (date) =>
-  date ? new Date(date).toISOString().substring(0, 10) : "";
+/* ===================== Utils ===================== */
+const formatDate = (d) => (d ? new Date(d).toISOString().substring(0, 10) : "");
 
-/* ---------------- 회사/담당자 ---------------- */
-const loadCompanies = async () => {
-  const res = await getSimpleClientCompanies({ page: 1, size: 100 });
-  companyList.value = res.data.content.map((c) => ({
-    companyId: c.id,
-    companyName: c.name,
+/* ===================== FILTER LIST ===================== */
+const filteredProjects = computed(() =>
+  projectOptions.value.filter((p) =>
+    p.projectTitle.toLowerCase().includes(projectSearch.value.toLowerCase())
+  )
+);
+
+const filteredProposals = computed(() =>
+  proposalOptions.value.filter((p) =>
+    p.title.toLowerCase().includes(proposalSearch.value.toLowerCase())
+  )
+);
+
+const filteredCompanies = computed(() => {
+  const search = companySearch.value.trim().toLowerCase();
+  return companyList.value.filter((c) =>
+    c.companyName.toLowerCase().includes(search)
+  );
+});
+
+const filteredClientList = computed(() =>
+  clientList.value.filter((cl) =>
+    cl.name.toLowerCase().includes(clientSearch.value.toLowerCase())
+  )
+);
+
+/* ===================== 회사 / 담당자 선택 ===================== */
+const selectCompany = async (c) => {
+  selectedCompanyName.value = c.companyName;
+  form.clientCompanyId = c.companyId;
+
+  selectedClientName.value = "";
+  form.clientId = null;
+
+  await loadClients(c.companyId);
+  companyDialog.value = false;
+};
+
+const selectClient = (cl) => {
+  selectedClientName.value = cl.name;
+  form.clientId = cl.id;
+  clientDialog.value = false;
+};
+
+/* ===================== API - LOAD ===================== */
+
+const loadProjects = async () => {
+  const res = await getProjectsWithPipelines({
+    myProject: true,
+    page: 1,
+    size: 100,
+  });
+  projectOptions.value = res.data.content.map((p) => ({
+    projectId: p.projectId,
+    projectTitle: p.title,
   }));
 };
+
+const loadProposals = async (projectId) => {
+  if (!projectId) return;
+
+  const res = await getProposalsByProject(projectId);
+  proposalOptions.value = res.data.map((p) => ({
+    id: p.id,
+    title: p.title,
+  }));
+};
+
+const loadCompanies = async () => {
+  const params = {
+    page: 1,
+    size: 100,
+  };
+
+  // 칩으로 선택되는 타입 필터 (CLIENT, LEAD)
+  if (companyTypeFilter.value !== "ALL") {
+    params.type = companyTypeFilter.value;
+  }
+
+  // 검색어도 서버에 전달
+  if (companySearch.value.trim()) {
+    params.keyword = companySearch.value.trim();
+  }
+
+  const res = await getSimpleClientCompanies(params);
+
+  let rows = [];
+
+  if (Array.isArray(res.data)) rows = res.data;
+  else if (Array.isArray(res.data?.content)) rows = res.data.content;
+  else if (Array.isArray(res.data?.data)) rows = res.data.data;
+
+  companyList.value = rows.map((c) => ({
+    companyId: c.id,
+    companyName: c.name,
+    type: c.type ?? "UNKNOWN",
+  }));
+};
+
+watch(
+  () => companyDialog.value,
+  (open) => {
+    if (open) {
+      companySearch.value = "";
+      companyTypeFilter.value = "ALL";
+      loadCompanies();
+    }
+  }
+);
+
+watch([companyTypeFilter, companySearch], () => {
+  if (companyDialog.value) loadCompanies();
+});
 
 const loadClients = async (companyId) => {
   if (!companyId) return;
@@ -387,119 +621,80 @@ const loadClients = async (companyId) => {
     size: 100,
   });
 
-  clientList.value = res.data.content.map((c) => ({
-    id: c.id,
-    name: c.name,
+  const rows = res.data?.content || res.data?.data || res.data || [];
+
+  clientList.value = rows.map((cl) => ({
+    id: cl.id,
+    name: cl.name,
   }));
 };
 
-const filteredCompanyList = computed(() =>
-  companyList.value.filter((c) =>
-    c.companyName.toLowerCase().includes(companySearch.value.toLowerCase())
-  )
-);
-
-const filteredClientList = computed(() =>
-  clientList.value.filter((c) =>
-    c.name.toLowerCase().includes(clientSearch.value.toLowerCase())
-  )
-);
-
-const selectCompany = (c) => {
-  selectedCompanyName.value = c.companyName;
-  form.clientCompanyId = c.companyId;
-
-  form.clientId = null;
-  selectedClientName.value = "";
-
-  loadClients(c.companyId);
-  companyDialog.value = false;
-};
-
-const selectClient = (p) => {
-  selectedClientName.value = p.name;
-  form.clientId = p.id;
-  clientDialog.value = false;
-};
-
-/* ---------------- 프로젝트/제안 ---------------- */
-const loadProjects = async () => {
-  const res = await getProjectsWithPipelines({
-    myProject: true,
-    page: 1,
-    size: 100,
-  });
-
-  projectOptions.value = res.data.content.map((p) => ({
-    projectId: p.projectId,
-    projectTitle: p.title,
-  }));
-};
-
-const ensureCurrentProjectInOptions = () => {
-  if (!form.projectId) return;
-
-  const exists = projectOptions.value.some(
-    (p) => p.projectId === form.projectId
-  );
-
-  if (!exists) {
-    projectOptions.value.push({
-      projectId: form.projectId,
-      projectTitle: detailProjectTitle.value || `프로젝트 #${form.projectId}`,
-    });
-  }
-};
-
-const onProjectChange = async (projectId) => {
-  form.proposalId = null;
-  proposalOptions.value = [];
-
-  if (!projectId) return;
-
-  const { data } = await getProjectMeta(projectId);
-
-  form.clientCompanyId = data.clientCompanyId;
-  selectedCompanyName.value = data.clientCompanyName;
-
-  form.clientId = data.clientId;
-  selectedClientName.value = data.clientName;
-
-  await loadClients(data.clientCompanyId);
-
-  const proposals = await getProposalsByProject(projectId);
-  proposalOptions.value = proposals.data.map((p) => ({
-    id: p.id,
-    title: p.title,
-  }));
-};
-
-const onProposalChange = async (proposalId) => {
-  if (!proposalId) return;
-
-  const { data } = await getProposalDetail(proposalId);
-
-  form.clientCompanyId = data.clientCompanyId;
-  form.clientId = data.clientId;
-
-  selectedCompanyName.value = data.clientCompanyName;
-  selectedClientName.value = data.clientName;
-
-  await loadClients(data.clientCompanyId);
-};
-
-/* ---------------- 공간: 층/매장 ---------------- */
 const loadFloors = async () => {
-  const { data } = await getFloors(1);
-
-  floorOptions.value = data.floors.map((f) => ({
+  const res = await getFloors(1);
+  floorOptions.value = res.data.floors.map((f) => ({
     id: f.floorId,
     label: f.floorName,
   }));
 };
 
+/* 다이얼로그 열릴 때 회사 필터 초기화 + 새로 로딩 */
+watch(
+  () => companyDialog.value,
+  (open) => {
+    if (open) {
+      companySearch.value = "";
+      companyTypeFilter.value = "ALL";
+      loadCompanies();
+    }
+  }
+);
+
+/* ===================== 프로젝트 선택 ===================== */
+const selectProject = async (p) => {
+  selectedProjectName.value = p.projectTitle;
+  form.projectId = p.projectId;
+
+  // 제안 초기화
+  form.proposalId = null;
+  selectedProposalName.value = "";
+
+  // 제안 가져오기
+  await loadProposals(p.projectId);
+
+  // 프로젝트 기본 고객사/담당자
+  const { data } = await getProjectMeta(p.projectId);
+  form.clientCompanyId = data.clientCompanyId;
+  form.clientId = data.clientId;
+
+  selectedCompanyName.value = data.clientCompanyName;
+  selectedClientName.value = data.clientName;
+
+  await loadClients(form.clientCompanyId);
+
+  projectDialog.value = false;
+};
+
+/* ===================== 제안 선택 ===================== */
+const selectProposal = async (p) => {
+  form.proposalId = p.id;
+  selectedProposalName.value = p.title;
+
+  const { data } = await getProposalDetail(p.id);
+
+  form.clientCompanyId = data.clientCompanyId;
+  form.clientId = data.clientId;
+
+  selectedCompanyName.value = data.clientCompanyName;
+  selectedClientName.value = data.clientName;
+
+  await loadClients(form.clientCompanyId);
+
+  proposalDialog.value = false;
+};
+
+/* ===================== 공간 선택 ===================== */
 const onFloorChange = async (idx) => {
-  const floorId = form.spaces[idx]?.floorId;
+  const floorId = form.spaces[idx].floorId;
   if (!floorId) return;
 
   const { data } = await getSpaces(floorId);
@@ -514,19 +709,19 @@ const onFloorChange = async (idx) => {
 };
 
 const onStoreChange = (idx) => {
-  const options = spaceStoreOptions.value[idx];
-  if (!options) return;
+  const storeId = form.spaces[idx].storeId;
+  if (!storeId) return;
 
-  const sp = form.spaces[idx];
-  const selected = options.find((item) => item.storeId === sp.storeId);
-  if (!selected) return;
+  const stores = spaceStoreOptions.value[idx];
+  const store = stores.find((s) => s.storeId === storeId);
+  if (!store) return;
 
-  sp.rentPrice = selected.rentPrice ?? 0;
-  sp.areaSize = selected.areaSize ?? 0;
-  sp.description = selected.description ?? "";
+  form.spaces[idx].rentPrice = store.rentPrice;
+  form.spaces[idx].areaSize = store.areaSize;
+  form.spaces[idx].description = store.description;
 };
 
-/* ---------------- 공간 추가/삭제 ---------------- */
+/* ===================== 공간 추가/삭제 ===================== */
 const addSpace = () => {
   form.spaces.push({
     floorId: null,
@@ -537,7 +732,6 @@ const addSpace = () => {
     discountAmount: 0,
     description: "",
   });
-
   spaceStoreOptions.value.push([]);
 };
 
@@ -546,51 +740,53 @@ const removeSpace = (idx) => {
   spaceStoreOptions.value.splice(idx, 1);
 };
 
-/* ---------------- 총 금액 ---------------- */
+/* ===================== 총 금액 ===================== */
 const totalPrice = computed(() =>
-  form.spaces.reduce((sum, sp) => {
-    const rent = Number(sp.rentPrice ?? 0);
-    const add = Number(sp.additionalFee ?? 0);
-    const disc = Number(sp.discountAmount ?? 0);
-    return sum + rent + add - disc;
+  form.spaces.reduce((sum, s) => {
+    return (
+      sum +
+      (s.rentPrice || 0) +
+      (s.additionalFee || 0) -
+      (s.discountAmount || 0)
+    );
   }, 0)
 );
 
-/* ---------------- 상세정보 로딩 ---------------- */
+/* ===================== 상세 로딩 ===================== */
 const loadDetail = async () => {
   const { data } = await getEstimateDetail(route.params.id);
 
   form.title = data.estimateTitle;
   form.projectId = data.projectId;
-  form.proposalId = data.proposalId;
+  selectedProjectName.value = data.projectTitle;
 
-  detailProjectTitle.value = data.projectTitle || "";
+  form.proposalId = data.proposalId;
+  selectedProposalName.value = data.proposalTitle;
 
   form.clientCompanyId = data.clientCompanyId;
   form.clientId = data.clientId;
 
-  selectedCompanyName.value = data.clientCompanyName || "";
-  selectedClientName.value = data.clientName || "";
+  selectedCompanyName.value = data.clientCompanyName;
+  selectedClientName.value = data.clientName;
 
   form.estimateDate = data.estimateDate;
   form.deliveryDate = data.deliveryDate;
-
   form.paymentCondition = data.paymentCondition;
   form.remark = data.remark;
 
-  form.spaces = (data.spaces || []).map((sp) => ({
-    storeEstimateMapId: sp.storeEstimateMapId,
-    floorId: sp.floorId,
-    storeId: sp.storeId,
-    rentPrice: sp.rentFee ?? 0,
-    areaSize: sp.area ?? 0,
-    additionalFee: sp.additionalFee ?? 0,
-    discountAmount: sp.discountAmount ?? 0,
-    description: sp.remark ?? "",
+  form.spaces = data.spaces.map((s) => ({
+    storeEstimateMapId: s.storeEstimateMapId,
+    floorId: s.floorId,
+    storeId: s.storeId,
+    rentPrice: s.rentFee,
+    areaSize: s.area,
+    additionalFee: s.additionalFee,
+    discountAmount: s.discountAmount,
+    description: s.remark,
   }));
 };
 
-/* ---------------- 저장 ---------------- */
+/* ===================== 저장 ===================== */
 const saveEstimate = async () => {
   try {
     const payload = {
@@ -603,72 +799,49 @@ const saveEstimate = async () => {
       deliveryDate: formatDate(form.deliveryDate),
       paymentCondition: form.paymentCondition,
       remark: form.remark,
-      spaces: form.spaces.map((sp) => ({
-        storeEstimateMapId: sp.storeEstimateMapId,
-        storeId: sp.storeId,
-        additionalFee: sp.additionalFee ?? 0,
-        discountAmount: sp.discountAmount ?? 0,
-        description: sp.description ?? "",
+      spaces: form.spaces.map((s) => ({
+        storeEstimateMapId: s.storeEstimateMapId,
+        storeId: s.storeId,
+        additionalFee: s.additionalFee,
+        discountAmount: s.discountAmount,
+        description: s.description,
       })),
     };
 
     await updateEstimate(route.params.id, payload);
 
     showSuccess("견적이 수정되었습니다.");
-
-    router.push({
-      name: "EstimateDetail",
-      params: { id: route.params.id },
-    });
+    router.push({ name: "EstimateDetail", params: { id: route.params.id } });
   } catch (err) {
     showError(err);
   }
 };
 
-/* ---------------- mount ---------------- */
+/* ===================== 초기 로딩 ===================== */
 onMounted(async () => {
-  try {
-    await loadDetail();
+  await loadDetail();
+  await loadProjects();
+  await loadCompanies();
+  await loadFloors();
 
-    await Promise.all([loadFloors(), loadProjects(), loadCompanies()]);
+  spaceStoreOptions.value = Array.from(
+    { length: form.spaces.length },
+    () => []
+  );
 
-    ensureCurrentProjectInOptions();
-
-    if (form.projectId) {
-      const res = await getProposalsByProject(form.projectId);
-      proposalOptions.value = res.data.map((p) => ({
-        id: p.id,
-        title: p.title,
-      }));
-    }
-
-    if (form.clientCompanyId) {
-      await loadClients(form.clientCompanyId);
-    }
-
-    spaceStoreOptions.value = Array.from(
-      { length: form.spaces.length },
-      () => []
-    );
-
-    for (let i = 0; i < form.spaces.length; i++) {
-      if (form.spaces[i].floorId) {
-        await onFloorChange(i);
-        onStoreChange(i);
-      }
-    }
-  } catch (err) {
-    showError(err);
+  for (let i = 0; i < form.spaces.length; i++) {
+    await onFloorChange(i);
+    onStoreChange(i);
   }
 });
 </script>
 
 <style scoped>
-/* ===== 페이지 / 카드 공통 ===== */
+/*        기본 페이지 레이아웃            */
 .page-wrapper {
   background: #fafafa;
   min-height: 100vh;
-  padding: 8px 16px;
+  padding: 8px 16px 10px;
 }
 
 .page-title {
@@ -679,6 +852,7 @@ onMounted(async () => {
   color: #111;
 }
 
+/*              카드 컨테이너              */
 .estimate-card {
   max-width: 1100px;
   margin: 0 auto 10px;
@@ -688,6 +862,7 @@ onMounted(async () => {
   padding: 8px 14px 20px;
 }
 
+/* 섹션 제목 */
 .section-title {
   font-size: 0.95rem;
   font-weight: 600;
@@ -695,6 +870,7 @@ onMounted(async () => {
   margin-bottom: 12px;
 }
 
+/*             입력 라벨 스타일            */
 .input-label {
   font-size: 0.9rem;
   font-weight: 600;
@@ -702,50 +878,82 @@ onMounted(async () => {
   margin-bottom: 4px;
 }
 
-/* v-col padding (생성 화면과 동일) */
+/*       v-col 간 상하 간격 줄이기         */
 .estimate-card :deep(.v-col) {
   padding-top: 1px !important;
   padding-bottom: 1px !important;
 }
 
-/* ===== 입력 박스 공통 ===== */
+/*     input / select 공통 스타일링        */
 .input-field {
   border-radius: 6px !important;
-  font-size: 0.8rem !important;
+  font-size: 0.8rem;
 }
 
+/* 박스 높이 통일 */
 .input-field :deep(.v-field) {
   min-height: 32px !important;
   height: 32px !important;
-  border-radius: 6px !important;
 }
 
+/* 입력 텍스트 */
 .input-field :deep(.v-field__input) {
   font-size: 0.8rem !important;
+  line-height: 1.2 !important;
   padding-top: 4px !important;
   padding-bottom: 4px !important;
+  min-height: 32px !important;
+}
+
+/* 중앙정렬 */
+.input-field :deep(.v-field__field) {
+  align-items: center !important;
+}
+
+/* placeholder 중앙정렬 */
+.input-field :deep(.v-field:not(.v-field--dirty) .v-field__input) {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+/* floating label 기본 위치 */
+.input-field :deep(.v-field-label) {
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  font-size: 0.8rem !important;
+}
+
+/* 값 입력 시 라벨 작게 위로 */
+.input-field :deep(.v-field--dirty .v-field-label) {
+  top: 6px !important;
+  transform: none !important;
+  font-size: 0.65rem !important;
+}
+
+/*           v-select 스타일               */
+.input-field :deep(.v-select__selection-text) {
+  display: flex !important;
+  align-items: center !important;
+}
+
+.input-field :deep(.v-select .v-field__field) {
+  display: flex !important;
+  align-items: center !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
   min-height: 32px !important;
   height: 32px !important;
 }
 
-.input-field :deep(.v-field__append-inner),
-.input-field :deep(.v-field__suffix),
-.input-field :deep(.v-field__prepend-inner) {
-  font-size: 0.8rem !important;
-  padding: 0 !important;
-  align-items: center !important;
-}
-
-/* ===== textarea (비고 / 공간설명) ===== */
+/*             textarea 스타일             */
 .textarea-field :deep(.v-field) {
   min-height: 65px !important;
-  border-radius: 6px !important;
 }
 
 .textarea-field :deep(.v-field__input) {
-  padding-top: 14px !important;
-  padding-bottom: 6px !important;
   font-size: 0.8rem !important;
+  padding-top: 16px !important;
+  padding-bottom: 6px !important;
   align-items: flex-start !important;
 }
 
@@ -755,7 +963,7 @@ onMounted(async () => {
   resize: none !important;
 }
 
-/* ===== 공간 카드 ===== */
+/*                공간 카드                */
 .space-card {
   border: 1px solid #eee;
   border-radius: 10px;
@@ -764,27 +972,20 @@ onMounted(async () => {
   margin-bottom: 8px;
 }
 
-/* ===== 공간 추가 버튼 (생성화면 동일 스타일) ===== */
+/*          공간 추가 버튼 스타일          */
 .space-add-btn {
   border: 1px solid #1976d2;
-  color: #1976d2;
-  font-size: 0.8rem;
-  padding: 6px 0;
+  color: #1976d2 !important;
   width: 120px;
-  float: right;
-  margin-top: 10px;
-  margin-bottom: 15px;
-  border-radius: 6px;
-  background: white;
+  font-size: 0.8rem;
 }
 
-/* ===== 총 금액 카드 ===== */
+/*              총 금액 카드              */
 .total-card {
   border: 1px solid #eee;
-  border-radius: 10px;
   background: white;
+  border-radius: 10px;
   text-align: right;
-  margin-bottom: 20px;
 }
 
 .total-title {
@@ -798,14 +999,13 @@ onMounted(async () => {
   margin-top: 4px;
 }
 
-/* ===== 저장 버튼 ===== */
 .actions-row {
   display: flex;
   justify-content: flex-end;
   margin-top: 10px;
 }
 
-/* ===== 모달 ===== */
+/* 모달 타이틀 & 리스트 */
 .dialog-title {
   font-size: 0.9rem;
   font-weight: 600;
@@ -818,96 +1018,6 @@ onMounted(async () => {
 }
 
 .dialog-item:hover {
-  background: #fff3e0;
-}
-
-/* 추가비용 / 할인 금액 number 필드의 스핀 버튼 제거 */
-.input-field :deep(input[type="number"])::-webkit-inner-spin-button,
-.input-field :deep(input[type="number"])::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-.input-field :deep(input[type="number"]) {
-  -moz-appearance: textfield; /* Firefox */
-}
-
-/* v-select 박스 높이 통일 */
-.input-field :deep(.v-field.v-field--select) {
-  min-height: 32px !important;
-  height: 32px !important;
-}
-
-/* v-select 내부 인풋 정렬 */
-.input-field :deep(.v-field.v-field--select .v-field__input) {
-  padding-top: 4px !important;
-  padding-bottom: 4px !important;
-  align-items: center !important;
-}
-
-/* v-select placeholder 정렬 */
-.input-field :deep(.v-select__selection-text) {
-  padding-top: 4px !important;
-  padding-bottom: 4px !important;
-  display: flex !important;
-  align-items: center !important;
-  font-size: 0.8rem !important;
-}
-
-.input-field :deep(.v-select__selection) {
-  padding-top: 4px !important;
-  padding-bottom: 4px !important;
-  display: flex !important;
-  align-items: center !important;
-}
-
-/* placeholder (v-field-label) */
-:deep(.v-field-label) {
-  top: 50% !important;
-  transform: translateY(-50%) !important;
-}
-
-/* 선택된 값이 들어가는 input 영역 */
-:deep(.v-field__input) {
-  display: flex !important;
-  align-items: center !important;
-}
-
-/* v-select 텍스트 수직 가운데 정렬 강제 */
-.input-field :deep(.v-field__input),
-.input-field :deep(.v-select__selection),
-.input-field :deep(.v-select__selection-text),
-.input-field :deep(.v-field__placeholder) {
-  display: flex !important;
-  align-items: center !important;
-  height: 32px !important; /* 인풋 높이에 맞춤 */
-  line-height: 1 !important;
-}
-
-/* ===== v-select 및 v-text-field 텍스트 정렬 완전 강제 ===== */
-.input-field :deep(.v-field__input),
-.input-field :deep(.v-select__selection),
-.input-field :deep(.v-select__selection-text),
-.input-field :deep(.v-field__append-inner),
-.input-field :deep(.v-field__prefix),
-.input-field :deep(.v-field__suffix),
-.input-field :deep(.v-field__placeholder) {
-  align-items: center !important;
-  display: flex !important;
-  line-height: normal !important;
-  height: 32px !important;
-  padding-top: 0 !important;
-  padding-bottom: 0 !important;
-}
-
-/* v-select / text-field 내부 input 영역 높이 강제 */
-.input-field :deep(.v-field__input) {
-  min-height: 32px !important;
-  height: 32px !important;
-}
-
-:deep(.v-field-label--active) {
-  top: 50% !important;
-  transform: translateY(-50%) !important;
+  background: #fff3e0 !important;
 }
 </style>

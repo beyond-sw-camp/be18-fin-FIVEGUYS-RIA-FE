@@ -39,12 +39,12 @@
           />
         </v-col>
 
-        <!-- 영업 기회 -->
+        <!-- 프로젝트 -->
         <v-col cols="12" md="6">
-          <div class="input-label">영업 기회</div>
+          <div class="input-label">프로젝트</div>
           <v-text-field
             v-model="form.projectType"
-            placeholder="영업 기회를 선택하세요"
+            placeholder="프로젝트가 연결되어 있지 않습니다."
             variant="outlined"
             class="input-field"
             hide-details
@@ -92,10 +92,9 @@
           >
             <template #activator="{ props }">
               <v-text-field
-                v-model="form.startDate"
+                :model-value="formatDate(form.startDate)"
                 placeholder="요청일"
                 variant="outlined"
-                hide-details
                 readonly
                 v-bind="props"
                 class="input-field"
@@ -119,7 +118,7 @@
           >
             <template #activator="{ props }">
               <v-text-field
-                v-model="form.endDate"
+                :model-value="formatDate(form.endDate)"
                 placeholder="제출일"
                 variant="outlined"
                 hide-details
@@ -296,7 +295,7 @@
     <!-- 프로젝트(영업 기회) 모달 -->
     <v-dialog v-model="opportunityDialog" width="500">
       <v-card class="pa-4">
-        <div class="dialog-title mb-4">영업 기회 선택</div>
+        <div class="dialog-title mb-4">프로젝트 선택</div>
         <v-list>
           <v-list-item
             v-for="o in opportunityList"
@@ -354,20 +353,6 @@ const router = useRouter();
 const route = useRoute();
 
 const editMode = ref(false);
-const isEditing = ref(false); // 사용자가 편집 중인지 여부
-
-const startEdit = () => {
-  isEditing.value = true;
-  editMode.value = true;
-};
-
-const cancelEdit = async () => {
-  isEditing.value = false;
-  editMode.value = false;
-  await loadDetail();
-};
-
-const isSelectingOpportunity = ref(false);
 
 const startMenu = ref(false);
 const endMenu = ref(false);
@@ -396,7 +381,7 @@ const form = reactive({
   salesManager: "",
 });
 
-// 영업 기회
+// 프로젝트
 const opportunityList = ref([]);
 
 const fetchProjectTitles = async () => {
@@ -408,48 +393,44 @@ const fetchProjectTitles = async () => {
 
   opportunityList.value = res.data.content.map((p) => ({
     id: p.projectId,
-    name: p.title,
+    name: p.title, // 백엔드 필드명: title
   }));
 };
-
 watch(opportunityDialog, (open) => {
-  if (!open) return;
-  fetchProjectTitles();
+  if (open) fetchProjectTitles();
 });
 
 const selectOpportunity = async (o) => {
-  // 일단 사용자가 선택한 값으로 세팅
   form.projectId = o.id;
   form.projectType = o.name;
 
-  try {
-    const { data } = await getProjectMeta(o.id);
+  const { data } = await getProjectMeta(o.id);
 
-    // projectId / 이름은 값 있을 때만 덮어쓰기
-    if (data.projectId) {
-      form.projectId = data.projectId;
-    }
-    if (data.projectName) {
-      form.projectType = data.projectName;
-    }
+  form.projectId = data.projectId;
+  form.projectType = data.projectName || o.name; // ← 핵심
+  form.clientCompanyId = data.clientCompanyId;
+  form.clientCompany = data.clientCompanyName;
+  form.clientId = data.clientId;
+  form.clientOwner = data.clientName;
 
-    // 고객사도 있을 때만 덮어쓰기 (없으면 기존 값 유지)
-    if (data.clientCompanyId) {
-      form.clientCompanyId = data.clientCompanyId;
-      form.clientCompany = data.clientCompanyName;
-    }
+  opportunityDialog.value = false;
+};
+// 제안 수정 시 날짜 포맷 바뀌지 않게 수정
+const formatDate = (date) => {
+  if (!date) return "";
+  const d = new Date(date);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
+    2,
+    "0"
+  )}-${String(d.getDate()).padStart(2, "0")}`;
+};
 
-    // 고객(담당자)도 있을 때만
-    if (data.clientId) {
-      form.clientId = data.clientId;
-      form.clientOwner = data.clientName;
-    }
-  } catch (e) {
-    console.error("getProjectMeta error", e);
-    // 필요하면 스낵바 띄워도 됨
-  } finally {
-    opportunityDialog.value = false;
-  }
+const toLocalDate = (d) => {
+  if (!d) return null;
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
 };
 
 // 고객사 리스트
@@ -584,8 +565,8 @@ const saveProposal = async () => {
     clientId: form.clientId,
     projectId: form.projectId,
     data: form.content,
-    requestDate: form.startDate || null,
-    submitDate: form.endDate || null,
+    requestDate: toLocalDate(form.startDate),
+    submitDate: toLocalDate(form.endDate),
     remark: form.notes || null,
   };
 
@@ -619,31 +600,36 @@ const onDeleteProposal = async () => {
 };
 
 const loadDetail = async () => {
-  if (isSelectingOpportunity.value) return;
-
   const id = route.params.id;
   const { data } = await getProposalDetail(id);
 
-  if (isSelectingOpportunity.value) return;
-
   form.projectName = data.title;
-  form.projectId = data.projectId;
-  form.projectType = data.projectTitle || "";
+
+  // ❗ 프로젝트가 있을 때만 값 넣고, 없으면 기존 값 유지
+  if (data.projectId) {
+    form.projectId = data.projectId;
+    form.projectType = data.projectTitle;
+  }
+
+  // 고객사 / 고객
   form.clientCompanyId = data.clientCompanyId;
   form.clientCompany = data.clientCompanyName;
   form.clientId = data.clientId;
   form.clientOwner = data.clientName;
-  form.startDate = data.requestDate;
-  form.endDate = data.submitDate;
+
+  // 날짜
+  form.startDate = data.requestDate ? new Date(data.requestDate) : null;
+  form.endDate = data.submitDate ? new Date(data.submitDate) : null;
+
   form.content = data.data;
   form.notes = data.remark;
   form.salesManager = data.createdUserName;
 };
 
-// const cancelEdit = async () => {
-//   await loadDetail();
-//   editMode.value = false;
-// };
+const cancelEdit = async () => {
+  await loadDetail();
+  editMode.value = false;
+};
 
 onMounted(loadDetail);
 </script>

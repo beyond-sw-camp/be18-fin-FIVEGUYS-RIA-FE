@@ -91,6 +91,18 @@
           />
         </v-col>
 
+        <!-- 납기일 -->
+        <v-col cols="12" md="6">
+          <div class="input-label">납기일</div>
+          <v-text-field
+            class="input-field"
+            :model-value="form.deliveryDate"
+            readonly
+            variant="outlined"
+            hide-details
+          />
+        </v-col>
+
         <!-- 결제 조건 -->
         <v-col cols="12" md="6">
           <div class="input-label">결제 조건</div>
@@ -223,6 +235,7 @@ const form = reactive({
   clientName: "",
   createdUserName: "",
   estimateDate: "",
+  deliveryDate: "",
   paymentCondition: "",
   remark: "",
   spaces: [],
@@ -241,6 +254,7 @@ const fetchDetail = async () => {
   form.clientName = data.clientName;
   form.createdUserName = data.createdUserName;
   form.estimateDate = data.estimateDate;
+  form.deliveryDate = data.deliveryDate;
   form.paymentCondition = mapPaymentCondition(data.paymentCondition);
   form.remark = data.remark;
 

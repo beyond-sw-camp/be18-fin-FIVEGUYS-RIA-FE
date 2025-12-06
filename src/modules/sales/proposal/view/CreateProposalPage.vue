@@ -24,12 +24,12 @@
           />
         </v-col>
 
-        <!-- 영업 기회 -->
+        <!-- 프로젝트 -->
         <v-col cols="12" md="6">
-          <div class="input-label">영업 기회</div>
+          <div class="input-label">프로젝트</div>
           <v-text-field
             v-model="form.projectType"
-            placeholder="영업 기회를 선택하세요"
+            placeholder="프로젝트를 선택하세요"
             variant="outlined"
             class="input-field"
             hide-details
@@ -236,7 +236,7 @@
     <!-- 영업 기회 모달 -->
     <v-dialog v-model="opportunityDialog" width="500">
       <v-card class="pa-4">
-        <div class="dialog-title mb-4">영업 기회 선택</div>
+        <div class="dialog-title mb-4">프로젝트 선택</div>
 
         <v-text-field
           v-model="opportunitySearch"
