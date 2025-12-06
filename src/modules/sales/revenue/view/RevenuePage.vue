@@ -27,8 +27,8 @@
                         density="comfortable" hide-details class="mb-4" />
 
                     <!-- 담당자 -->
-                    <v-select v-model="managerFilter" :items="managerOptions" label="담당자" variant="outlined"
-                        density="comfortable" hide-details class="mb-6" />
+                    <v-select v-model="managerFilter" :items="managerOptions" item-title="title" item-value="value"
+                        label="담당자" variant="outlined" density="comfortable" hide-details class="mb-6" />
                 </v-card>
             </v-col>
 
@@ -117,7 +117,7 @@ const showFavoritesOnly = ref(false)
 
 const saleType = ref('전체')
 const dateSort = ref('날짜 최신순')
-const managerFilter = ref('전체')
+const managerFilter = ref(null) // 숫자 id 또는 null
 
 const saleTypeOptions = ['전체', '입점', '팝업', '전시회']
 const dateSortOptions = ['날짜 최신순', '날짜 오래된순']
@@ -148,14 +148,20 @@ const loadSales = async (reset = false) => {
         page.value = 1
     }
 
-    const res = await fetchRevenueList({
+    const params = {
         page: page.value - 1, // 서버는 0-based
         size: size.value,
         keyword: keyword.value.trim() || null,
         storeType: mapLabelToStoreType(saleType.value),
-        manager: managerFilter.value === '전체' ? null : managerFilter.value,
         sort: dateSort.value === '날짜 최신순' ? 'LATEST' : 'OLDEST'
-    })
+    }
+
+    // 담당자 선택된 경우에만 파라미터 전송
+    if (managerFilter.value != null) {
+        params.managerId = managerFilter.value // 백엔드 @RequestParam("managerId") Long managerId 기준
+    }
+
+    const res = await fetchRevenueList(params)
 
     const data = res.data || {}
     const items = Array.isArray(data.data) ? data.data : []
@@ -167,6 +173,7 @@ const loadSales = async (reset = false) => {
         contractStartDay: item.contractStartDay,
         contractEndDay: item.contractEndDay,
         salesManager: item.managerName,
+        managerId: item.managerId,
         settlementYear: item.settlementYear,
         settlementMonth: item.settlementMonth,
         saleAmount: Number(item.finalRevenue ?? 0),
@@ -188,11 +195,19 @@ watch([saleType, dateSort, managerFilter, keyword], () => {
 })
 
 const managerOptions = computed(() => {
-    const base = ['전체']
-    const names = [
-        ...new Set(sales.value.map((s) => s.salesManager).filter(Boolean))
-    ]
-    return base.concat(names)
+    const result = [{ title: '전체', value: null }]
+
+    const seen = new Set()
+    sales.value.forEach((s) => {
+        if (!s.managerId || seen.has(s.managerId)) return
+        seen.add(s.managerId)
+        result.push({
+            title: s.salesManager || '-',
+            value: s.managerId
+        })
+    })
+
+    return result
 })
 
 const toggleFavorite = (sale) => {
@@ -201,6 +216,11 @@ const toggleFavorite = (sale) => {
 
 const filteredSales = computed(() => {
     let list = sales.value.slice()
+
+    // 프론트에서 한 번 더 안전하게 담당자 필터
+    if (managerFilter.value != null) {
+        list = list.filter((s) => s.managerId === managerFilter.value)
+    }
 
     if (showFavoritesOnly.value) {
         list = list.filter((s) => s.isFavorite)
