@@ -11,3 +11,13 @@ export const fetchMonthlyPerformance = (params) =>
   api.get("api/dashboard/sales/performance", {
     params, // { year, month }
   });
+
+// 내가 담당한 브랜드별 매출 점유율
+export const fetchBrandMonthlyShare = (params) =>
+  api.get("api/dashboard/sales/brand", {
+    params, // { year, month }
+  });
+
+// 내가 담당한 팝업/전시회 일별 매출
+export const fetchPopupDailySales = (params) =>
+  api.get("api/dashboard/sales/temporary", { params });

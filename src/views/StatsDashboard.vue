@@ -60,7 +60,7 @@
 
         <!-- 우하단: 팝업/전시회 일별 매출 -->
         <v-col cols="12" md="6" class="chart-cell">
-          <ChartCard v-if="popupDaily" title="팝업/전시회 일별 매출" subtitle="담당 행사 기간 성과" type="line" :data="popupDaily"
+          <ChartCard v-if="popupDaily" :title="popupTitle" :subtitle="popupSubtitle" type="line" :data="popupDaily"
             :options="lineOptions('원', true)" />
         </v-col>
       </v-row>
@@ -98,7 +98,12 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
 import ChartCard from "@/components/charts/ChartCard.vue";
-import { fetchMonthlyStoreSales, fetchMonthlyPerformance } from "@/apis/dashboard";
+import {
+  fetchMonthlyStoreSales,
+  fetchMonthlyPerformance,
+  fetchBrandMonthlyShare,
+  fetchPopupDailySales,
+} from "@/apis/dashboard";
 
 const props = defineProps({
   initialRole: {
@@ -121,13 +126,7 @@ const COLOR_ORANGE = "#F79646"; // 실제 수익
 const COLOR_ORANGE_SOFT = "rgba(247, 150, 70, 0.22)"; // 예상 수익
 
 // 브랜드별 도넛용 색상
-const BRAND_COLORS = [
-  "#10B981", // teal
-  "#0F766E",
-  "#FBBF24",
-  "#F97316",
-  "#111827",
-];
+const BRAND_COLORS = ["#10B981", "#0F766E", "#FBBF24", "#F97316", "#111827"];
 
 /**
  * 공통 옵션
@@ -289,15 +288,13 @@ const currentMonth = ref(null);
 const hasPrevMonth = ref(false);
 const hasNextMonth = ref(false);
 
-// 매장별 월매출 차트 데이터
 const storeMonthlySalesChart = ref(null);
-
-// 계약별 실적 비교 차트 데이터
-// (목표 매출 / 실제 매출 / 예상 수익 / 실제 수익)
 const contractPerformance = ref(null);
-
-// 담당 브랜드 매출 점유율 (도넛)
 const brandShare = ref(null);
+const popupDaily = ref(null);
+
+// 팝업/전시회 매장명
+const popupStoreName = ref(null);
 
 /**
  * 기준 월 표시용
@@ -308,22 +305,33 @@ const displayMonth = computed(() => {
 });
 
 /**
+ * 팝업/전시회 타이틀/서브타이틀
+ * 예) 타이틀: "팝업 테스트 매장 일별 매출"
+ *     서브 : "팝업 테스트 매장 · 행사 기간 성과"
+ */
+const popupTitle = computed(() => {
+  if (!popupStoreName.value) return "팝업/전시회 일별 매출";
+  return `${popupStoreName.value} 일별 매출`;
+});
+
+const popupSubtitle = computed(() => {
+  if (!popupStoreName.value) return "담당 행사 기간 성과";
+  return `${popupStoreName.value} · 행사 기간 성과`;
+});
+
+/**
  * 매장별 실적/목표/수익 호출
  * GET /api/dashboard/sales/performance
- * 배치: [목표 매출, 실제 매출] / [예상 수익, 실제 수익]
  */
 async function loadMonthlyPerformance(year = null, month = null) {
-  const { data } = await fetchMonthlyPerformance({
-    year,
-    month,
-  });
+  const { data } = await fetchMonthlyPerformance({ year, month });
 
   const labels = data.stores.map((s) => s.storeName);
 
-  const targetAmountData = data.stores.map((s) => s.targetAmount); // 목표 매출
-  const actualAmountData = data.stores.map((s) => s.actualAmount); // 실제 매출
-  const expectedProfitData = data.stores.map((s) => s.expectedProfit); // 예상 수익
-  const actualProfitData = data.stores.map((s) => s.actualProfit); // 실제 수익
+  const targetAmountData = data.stores.map((s) => s.targetAmount);
+  const actualAmountData = data.stores.map((s) => s.actualAmount);
+  const expectedProfitData = data.stores.map((s) => s.expectedProfit);
+  const actualProfitData = data.stores.map((s) => s.actualProfit);
 
   contractPerformance.value = {
     labels,
@@ -361,14 +369,76 @@ async function loadMonthlyPerformance(year = null, month = null) {
 }
 
 /**
+ * 담당 브랜드별 매출 점유율 호출
+ * GET /api/dashboard/sales/brand
+ */
+async function loadBrandShare(year = null, month = null) {
+  const { data } = await fetchBrandMonthlyShare({ year, month });
+
+  const labels = data.stores.map((s) => s.storeName);
+  const amountData = data.stores.map((s) => s.totalSalesAmount);
+
+  const total = amountData.reduce((a, b) => a + b, 0);
+  const shares =
+    total > 0
+      ? amountData.map((v) => Math.round((v / total) * 100))
+      : amountData.map(() => 0);
+
+  brandShare.value = {
+    labels,
+    datasets: [
+      {
+        data: shares,
+        backgroundColor: BRAND_COLORS.slice(0, labels.length),
+        borderWidth: 0,
+        hoverOffset: 4,
+      },
+    ],
+  };
+}
+
+/**
+ * 팝업/전시회 일별 매출 호출
+ * GET /api/dashboard/sales/temporary
+ */
+async function loadPopupDailySalesData(year = null, month = null) {
+  const { data } = await fetchPopupDailySales({ year, month });
+
+  // 응답 구조: { year, month, hasPrevMonth, hasNextMonth, days: [...] }
+  const days = Array.isArray(data.days) ? data.days : [];
+
+  // 매장명 세팅 (첫 번째 팝업 기준)
+  popupStoreName.value =
+    days.length > 0 && days[0].storeName ? days[0].storeName : null;
+
+  const labels = days.map((d) => `${d.day}일`);
+  const amountData = days.map((d) => d.totalAmount);
+
+  popupDaily.value = {
+    labels,
+    datasets: [
+      {
+        type: "line",
+        label: popupStoreName.value
+          ? `${popupStoreName.value} 일별 매출`
+          : "일별 매출",
+        data: amountData,
+        borderColor: COLOR_ORANGE,
+        backgroundColor: COLOR_ORANGE_SOFT,
+        tension: 0.25,
+        pointRadius: 3,
+        fill: true,
+      },
+    ],
+  };
+}
+
+/**
  * 매장별 월매출 호출
  * GET /api/dashboard/sales/monthly
  */
 const loadMonthlyStoreSales = async (year = null, month = null) => {
-  const { data } = await fetchMonthlyStoreSales({
-    year,
-    month,
-  });
+  const { data } = await fetchMonthlyStoreSales({ year, month });
 
   currentYear.value = data.year;
   currentMonth.value = data.month;
@@ -405,22 +475,9 @@ const loadMonthlyStoreSales = async (year = null, month = null) => {
     ],
   };
 
-  // 같은 기준 월로 실적/수익 차트도 갱신
   await loadMonthlyPerformance(data.year, data.month);
-
-  // 브랜드별 매출 점유율 (현재는 mock · 담당 브랜드 기준으로 바꾸려면 여기서 API 매핑)
-  // labels/amountData를 그대로 써서 "담당 매장 = 담당 브랜드" 관점으로 도넛 구성
-  brandShare.value = {
-    labels,
-    datasets: [
-      {
-        data: amountData.map((v) => Math.round((v / amountData.reduce((a, b) => a + b, 0)) * 100)),
-        backgroundColor: BRAND_COLORS.slice(0, labels.length),
-        borderWidth: 0,
-        hoverOffset: 4,
-      },
-    ],
-  };
+  await loadBrandShare(data.year, data.month);
+  await loadPopupDailySalesData(data.year, data.month);
 };
 
 /**
@@ -444,16 +501,13 @@ const goNextMonth = () => {
   changeMonth(1);
 };
 
-// 첫 렌더 시 최신월 조회 (year/month null → 백엔드에서 기본값 처리)
 onMounted(() => {
   loadMonthlyStoreSales();
 });
 
 /**
- * 아래부터는 나머지 mock 데이터 (블루/오렌지 팔레트 통일)
+ * 팀장 화면 mock 데이터
  */
-
-// 브랜드별 월매출 TOP5 / 하위5
 const brandMonthlySalesTopBottom = ref({
   labels: ["GUCCI", "LOUIS VUITTON", "NIKE", "ZARA", "MLB"],
   datasets: [
@@ -472,7 +526,6 @@ const brandMonthlySalesTopBottom = ref({
   ],
 });
 
-// 월 정산 금액
 const monthlySettlement = ref({
   labels: ["2025-01", "2025-02", "2025-03", "2025-04", "2025-05", "2025-06"],
   datasets: [
@@ -488,7 +541,6 @@ const monthlySettlement = ref({
   ],
 });
 
-// 매장 면적 대비 효율
 const storeEfficiency = ref({
   labels: ["명품관", "푸드관", "생활관", "아울렛", "키즈관"],
   datasets: [
@@ -507,7 +559,6 @@ const storeEfficiency = ref({
   ],
 });
 
-// 층별 매출
 const floorSales = ref({
   labels: ["B1", "1F", "2F", "3F", "4F"],
   datasets: [
@@ -517,22 +568,6 @@ const floorSales = ref({
       backgroundColor: COLOR_BLUE,
       borderRadius: 8,
       maxBarThickness: 38,
-    },
-  ],
-});
-
-// 팝업/전시회 일별 매출
-const popupDaily = ref({
-  labels: ["1일", "2일", "3일", "4일", "5일", "6일", "7일"],
-  datasets: [
-    {
-      label: "일별 매출",
-      data: [5000000, 6200000, 4800000, 7000000, 6800000, 7300000, 6500000],
-      borderColor: COLOR_ORANGE,
-      backgroundColor: COLOR_ORANGE_SOFT,
-      tension: 0.25,
-      pointRadius: 3,
-      fill: true,
     },
   ],
 });
@@ -645,7 +680,7 @@ const popupDaily = ref({
 .role-toggle :deep(.v-btn--active:not(.v-btn--disabled).v-btn--variant-elevated) {
   background-color: #ffffff;
   color: #111827;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.18);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
 }
 
 /* 대시보드 영역 */
