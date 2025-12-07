@@ -30,7 +30,7 @@ export const getProjectTitles = (keyword) => {
   });
 };
 export const getProjectMeta = (projectId) => {
-  return apiClient.get(`/api/projects/titles/${projectId}`);
+  return apiClient.get(`/api/projects/${projectId}`);
 };
 export const deleteProject = (projectId) => {
   return apiClient.delete(`/api/projects/${projectId}`);

@@ -24,8 +24,8 @@
               @click="openPipelineConfirm(i + 1)">
               {{ step.name }}
             </div>
-            <div v-if="i < project.pipeline.length - 1" class="pipeline-line"
-              :class="project.pipeline[i + 1].completed ? 'completed' : 'pending'"></div>
+            <div v-if="i < project.pipeline.length - 1" class="pipeline-line" :class="project.pipeline[i + 1].completed ? 'completed' : 'pending'
+              "></div>
           </template>
           <div class="progress-text">{{ project.progress }}%</div>
         </div>
@@ -217,8 +217,8 @@
             :text-color="clientTypeFilter === 'ALL' ? 'white' : undefined" @click="clientTypeFilter = 'ALL'">
             전체
           </v-chip>
-          <v-chip class="mr-2" :color="clientTypeFilter === 'CLIENT' ? 'orange darken-2' : undefined"
-            :text-color="clientTypeFilter === 'CLIENT' ? 'white' : undefined" @click="clientTypeFilter = 'CLIENT'">
+          <v-chip class="mr-2" :color="clientTypeFilter === 'CLIENT' ? 'orange darken-2' : undefined
+            " :text-color="clientTypeFilter === 'CLIENT' ? 'white' : undefined" @click="clientTypeFilter = 'CLIENT'">
             고객사
           </v-chip>
           <v-chip :color="clientTypeFilter === 'LEAD' ? 'orange darken-2' : undefined"
@@ -304,159 +304,164 @@
 </template>
 
 <script setup>
-import { reactive, ref, computed, watch, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { reactive, ref, computed, watch, onMounted } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import {
   getProjectDetail,
   updateProject,
   updateProjectManager,
-  deleteProject
-} from '@/apis/project'
+  deleteProject,
+} from "@/apis/project";
 import {
   getSimpleClientCompanies,
-  getSimpleClientsByCompany
-} from '@/apis/client'
-import { getUserList } from '@/apis/user'
-import { updatePipelineStage } from '@/apis/pipeline'
+  getSimpleClientsByCompany,
+} from "@/apis/client";
+import { getUserList } from "@/apis/user";
+import { updatePipelineStage } from "@/apis/pipeline";
 
-const route = useRoute()
-const router = useRouter()
-const startMenu = ref(false)
-const endMenu = ref(false)
+const route = useRoute();
+const router = useRouter();
+const startMenu = ref(false);
+const endMenu = ref(false);
 
-const clientDialog = ref(false)
-const managerDialog = ref(false)
-const clientPersonDialog = ref(false)
+const clientDialog = ref(false);
+const managerDialog = ref(false);
+const clientPersonDialog = ref(false);
 
-const clientSearch = ref('')
-const managerSearch = ref('')
-const clientPersonSearch = ref('')
+const clientSearch = ref("");
+const managerSearch = ref("");
+const clientPersonSearch = ref("");
 
 const project = reactive({
   id: null,
-  status: '',
-  statusCode: '',
+  status: "",
+  statusCode: "",
   progress: 0,
   pipeline: [],
-  pipelineId: null
-})
+  pipelineId: null,
+});
 
-const snackbar = ref(false)
-const snackbarMessage = ref('')
-const snackbarColor = ref('error')
+const snackbar = ref(false);
+const snackbarMessage = ref("");
+const snackbarColor = ref("error");
 
-const showError = (err, fallbackMessage = '요청 처리 중 오류가 발생했습니다.') => {
+const showError = (
+  err,
+  fallbackMessage = "요청 처리 중 오류가 발생했습니다."
+) => {
   const msg =
     err?.response?.data?.message ||
     err?.response?.data?.errorMessage ||
-    fallbackMessage
+    fallbackMessage;
 
-  snackbarMessage.value = msg
-  snackbarColor.value = 'error'
-  snackbar.value = true
-}
+  snackbarMessage.value = msg;
+  snackbarColor.value = "error";
+  snackbar.value = true;
+};
 
-const showSuccess = (msg = '저장이 완료되었습니다.') => {
-  snackbarMessage.value = msg
-  snackbarColor.value = 'success'
-  snackbar.value = true
-}
+const showSuccess = (msg = "저장이 완료되었습니다.") => {
+  snackbarMessage.value = msg;
+  snackbarColor.value = "success";
+  snackbar.value = true;
+};
 
 /* 파이프라인 변경 확인용 상태 */
-const pipelineConfirmDialog = ref(false)
-const targetStageNo = ref(null)
+const pipelineConfirmDialog = ref(false);
+const targetStageNo = ref(null);
 
 const openPipelineConfirm = (stageNo) => {
-  targetStageNo.value = stageNo
-  pipelineConfirmDialog.value = true
-}
+  targetStageNo.value = stageNo;
+  pipelineConfirmDialog.value = true;
+};
 
 const confirmChangePipelineStage = async () => {
   if (!targetStageNo.value) {
-    pipelineConfirmDialog.value = false
-    return
+    pipelineConfirmDialog.value = false;
+    return;
   }
-  await changePipelineStage(targetStageNo.value)
-  pipelineConfirmDialog.value = false
-  targetStageNo.value = null
-}
+  await changePipelineStage(targetStageNo.value);
+  pipelineConfirmDialog.value = false;
+  targetStageNo.value = null;
+};
 
 const targetStageName = computed(() => {
-  if (!targetStageNo.value || !project.pipeline.length) return ''
-  const idx = targetStageNo.value - 1
-  return project.pipeline[idx]?.name || ''
-})
+  if (!targetStageNo.value || !project.pipeline.length) return "";
+  const idx = targetStageNo.value - 1;
+  return project.pipeline[idx]?.name || "";
+});
 
 const changePipelineStage = async (targetStageNoParam) => {
   try {
     if (!project.pipelineId) {
-      showError(null, '파이프라인 ID를 찾을 수 없습니다.')
-      return
+      showError(null, "파이프라인 ID를 찾을 수 없습니다.");
+      return;
     }
 
-    await updatePipelineStage(project.pipelineId, { targetStageNo: targetStageNoParam })
+    await updatePipelineStage(project.pipelineId, {
+      targetStageNo: targetStageNoParam,
+    });
 
-    const res = await getProjectDetail(project.id)
-    applyDetailDto(res.data)
+    const res = await getProjectDetail(project.id);
+    applyDetailDto(res.data);
 
-    showSuccess('진행 단계가 변경되었습니다.')
+    showSuccess("진행 단계가 변경되었습니다.");
   } catch (err) {
-    showError(err, '단계를 변경할 수 없습니다.')
+    showError(err, "단계를 변경할 수 없습니다.");
   }
-}
+};
 
 const form = reactive({
-  projectName: '',
-  clientCompany: '',
+  projectName: "",
+  clientCompany: "",
   clientCompanyId: null,
-  client: '',
+  client: "",
   clientId: null,
-  salesManager: '',
+  salesManager: "",
   salesManagerId: null,
-  salesType: '',
+  salesType: "",
   startDate: null,
   endDate: null,
   expectedRevenue: null,
   expectedMarginRate: null,
   expectedProfit: null,
-  description: ''
-})
+  description: "",
+});
 
-const clientTypeFilter = ref('ALL')
-const clientPage = ref(1)
-const clientPageSize = ref(10)
-const clientTotalCount = ref(0)
-const clientList = ref([])
+const clientTypeFilter = ref("ALL");
+const clientPage = ref(1);
+const clientPageSize = ref(10);
+const clientTotalCount = ref(0);
+const clientList = ref([]);
 
-const clientPersonList = ref([])
-const managerList = ref([])
-const selectedManagerId = ref(null)
+const clientPersonList = ref([]);
+const managerList = ref([]);
+const selectedManagerId = ref(null);
 
-const typeList = ['팝업 스토어', '전시회', '임대']
+const typeList = ["팝업 스토어", "전시회", "임대"];
 
-const historyItems = ref([])
+const historyItems = ref([]);
 
 const translateStatus = (status) => {
   switch (status) {
-    case 'ACTIVE':
-      return '진행중'
-    case 'SUCCESS':
-      return '계약 성공'
-    case 'FAIL':
-      return '실패'
+    case "ACTIVE":
+      return "진행중";
+    case "SUCCESS":
+      return "계약 성공";
+    case "FAIL":
+      return "실패";
     default:
-      return status
+      return status;
   }
-}
+};
 
 const toLocalDateString = (date) => {
-  if (!date) return null
-  const d = new Date(date)
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${y}-${m}-${day}`
-}
+  if (!date) return null;
+  const d = new Date(date);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
 
 const translateType = (type) => {
   switch (type) {
@@ -467,9 +472,9 @@ const translateType = (type) => {
     case 'RENTAL':
       return '입점'
     default:
-      return type
+      return type;
   }
-}
+};
 
 const mapSalesTypeToEnum = (label) => {
   switch (label) {
@@ -480,244 +485,261 @@ const mapSalesTypeToEnum = (label) => {
     case '입점':
       return 'RENTAL'
     default:
-      return null
+      return null;
   }
-}
+};
 
 const applyDetailDto = (dto) => {
-  project.id = dto.projectId
-  project.statusCode = dto.status
-  project.status = translateStatus(dto.status)
-  project.progress = dto.pipelineInfo?.progressRate ?? 0
+  project.id = dto.projectId;
+  project.statusCode = dto.status;
+  project.status = translateStatus(dto.status);
+  project.progress = dto.pipelineInfo?.progressRate ?? 0;
   project.pipeline = (dto.stageList || []).map((s) => ({
     name: s.stageName,
-    completed: s.completed === true
-  }))
-  project.pipelineId = dto.pipelineInfo?.pipelineId ?? null
+    completed: s.completed === true,
+  }));
+  project.pipelineId = dto.pipelineInfo?.pipelineId ?? null;
 
-  form.projectName = dto.title
-  form.clientCompany = dto.clientCompanyName
-  form.client = dto.clientName
-  form.description = dto.description || ''
-  form.salesManager = dto.salesManagerName
-  form.salesType = translateType(dto.type)
-  form.startDate = dto.startDay
-  form.endDate = dto.endDay
-  form.expectedRevenue = dto.expectedRevenue
-  form.expectedMarginRate = dto.expectedMarginRate
+  form.projectName = dto.title;
+  form.clientCompany = dto.clientCompanyName;
+  form.client = dto.clientName;
+  form.description = dto.description || "";
+  form.salesManager = dto.salesManagerName;
+  form.salesType = translateType(dto.type);
+  form.startDate = dto.startDay;
+  form.endDate = dto.endDay;
+  form.expectedRevenue = dto.expectedRevenue;
+  form.expectedMarginRate = dto.expectedMarginRate;
   form.expectedProfit =
     dto.expectedRevenue && dto.expectedMarginRate
       ? (dto.expectedRevenue * dto.expectedMarginRate) / 100
-      : null
+      : null;
 
   historyItems.value = (dto.proposals || []).map((p) => ({
-    type: 'proposal',
-    icon: 'mdi-file-document-outline',
-    label: '제안',
+    type: "proposal",
+    icon: "mdi-file-document-outline",
+    label: "제안",
     title: p.title,
     description: `[${dto.clientCompanyName}] / [${p.writerName}]`,
-    meta: p.requestDate ? `요청일 : ${p.requestDate}` : '',
+    meta: p.requestDate ? `요청일 : ${p.requestDate}` : "",
     amount: dto.expectedRevenue || null,
-    date: p.submitDate || p.requestDate || ''
-  }))
-}
+    date: p.submitDate || p.requestDate || "",
+  }));
+
+  if (dto.estimates) {
+    dto.estimates.forEach((e) => {
+      historyItems.value.push({
+        type: "estimate",
+        icon: "mdi-calculator-variant",
+        label: "견적",
+        title: e.title,
+        description: `[${dto.clientCompanyName}] / [${e.writerName}]`,
+        meta: `작성일 : ${e.createdDate}`,
+        amount: e.totalAmount,
+        date: e.createdDate,
+      });
+    });
+  }
+};
 
 const loadClients = async () => {
   const params = {
     page: clientPage.value,
-    size: clientPageSize.value
-  }
+    size: clientPageSize.value,
+  };
 
-  if (clientTypeFilter.value !== 'ALL') {
-    params.type = clientTypeFilter.value
+  if (clientTypeFilter.value !== "ALL") {
+    params.type = clientTypeFilter.value;
   }
 
   if (clientSearch.value.trim()) {
-    params.keyword = clientSearch.value.trim()
+    params.keyword = clientSearch.value.trim();
   }
 
-  const res = await getSimpleClientCompanies(params)
-  clientList.value = res.data.content || []
-  clientTotalCount.value = res.data.totalCount || 0
-}
+  const res = await getSimpleClientCompanies(params);
+  clientList.value = res.data.content || [];
+  clientTotalCount.value = res.data.totalCount || 0;
+};
 
 const filteredClients = computed(() =>
   clientList.value.filter((c) => c.name.includes(clientSearch.value))
-)
+);
 
 watch(clientDialog, (open) => {
   if (open) {
-    clientPage.value = 1
-    loadClients()
+    clientPage.value = 1;
+    loadClients();
   }
-})
+});
 
 watch([clientTypeFilter, clientSearch], () => {
   if (clientDialog.value) {
-    clientPage.value = 1
-    loadClients()
+    clientPage.value = 1;
+    loadClients();
   }
-})
+});
 
 const loadClientPersons = async (companyId) => {
-  if (!companyId) return
+  if (!companyId) return;
 
-  const params = { page: 1, size: 50 }
+  const params = { page: 1, size: 50 };
 
   if (clientPersonSearch.value.trim()) {
-    params.keyword = clientPersonSearch.value.trim()
+    params.keyword = clientPersonSearch.value.trim();
   }
 
-  const res = await getSimpleClientsByCompany(companyId, params)
-  clientPersonList.value = res.data.content || []
-}
+  const res = await getSimpleClientsByCompany(companyId, params);
+  clientPersonList.value = res.data.content || [];
+};
 
-const filteredClientPersons = computed(() => clientPersonList.value)
+const filteredClientPersons = computed(() => clientPersonList.value);
 
 watch(clientPersonDialog, (open) => {
   if (open && form.clientCompanyId) {
-    clientPersonSearch.value = ''
-    loadClientPersons(form.clientCompanyId)
+    clientPersonSearch.value = "";
+    loadClientPersons(form.clientCompanyId);
   }
-})
+});
 
 watch(clientPersonSearch, () => {
   if (form.clientCompanyId && clientPersonDialog.value) {
-    loadClientPersons(form.clientCompanyId)
+    loadClientPersons(form.clientCompanyId);
   }
-})
+});
 
 const loadManagers = async () => {
-  const res = await getUserList()
-  managerList.value = res.data || []
-}
+  const res = await getUserList();
+  managerList.value = res.data || [];
+};
 
 watch(managerDialog, async (open) => {
   if (open) {
-    managerSearch.value = ''
-    selectedManagerId.value = form.salesManagerId
-    await loadManagers()
+    managerSearch.value = "";
+    selectedManagerId.value = form.salesManagerId;
+    await loadManagers();
   }
-})
+});
 
 const filteredManagers = computed(() =>
   managerList.value.filter((m) => m.name.includes(managerSearch.value))
-)
+);
 
 const selectClient = (item) => {
-  form.clientCompany = item.name
-  form.clientCompanyId = item.id
-  form.client = ''
-  form.clientId = null
-  clientPersonSearch.value = ''
-  clientPersonList.value = []
-  clientDialog.value = false
-  loadClientPersons(item.id)
-}
+  form.clientCompany = item.name;
+  form.clientCompanyId = item.id;
+  form.client = "";
+  form.clientId = null;
+  clientPersonSearch.value = "";
+  clientPersonList.value = [];
+  clientDialog.value = false;
+  loadClientPersons(item.id);
+};
 
 const selectClientPerson = (p) => {
-  form.client = p.name
-  form.clientId = p.id
-  clientPersonDialog.value = false
-}
+  form.client = p.name;
+  form.clientId = p.id;
+  clientPersonDialog.value = false;
+};
 
 const selectManager = (item) => {
-  selectedManagerId.value = item.userId
-}
+  selectedManagerId.value = item.userId;
+};
 
 const confirmManagerSelect = async () => {
-  if (!selectedManagerId.value) return
+  if (!selectedManagerId.value) return;
 
-  const selected = managerList.value.find((m) => m.userId === selectedManagerId.value)
-  if (!selected) return
+  const selected = managerList.value.find(
+    (m) => m.userId === selectedManagerId.value
+  );
+  if (!selected) return;
 
   try {
-    await updateProjectManager(project.id, selected.userId)
+    await updateProjectManager(project.id, selected.userId);
 
-    form.salesManagerId = selected.userId
-    form.salesManager = selected.name
-    managerDialog.value = false
+    form.salesManagerId = selected.userId;
+    form.salesManager = selected.name;
+    managerDialog.value = false;
 
-    showSuccess('담당자가 변경되었습니다.')
+    showSuccess("담당자가 변경되었습니다.");
   } catch (err) {
-    showError(err, '담당자를 변경할 수 없습니다.')
+    showError(err, "담당자를 변경할 수 없습니다.");
   }
-}
+};
 
 const formattedRevenue = computed(() => {
-  if (!form.expectedRevenue) return ''
-  return Number(form.expectedRevenue).toLocaleString()
-})
+  if (!form.expectedRevenue) return "";
+  return Number(form.expectedRevenue).toLocaleString();
+});
 
 const onDeleteProject = async () => {
-  if (!project.id) return
+  if (!project.id) return;
 
-  const ok = window.confirm('프로젝트를 삭제하시겠습니까?')
-  if (!ok) return
+  const ok = window.confirm("프로젝트를 삭제하시겠습니까?");
+  if (!ok) return;
 
   try {
-    await deleteProject(project.id)
+    await deleteProject(project.id);
 
-    showSuccess('프로젝트가 삭제되었습니다.')
-    router.push('/project')
+    showSuccess("프로젝트가 삭제되었습니다.");
+    router.push("/project");
   } catch (err) {
-    showError(err, '프로젝트를 삭제할 수 없습니다.')
+    showError(err, "프로젝트를 삭제할 수 없습니다.");
   }
-}
+};
 
 const updateRevenue = (val) => {
-  const numeric = Number((val || '').replace(/[^0-9]/g, ''))
-  form.expectedRevenue = numeric || null
-}
+  const numeric = Number((val || "").replace(/[^0-9]/g, ""));
+  form.expectedRevenue = numeric || null;
+};
 
 const formattedProfit = computed(() => {
-  if (!form.expectedRevenue || !form.expectedMarginRate) return ''
-  const profit = (form.expectedRevenue * form.expectedMarginRate) / 100
-  form.expectedProfit = profit
-  return profit.toLocaleString() + ' 원'
-})
+  if (!form.expectedRevenue || !form.expectedMarginRate) return "";
+  const profit = (form.expectedRevenue * form.expectedMarginRate) / 100;
+  form.expectedProfit = profit;
+  return profit.toLocaleString() + " 원";
+});
 
 const toDateString = (date) => {
-  if (!date) return ''
-  const d = new Date(date)
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${y}-${m}-${day}`
-}
+  if (!date) return "";
+  const d = new Date(date);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
 
-const formattedStartDate = computed(() => toDateString(form.startDate))
-const formattedEndDate = computed(() => toDateString(form.endDate))
+const formattedStartDate = computed(() => toDateString(form.startDate));
+const formattedEndDate = computed(() => toDateString(form.endDate));
 
 const saveProject = async () => {
   const payload = {
     title: form.projectName,
-    description: form.description || '',
+    description: form.description || "",
     type: mapSalesTypeToEnum(form.salesType),
     expectedRevenue: form.expectedRevenue,
     expectedMarginRate: form.expectedMarginRate,
     startDay: toLocalDateString(form.startDate),
-    endDay: toLocalDateString(form.endDate)
-  }
+    endDay: toLocalDateString(form.endDate),
+  };
 
   try {
-    await updateProject(project.id, payload)
+    await updateProject(project.id, payload);
 
-    const res = await getProjectDetail(project.id)
-    applyDetailDto(res.data)
+    const res = await getProjectDetail(project.id);
+    applyDetailDto(res.data);
 
-    showSuccess('프로젝트 저장이 완료되었습니다.')
+    showSuccess("프로젝트 저장이 완료되었습니다.");
   } catch (err) {
-    showError(err, '프로젝트를 저장할 수 없습니다.')
+    showError(err, "프로젝트를 저장할 수 없습니다.");
   }
-}
+};
 
 onMounted(async () => {
-  const projectId = route.params.projectId || route.params.id
-  if (!projectId) return
-  const res = await getProjectDetail(projectId)
-  applyDetailDto(res.data)
-})
+  const projectId = route.params.projectId || route.params.id;
+  if (!projectId) return;
+  const res = await getProjectDetail(projectId);
+  applyDetailDto(res.data);
+});
 </script>
 
 <style scoped>
@@ -725,8 +747,8 @@ onMounted(async () => {
   background-color: #f9f9f9;
   min-height: 100vh;
   padding: 8px 16px 10px !important;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
-    Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+    Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
 }
 
 .project-title {
