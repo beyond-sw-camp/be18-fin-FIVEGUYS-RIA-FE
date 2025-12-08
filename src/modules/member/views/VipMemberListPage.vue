@@ -14,14 +14,7 @@
         </v-card>
       </v-col>
 
-      <v-col
-        cols="12"
-        sm="6"
-        md="3"
-        lg="3"
-        v-for="(grade, index) in vipGrades"
-        :key="index"
-      >
+      <v-col cols="12" sm="6" md="3" lg="3" v-for="(grade, index) in vipGrades" :key="index">
         <v-card elevation="2" class="pa-4" rounded="xl">
           <div class="kpi-label">{{ grade.name }}</div>
           <div class="kpi-value" :style="{ color: getGradeColor(grade.name) }">
@@ -33,27 +26,10 @@
 
     <!-- 검색 / 필터 -->
     <div class="d-flex align-center justify-space-between mb-4">
-      <v-text-field
-        v-model="search"
-        placeholder="검색 (이름, 연락처)"
-        density="compact"
-        variant="outlined"
-        hide-details
-        clearable
-        rounded="lg"
-        style="max-width: 300px"
-      />
-      <v-select
-        v-model="selectedGrade"
-        :items="gradeList"
-        density="compact"
-        variant="outlined"
-        hide-details
-        rounded="lg"
-        style="max-width: 200px"
-        placeholder="등급별 필터"
-        @update:model-value="onGradeChange"
-      />
+      <v-text-field v-model="search" placeholder="검색 (이름, 연락처)" density="compact" variant="outlined" hide-details
+        clearable rounded="lg" style="max-width: 300px" />
+      <v-select v-model="selectedGrade" :items="gradeList" density="compact" variant="outlined" hide-details
+        rounded="lg" style="max-width: 200px" placeholder="등급별 필터" @update:model-value="onGradeChange" />
     </div>
 
     <!-- 리스트 -->
@@ -68,26 +44,16 @@
       </v-row>
       <v-divider />
 
-      <v-row
-        v-for="(vip, index) in vipList"
-        :key="index"
-        class="store-row pa-2 align-center"
-        dense
-      >
+      <v-row v-for="(vip, index) in vipList" :key="index" class="store-row pa-2 align-center" dense>
         <v-col cols="2" class="text-center">{{ vip.name }}</v-col>
         <v-col cols="2" class="text-center">{{ vip.phone }}</v-col>
 
         <!-- 등급 칩 -->
         <v-col cols="2" class="text-center">
-          <v-chip
-            size="small"
-            label
-            class="white--text"
-            :style="{
-              backgroundColor: getGradeColor(vip.grade),
-              color: 'white',
-            }"
-          >
+          <v-chip size="small" label class="white--text" :style="{
+            backgroundColor: getGradeColor(vip.grade),
+            color: 'white',
+          }">
             {{ vip.grade }}
           </v-chip>
         </v-col>
@@ -103,12 +69,7 @@
 
         <!-- AI -->
         <v-col cols="2" class="d-flex flex-column align-center">
-          <v-btn
-            size="x-small"
-            variant="outlined"
-            class="ai-btn"
-            @click="openAiDialog(vip)"
-          >
+          <v-btn size="x-small" variant="outlined" class="ai-btn" @click="openAiDialog(vip)">
             AI 추천
           </v-btn>
         </v-col>
@@ -117,21 +78,14 @@
 
     <!-- 페이지네이션 -->
     <div class="d-flex justify-center mt-4" v-if="totalPages > 1">
-      <v-pagination
-        v-model="page"
-        :length="totalPages"
-        :total-visible="5"
-        @update:model-value="onPageChange"
-      />
+      <v-pagination v-model="page" :length="totalPages" :total-visible="5" @update:model-value="onPageChange" />
     </div>
 
     <!-- AI 추천 모달 -->
     <v-dialog v-model="aiDialog" max-width="720">
       <v-card class="ai-card" rounded="xl">
         <!-- 상단 타이틀 -->
-        <v-card-title
-          class="d-flex align-center justify-space-between ai-header"
-        >
+        <v-card-title class="d-flex align-center justify-space-between ai-header">
           <div class="d-flex align-center">
             <div>
               <div class="ai-title">AI 추천</div>
@@ -164,18 +118,8 @@
               </div>
             </v-col>
 
-            <v-col
-              cols="12"
-              md="5"
-              class="d-flex align-center justify-end mt-2 mt-md-0"
-            >
-              <v-btn
-                color="primary"
-                :loading="aiLoading"
-                @click="onGenerateAi"
-                class="ai-generate-btn"
-                size="small"
-              >
+            <v-col cols="12" md="5" class="d-flex align-center justify-end mt-2 mt-md-0">
+              <v-btn color="primary" :loading="aiLoading" @click="onGenerateAi" class="ai-generate-btn" size="small">
                 <v-icon start>mdi-robot-outline</v-icon>
                 추천 생성
               </v-btn>
@@ -205,15 +149,8 @@
             <div v-else>
               <div v-if="aiResultList.length" class="ai-result-list">
                 <v-list density="comfortable">
-                  <v-list-item
-                    v-for="(rec, idx) in aiResultList"
-                    :key="rec.recoId ?? idx"
-                    class="ai-result-item"
-                  >
-                    <div
-                      class="ai-result-reason-only"
-                      v-html="rec.reason"
-                    ></div>
+                  <v-list-item v-for="(rec, idx) in aiResultList" :key="rec.recoId ?? idx" class="ai-result-item">
+                    <div class="ai-result-reason-only" v-html="rec.reason"></div>
                   </v-list-item>
                 </v-list>
               </div>
@@ -326,7 +263,6 @@ const loadVipList = async () => {
     keyword,
   });
 
-  console.log("VIP API raw data:", JSON.stringify(data.vips, null, 2));
 
   totalElements.value = data.totalElements;
   totalPages.value = data.totalPages;
@@ -588,6 +524,7 @@ onMounted(async () => {
 .ai-result-reason {
   color: #6b7280;
 }
+
 .ai-result-item {
   border-radius: 12px;
   margin-bottom: 10px;

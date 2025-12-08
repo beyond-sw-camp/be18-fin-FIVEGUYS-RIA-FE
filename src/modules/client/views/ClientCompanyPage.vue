@@ -1,27 +1,25 @@
 <template>
     <v-container fluid class="pa-0 full-height">
         <v-row no-gutters class="full-height">
-
             <!-- ==================== 좌측 사이드바 ==================== -->
             <v-col cols="12" md="2" class="pa-4 sidebar">
                 <v-card class="pa-6 sidebar-card" flat>
                     <v-text-field v-model="search" append-inner-icon="mdi-magnify" label="검색" variant="outlined"
                         hide-details density="comfortable" class="mb-4 sidebar-input" />
 
-                    <v-select v-model="category" :items="categoryItems" item-title="title" item-value="value"
+                    <!-- 카테고리: 첫 번째 옵션 '전체' -->
+                    <v-select v-model="category" :items="categoryFilterItems" item-title="title" item-value="value"
                         label="카테고리" variant="outlined" hide-details density="comfortable" class="mb-6 sidebar-input" />
 
-                    <v-select v-model="contractStatus" :items="['활성', '종료']" label="계약 상태" variant="outlined"
-                        hide-details density="comfortable" class="mb-6 sidebar-input" />
-
-                    <v-select v-model="floor" :items="['B1', '1F', '2F']" label="층" variant="outlined" hide-details
-                        density="comfortable" class="mb-6 sidebar-input" />
+                    <!-- 계약 상태: '전체 / 활성(ACTIVE) / 종료(COMPLETED)' -->
+                    <v-select v-model="contractStatus" :items="contractStatusItems" item-title="title"
+                        item-value="value" label="계약 상태" variant="outlined" hide-details density="comfortable"
+                        class="mb-6 sidebar-input" />
                 </v-card>
             </v-col>
 
             <!-- ==================== 메인 컨텐츠 ==================== -->
             <v-col cols="12" md="10" class="pa-6 main-content">
-
                 <!-- 고객사 추가 버튼 -->
                 <div class="d-flex justify-end mb-4">
                     <v-btn color="orange darken-2" class="white--text" rounded elevation="4" @click="showModal = true">
@@ -31,30 +29,44 @@
 
                 <!-- 고객사 카드 목록 -->
                 <v-row dense>
-                    <v-col v-for="(client, index) in clients" :key="index" cols="12" sm="6" md="3">
+                    <v-col v-for="(client, index) in filteredClients" :key="index" cols="12" sm="6" md="3">
                         <v-card outlined class="pa-4 client-card" @click="goToClientCompanyDetail(client.id)">
                             <v-card-title class="client-title text-center">
-                                {{ client.company }}
+                                {{ client.companyName }}
                             </v-card-title>
+
                             <v-divider class="my-2" />
+
                             <v-card-text class="pa-0">
-                                <v-row dense class="mb-1">
+                                <v-row dense class="info-row">
                                     <v-col cols="5" class="label">카테고리</v-col>
-                                    <v-col cols="7">{{ client.categoryLabel }}</v-col>
+                                    <v-col cols="7" class="value-col">
+                                        {{ client.categoryLabel }}
+                                    </v-col>
                                 </v-row>
-                                <v-row dense class="mb-1">
+
+                                <v-row dense class="info-row">
                                     <v-col cols="5" class="label">담당자</v-col>
-                                    <v-col cols="7">{{ client.owner }}</v-col>
+                                    <v-col cols="7" class="value-col">
+                                        {{ client.managerName || '-' }}
+                                    </v-col>
                                 </v-row>
-                                <v-row dense class="mb-1">
-                                    <v-col cols="5" class="label">층 수</v-col>
-                                    <v-col cols="7">{{ client.floor }}</v-col>
+
+                                <v-row dense class="info-row">
+                                    <v-col cols="5" class="label">계약 기간</v-col>
+                                    <v-col cols="7" class="value-col">
+                                        <span class="period-badge">
+                                            {{ client.contractStartDay }}<br />
+                                            {{ client.contractEndDay }}
+                                        </span>
+                                    </v-col>
                                 </v-row>
-                                <v-row dense>
+
+                                <v-row dense class="info-row">
                                     <v-col cols="5" class="label">계약 상태</v-col>
-                                    <v-col cols="7">
-                                        <span :class="client.status === '활성' ? 'status-active' : 'status-ended'">
-                                            {{ client.status }}
+                                    <v-col cols="7" class="value-col">
+                                        <span :class="client.isActive ? 'status-active' : 'status-ended'">
+                                            {{ client.statusLabel }}
                                         </span>
                                     </v-col>
                                 </v-row>
@@ -67,56 +79,39 @@
                 <div class="d-flex justify-center mt-4">
                     <v-pagination v-model="page" :length="totalPages" @update:model-value="fetchClients" />
                 </div>
-
             </v-col>
         </v-row>
 
         <!-- ==================== 고객사 추가 모달 ==================== -->
         <v-dialog v-model="showModal" max-width="500">
             <v-card class="pa-6 modal-card">
-                <!-- 타이틀 + 설명 -->
                 <v-card-title class="text-center modal-title-container">
                     <div class="modal-title">고객사 추가</div>
                     <div class="modal-subtitle">새로운 고객사 정보를 입력해주세요.</div>
                 </v-card-title>
 
                 <v-card-text>
-                    <!-- companyName -->
                     <v-text-field v-model="form.companyName" label="고객사명" variant="outlined" class="modal-input" />
 
-                    <!-- category (ENUM) -->
-                    <v-select v-model="form.category" :items="[
-                        { title: '패션', value: 'FASHION' },
-                        { title: '뷰티', value: 'BEAUTY' },
-                        { title: '식음료', value: 'FOOD' },
-                        { title: '리빙/라이프스타일', value: 'LIFESTYLE' },
-                        { title: '가전/디지털', value: 'ELECTRONICS' },
-                        { title: '잡화/액세서리', value: 'ACCESSORY' },
-                        { title: '스포츠/아웃도어', value: 'SPORTS' },
-                        { title: '서비스/기타', value: 'SERVICE' }
-                    ]" item-title="title" item-value="value" label="카테고리" variant="outlined" class="modal-input" />
+                    <!-- 등록 폼용 카테고리: '전체' 없이 enum만 -->
+                    <v-select v-model="form.category" :items="categoryFormItems" item-title="title" item-value="value"
+                        label="카테고리" variant="outlined" class="modal-input" />
 
-                    <!-- businessNumber -->
                     <v-text-field v-model="form.businessNumber" label="사업자번호" placeholder="555-22-14444"
                         variant="outlined" class="modal-input" />
 
-                    <!-- phone -->
                     <v-text-field v-model="form.phone" label="연락처" placeholder="031-123-9999" variant="outlined"
                         class="modal-input" />
 
-                    <!-- address -->
-                    <v-text-field v-model="form.address" label="주소" placeholder="최정우 좌측 옆자리" variant="outlined"
+                    <v-text-field v-model="form.address" label="주소" placeholder="주소 입력" variant="outlined"
                         class="modal-input" />
 
-                    <!-- website -->
                     <v-text-field v-model="form.website" label="웹사이트" placeholder="https://example.co.kr"
                         variant="outlined" class="modal-input" />
 
-                    <!-- fax -->
                     <v-text-field v-model="form.fax" label="팩스" placeholder="031-111-2222" variant="outlined"
                         class="modal-input" />
 
-                    <!-- zipCode -->
                     <v-text-field v-model="form.zipCode" label="우편번호" placeholder="13529" variant="outlined"
                         class="modal-input" />
                 </v-card-text>
@@ -141,26 +136,69 @@ import { registerCustomer, getCustomerCompanies } from '@/apis/client'
 
 const router = useRouter()
 
+// ====================== 카테고리 enum <-> 라벨 맵 ======================
+const CATEGORY_LABEL_MAP = {
+    FASHION: '패션',
+    BEAUTY: '뷰티',
+    FOOD: '식음료',
+    LIFESTYLE: '리빙/라이프스타일',
+    ELECTRONICS: '가전/디지털',
+    ACCESSORY: '잡화/액세서리',
+    SPORTS: '스포츠/아웃도어',
+    SERVICE: '서비스/기타'
+}
+
+// 사이드바 필터용: 제일 앞에 '전체'
+const categoryFilterItems = [
+    { title: '전체', value: '' },
+    ...Object.entries(CATEGORY_LABEL_MAP).map(([value, title]) => ({
+        title,
+        value
+    }))
+]
+
+// 등록 폼용: enum만
+const categoryFormItems = Object.entries(CATEGORY_LABEL_MAP).map(([value, title]) => ({
+    title,
+    value
+}))
+
+// 계약 상태 필터용: '' = 전체, ACTIVE = 활성, COMPLETED = 종료
+const contractStatusItems = [
+    { title: '전체', value: '' },
+    { title: '활성', value: 'ACTIVE' },
+    { title: '종료', value: 'COMPLETED' }
+]
+
+const toKoreanCategory = (value) => {
+    if (!value) return '-'
+    return CATEGORY_LABEL_MAP[value] ?? value
+}
+
+const toKoreanProjectStatus = (value) => {
+    switch (value) {
+        case 'ACTIVE':
+            return '활성'
+        case 'COMPLETED':
+            return '종료'
+        case 'PENDING':
+            return '계약 예정'
+        case 'ENDED':
+            return '종료'
+        default:
+            return value || '-'
+    }
+}
+
 // 검색 / 필터
 const search = ref('')
-const category = ref('')
-const categoryItems = [
-    { title: '패션', value: 'FASHION' },
-    { title: '뷰티', value: 'BEAUTY' },
-    { title: '식음료', value: 'FOOD' },
-    { title: '리빙/라이프스타일', value: 'LIFESTYLE' },
-    { title: '가전/디지털', value: 'ELECTRONICS' },
-    { title: '잡화/액세서리', value: 'ACCESSORY' },
-    { title: '스포츠/아웃도어', value: 'SPORTS' },
-    { title: '서비스/기타', value: 'SERVICE' }
-]
-const contractStatus = ref('')
-const floor = ref('')
+const category = ref('')          // '' = 전체, 나머지 = enum 이름
+const contractStatus = ref('')    // '' = 전체, 'ACTIVE' | 'COMPLETED'
 
 // DB에서 받아온 고객사 목록
 const clients = ref([])
 
-// 페이지 (백엔드 DTO 기준)
+// 페이지 정보
 const page = ref(1)
 const size = ref(20)
 const totalCount = ref(0)
@@ -175,7 +213,7 @@ const showModal = ref(false)
 
 const form = reactive({
     companyName: '',
-    category: null,
+    category: null, // enum 이름 (예: 'ACCESSORY')
     businessNumber: '',
     phone: '',
     address: '',
@@ -184,25 +222,12 @@ const form = reactive({
     zipCode: ''
 })
 
-const toKoreanCategory = (value) => {
-    switch (value) {
-        case 'FASHION': return '패션'
-        case 'BEAUTY': return '뷰티'
-        case 'FOOD': return '식음료'
-        case 'LIFESTYLE': return '리빙/라이프스타일'
-        case 'ELECTRONICS': return '가전/디지털'
-        case 'ACCESSORY': return '잡화/액세서리'
-        case 'SPORTS': return '스포츠/아웃도어'
-        case 'SERVICE': return '서비스/기타'
-        default: return value
-    }
-}
-
-// 고객사 목록 조회 (GET /api/companies/clients)
+// 고객사 목록 조회
 const fetchClients = async () => {
     try {
         const params = {
             keyword: search.value || null,
+            // '' 선택 시 null 로 보내서 전체
             category: category.value || null,
             page: page.value,
             size: size.value
@@ -212,12 +237,15 @@ const fetchClients = async () => {
 
         clients.value = (data.data || []).map((c) => ({
             id: c.clientCompanyId,
-            company: c.companyName,
+            companyName: c.companyName,
             category: c.category,
             categoryLabel: toKoreanCategory(c.category),
-            owner: '-',
-            floor: '-',
-            status: '-'
+            managerName: c.managerName,
+            contractStartDay: c.contractStartDay,
+            contractEndDay: c.contractEndDay,
+            projectStatus: c.projectStatus,                // 원본 상태 저장
+            isActive: c.projectStatus === 'ACTIVE',
+            statusLabel: toKoreanProjectStatus(c.projectStatus)
         }))
 
         totalCount.value = data.totalCount
@@ -227,6 +255,19 @@ const fetchClients = async () => {
         console.error('고객사 목록 조회 실패', e)
     }
 }
+
+// 화면용 필터링 (계약 상태)
+const filteredClients = computed(() => {
+    let list = clients.value
+
+    if (contractStatus.value === 'ACTIVE') {
+        list = list.filter(c => c.projectStatus === 'ACTIVE')
+    } else if (contractStatus.value === 'COMPLETED') {
+        list = list.filter(c => c.projectStatus === 'COMPLETED')
+    }
+
+    return list
+})
 
 // 최초 진입 시 목록 조회
 onMounted(() => {
@@ -288,11 +329,6 @@ const goToClientCompanyDetail = (id) => {
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
     padding: 24px;
     height: 100%;
-    transition: all 0.2s ease-in-out;
-}
-
-.sidebar-card:hover {
-    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.12);
 }
 
 .sidebar-input {
@@ -300,7 +336,21 @@ const goToClientCompanyDetail = (id) => {
     border-radius: 8px;
 }
 
-/* 고객사 카드 → client-card */
+/* 정보 행 공통 */
+.info-row {
+    margin-bottom: 2px;
+}
+
+.info-row:last-of-type {
+    margin-bottom: 0;
+}
+
+.info-row>.v-col {
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+/* 고객사 카드 */
 .client-card {
     background-color: #fff;
     border: 1px solid #eee;
@@ -324,8 +374,28 @@ const goToClientCompanyDetail = (id) => {
 .label {
     font-weight: 500;
     color: #888;
+    font-size: 0.7rem;
 }
 
+.value-col {
+    padding-left: 0;
+    font-weight: 500;
+    color: #333;
+    font-size: 0.8rem;
+}
+
+/* 계약기간 배지 */
+.period-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 6px;
+    background-color: #f2f2f7;
+    font-size: 0.72rem;
+    color: #555;
+    line-height: 1.2;
+}
+
+/* 상태 색상 */
 .status-active {
     color: green;
     font-weight: 600;
@@ -340,12 +410,5 @@ const goToClientCompanyDetail = (id) => {
 .modal-card {
     border-radius: 20px;
     box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
-}
-
-:deep(.modal-input .v-field),
-:deep(.modal-input .v-field__control) {
-    background-color: #ffffff !important;
-    border-radius: 12px;
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 </style>
