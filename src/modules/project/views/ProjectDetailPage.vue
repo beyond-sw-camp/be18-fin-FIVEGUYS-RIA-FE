@@ -291,6 +291,8 @@
             :key="index"
             class="history-card mb-3"
             elevation="0"
+            @click="goToHistoryDetail(item)"
+            style="cursor: pointer"
           >
             <div class="history-inner">
               <!-- 왼쪽 아이콘 + 세로 라인 -->
@@ -697,6 +699,7 @@ const applyDetailDto = (dto) => {
 
   historyItems.value = (dto.proposals || []).map((p) => ({
     type: "proposal",
+    id: p.proposalId,
     icon: "mdi-file-document-outline",
     label: "제안",
     title: p.title,
@@ -710,6 +713,7 @@ const applyDetailDto = (dto) => {
     dto.estimates.forEach((e) => {
       historyItems.value.push({
         type: "estimate",
+        id: e.estimateId,
         icon: "mdi-calculator-variant",
         label: "견적",
         title: e.title,
@@ -914,6 +918,30 @@ const saveProject = async () => {
   }
 };
 
+const goToHistoryDetail = (item) => {
+  if (!item?.id) return;
+
+  switch (item.type) {
+    case "proposal":
+      router.push(`/proposal/${item.id}`);
+      break;
+
+    case "estimate":
+      router.push(`/estimate/${item.id}`);
+      break;
+
+    case "contract":
+      router.push(`/contract/${item.id}`);
+      break;
+
+    case "revenue":
+      router.push(`/revenue/${item.id}`);
+      break;
+
+    default:
+      console.warn("Unknown history type:", item.type);
+  }
+};
 onMounted(async () => {
   const projectId = route.params.projectId || route.params.id;
   if (!projectId) return;
