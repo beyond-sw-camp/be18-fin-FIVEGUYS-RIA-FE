@@ -25,7 +25,7 @@
         <!-- Tabs -->
         <v-tabs
           v-model="tab"
-          color="primary"
+          color=#f2a23a
           align-tabs="center"
           class="fixed-tabs"
         >
@@ -174,7 +174,7 @@
 
       <v-card-actions>
         <v-spacer />
-        <v-btn color="primary" variant="flat" @click="close">확인</v-btn>
+        <v-btn color=#f2a23a variant="flat" @click="close">확인</v-btn>
       </v-card-actions>
 
     </v-card>

@@ -163,7 +163,7 @@ function centerMapOnLoad() {
 
   // 보정값 (px 단위)
   const OFFSET_X = 120; // ← 이 값만 조정하면 됨
-  const OFFSET_Y = 0;   // 필요하면 나중에 사용
+  const OFFSET_Y = -80;   // 필요하면 나중에 사용
 
   if (img.scrollWidth > container.clientWidth) {
     container.scrollLeft =
@@ -181,11 +181,14 @@ function centerMapOnLoad() {
 <style scoped>
 .map-container {
   width: 100%;
-  height: calc(100vh - 80px);
-  overflow: auto;
+  height: 100%;
+
+  
+  overflow-x: auto;   /* 좌우 스크롤 유지 */
+  overflow-y: auto;   
+
   position: relative;
 }
-
 .zoom-wrapper {
   position: relative;
   display: inline-block;
