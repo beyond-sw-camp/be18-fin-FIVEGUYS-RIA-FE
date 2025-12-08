@@ -27,8 +27,8 @@
                         density="comfortable" hide-details class="mb-4" />
 
                     <!-- 담당자 -->
-                    <v-select v-model="managerFilter" :items="managerOptions" label="담당자" variant="outlined"
-                        density="comfortable" hide-details class="mb-6" />
+                    <v-select v-model="managerFilter" :items="managerOptions" item-title="title" item-value="value"
+                        label="담당자" variant="outlined" density="comfortable" hide-details class="mb-6" />
                 </v-card>
             </v-col>
 
@@ -36,7 +36,7 @@
             <v-col cols="12" md="10" class="pa-6 main-content">
                 <v-row dense>
                     <v-col v-for="sale in filteredSales" :key="sale.id" cols="12" sm="6" md="3" class="proposal-col">
-                        <v-card outlined class="proposal-card" elevation="2" rounded="xl">
+                        <v-card outlined class="proposal-card" elevation="2" rounded="xl" @click="goDetail(sale)">
                             <!-- 즐겨찾기 버튼 -->
                             <v-btn small class="favorite-btn" @click.stop="toggleFavorite(sale)" elevation="0">
                                 <v-icon :color="sale.isFavorite ? '#FFD60A' : '#8e8e93'">
@@ -106,17 +106,20 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { fetchRevenueList } from '@/apis/revenue'
+
+const router = useRouter()
 
 const keyword = ref('')
 const showFavoritesOnly = ref(false)
 
 const saleType = ref('전체')
 const dateSort = ref('날짜 최신순')
-const managerFilter = ref('전체')
+const managerFilter = ref(null) // 숫자 id 또는 null
 
-const saleTypeOptions = ['전체', '임대', '팝업', '전시회']
+const saleTypeOptions = ['전체', '입점', '팝업', '전시회']
 const dateSortOptions = ['날짜 최신순', '날짜 오래된순']
 
 const page = ref(1) // UI 1-based
@@ -126,32 +129,51 @@ const totalElements = ref(0)
 
 const sales = ref([])
 
-const mapStoreTypeToLabel = type => {
-    if (type === 'REGULAR') return '임대'
+const mapStoreTypeToLabel = (type) => {
+    if (type === 'REGULAR') return '입점'
     if (type === 'POPUP') return '팝업'
     if (type === 'EXHIBITION') return '전시회'
     return type || '-'
 }
 
-const loadSales = async (reset = false) => {
-    if (reset) page.value = 1
+const mapLabelToStoreType = (label) => {
+    if (label === '입점') return 'REGULAR'
+    if (label === '팝업') return 'POPUP'
+    if (label === '전시회') return 'EXHIBITION'
+    return null
+}
 
-    const res = await fetchRevenueList({
+const loadSales = async (reset = false) => {
+    if (reset) {
+        page.value = 1
+    }
+
+    const params = {
         page: page.value - 1, // 서버는 0-based
-        size: size.value
-    })
+        size: size.value,
+        keyword: keyword.value.trim() || null,
+        storeType: mapLabelToStoreType(saleType.value),
+        sort: dateSort.value === '날짜 최신순' ? 'LATEST' : 'OLDEST'
+    }
+
+    // 담당자 선택된 경우에만 파라미터 전송
+    if (managerFilter.value != null) {
+        params.managerId = managerFilter.value // 백엔드 @RequestParam("managerId") Long managerId 기준
+    }
+
+    const res = await fetchRevenueList(params)
 
     const data = res.data || {}
-
     const items = Array.isArray(data.data) ? data.data : []
 
-    sales.value = items.map(item => ({
+    sales.value = items.map((item) => ({
         id: item.revenueId,
         productName: item.contractTitle,
         clientCompany: item.clientCompanyName,
         contractStartDay: item.contractStartDay,
         contractEndDay: item.contractEndDay,
         salesManager: item.managerName,
+        managerId: item.managerId,
         settlementYear: item.settlementYear,
         settlementMonth: item.settlementMonth,
         saleAmount: Number(item.finalRevenue ?? 0),
@@ -168,64 +190,60 @@ const loadSales = async (reset = false) => {
 
 onMounted(() => loadSales(true))
 
-const managerOptions = computed(() => {
-    const base = ['전체']
-    const names = [...new Set(sales.value.map(s => s.salesManager).filter(Boolean))]
-    return base.concat(names)
+watch([saleType, dateSort, managerFilter, keyword], () => {
+    loadSales(true)
 })
 
-const toggleFavorite = sale => {
+const managerOptions = computed(() => {
+    const result = [{ title: '전체', value: null }]
+
+    const seen = new Set()
+    sales.value.forEach((s) => {
+        if (!s.managerId || seen.has(s.managerId)) return
+        seen.add(s.managerId)
+        result.push({
+            title: s.salesManager || '-',
+            value: s.managerId
+        })
+    })
+
+    return result
+})
+
+const toggleFavorite = (sale) => {
     sale.isFavorite = !sale.isFavorite
 }
 
 const filteredSales = computed(() => {
     let list = sales.value.slice()
 
-    const kw = keyword.value.trim()
-    if (kw) {
-        list = list.filter(s =>
-            [s.productName, s.clientCompany].some(v => v?.includes(kw))
-        )
+    // 프론트에서 한 번 더 안전하게 담당자 필터
+    if (managerFilter.value != null) {
+        list = list.filter((s) => s.managerId === managerFilter.value)
     }
 
     if (showFavoritesOnly.value) {
-        list = list.filter(s => s.isFavorite)
-    }
-
-    if (saleType.value !== '전체') {
-        list = list.filter(s => s.saleType === saleType.value)
-    }
-
-    if (managerFilter.value !== '전체') {
-        list = list.filter(s => s.salesManager === managerFilter.value)
-    }
-
-    if (dateSort.value === '날짜 최신순') {
-        list.sort(
-            (a, b) =>
-                b.settlementYear * 100 +
-                b.settlementMonth -
-                (a.settlementYear * 100 + a.settlementMonth)
-        )
-    } else {
-        list.sort(
-            (a, b) =>
-                a.settlementYear * 100 +
-                a.settlementMonth -
-                (b.settlementYear * 100 + b.settlementMonth)
-        )
+        list = list.filter((s) => s.isFavorite)
     }
 
     return list
 })
 
-const formatPrice = p => Math.floor(p).toLocaleString() + '원'
+const formatPrice = (p) => Math.floor(p).toLocaleString() + '원'
 
 const formatYearMonth = (y, m) =>
     !y || !m ? '-' : `${y}-${String(m).padStart(2, '0')}`
 
 const onPageChange = () => {
     loadSales(false)
+}
+
+const goDetail = (sale) => {
+    if (!sale?.id) return
+    router.push({
+        name: 'RevenueDetail',
+        params: { id: sale.id }
+    })
 }
 </script>
 
@@ -255,14 +273,14 @@ const onPageChange = () => {
     font-size: 1.2rem;
 }
 
-/* 카드 리스트 정렬 (제안 페이지와 동일) */
+/* 카드 리스트 정렬 */
 .proposal-col {
     padding-left: 10px;
     padding-right: 10px;
     margin-bottom: 18px;
 }
 
-/* 카드 디자인 (제안 페이지와 동일) */
+/* 카드 디자인 */
 .proposal-card {
     position: relative;
     padding: 16px;
@@ -295,7 +313,7 @@ const onPageChange = () => {
     font-size: 1.1rem;
 }
 
-/* 행 간격 (제안 페이지와 비슷하게) */
+/* 행 간격 */
 .info-row {
     margin-bottom: 2px;
 }
@@ -315,7 +333,7 @@ const onPageChange = () => {
     color: #333;
 }
 
-/* 라벨/텍스트 사이즈 제안 페이지와 통일 */
+/* 라벨/텍스트 */
 .label {
     font-size: 0.7rem;
     color: #8e8e93;
