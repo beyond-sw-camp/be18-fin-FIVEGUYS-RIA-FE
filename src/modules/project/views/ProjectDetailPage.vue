@@ -393,6 +393,8 @@ const targetStageName = computed(() => {
 const changePipelineStage = async (targetStageNoParam) => {
   try {
     if (!project.pipelineId) {
+      // 실제 DTO에는 pipelineInfo.pipelineId 항상 내려오므로
+      // 여기 걸린다면 DTO 문제 또는 초기 로딩 이전 클릭 케이스
       showError(null, "파이프라인 ID를 찾을 수 없습니다.");
       return;
     }
@@ -465,12 +467,12 @@ const toLocalDateString = (date) => {
 
 const translateType = (type) => {
   switch (type) {
-    case 'POPUP':
-      return '팝업 스토어'
-    case 'EXHIBITION':
-      return '전시회'
-    case 'RENTAL':
-      return '입점'
+    case "POPUP":
+      return "팝업 스토어";
+    case "EXHIBITION":
+      return "전시회";
+    case "RENTAL":
+      return "입점";
     default:
       return type;
   }
@@ -478,12 +480,12 @@ const translateType = (type) => {
 
 const mapSalesTypeToEnum = (label) => {
   switch (label) {
-    case '팝업 스토어':
-      return 'POPUP'
-    case '전시회':
-      return 'EXHIBITION'
-    case '입점':
-      return 'RENTAL'
+    case "팝업 스토어":
+      return "POPUP";
+    case "전시회":
+      return "EXHIBITION";
+    case "입점":
+      return "RENTAL";
     default:
       return null;
   }
@@ -493,11 +495,18 @@ const applyDetailDto = (dto) => {
   project.id = dto.projectId;
   project.statusCode = dto.status;
   project.status = translateStatus(dto.status);
+
+  // 진행률
   project.progress = dto.pipelineInfo?.progressRate ?? 0;
+
+  // 파이프라인 스텝: DTO 그대로 사용
   project.pipeline = (dto.stageList || []).map((s) => ({
+    stageNo: s.stageNo,
     name: s.stageName,
     completed: s.completed === true,
   }));
+
+  // 파이프라인 ID는 pipelineInfo에서만 사용
   project.pipelineId = dto.pipelineInfo?.pipelineId ?? null;
 
   form.projectName = dto.title;
@@ -515,6 +524,7 @@ const applyDetailDto = (dto) => {
       ? (dto.expectedRevenue * dto.expectedMarginRate) / 100
       : null;
 
+  // 제안 이력
   historyItems.value = (dto.proposals || []).map((p) => ({
     type: "proposal",
     icon: "mdi-file-document-outline",
@@ -526,6 +536,7 @@ const applyDetailDto = (dto) => {
     date: p.submitDate || p.requestDate || "",
   }));
 
+  // 견적 이력
   if (dto.estimates) {
     dto.estimates.forEach((e) => {
       historyItems.value.push({
@@ -541,6 +552,8 @@ const applyDetailDto = (dto) => {
     });
   }
 };
+
+/* 이하 나머지 코드는 기존과 동일 */
 
 const loadClients = async () => {
   const params = {
@@ -741,6 +754,7 @@ onMounted(async () => {
   applyDetailDto(res.data);
 });
 </script>
+
 
 <style scoped>
 .detail-container {

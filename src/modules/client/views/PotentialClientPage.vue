@@ -1,3 +1,4 @@
+<!-- src/modules/client/view/LeadCompanyList.vue (잠재 고객 리스트, 카테고리 전체 추가) -->
 <template>
     <v-container fluid class="pa-0 full-height">
         <v-row no-gutters class="full-height">
@@ -9,9 +10,9 @@
                     <v-text-field v-model="search" append-inner-icon="mdi-magnify" label="검색" variant="outlined"
                         hide-details density="comfortable" class="mb-4 sidebar-input" />
 
-                    <!-- 카테고리 셀렉트 -->
+                    <!-- 카테고리 셀렉트 (전체 포함) -->
                     <v-select v-model="selectedCategory" :items="categoryItems" item-title="title" item-value="value"
-                        label="카테고리" variant="outlined" density="comfortable" class="sidebar-input" clearable />
+                        label="카테고리" variant="outlined" density="comfortable" class="sidebar-input" />
                 </v-card>
             </v-col>
 
@@ -63,21 +64,18 @@
             </v-col>
         </v-row>
 
-        <!-- ==================== 잠재 고객 추가 모달 ==================== -->
+        <!-- 잠재 고객 추가 모달 -->
         <v-dialog v-model="showModal" max-width="500">
             <v-card class="pa-6 modal-card">
-
-                <!-- 타이틀 + 설명 -->
                 <v-card-title class="text-center modal-title-container">
                     <div class="modal-title">잠재 고객 추가</div>
                     <div class="modal-subtitle">새로운 잠재 고객 정보를 입력해주세요.</div>
                 </v-card-title>
 
                 <v-card-text>
-                    <!-- 백엔드 DTO랑 1:1 매칭 -->
                     <v-text-field v-model="form.companyName" label="고객사명" variant="outlined" class="modal-input" />
 
-                    <v-select v-model="form.category" :items="categoryItems" item-title="title" item-value="value"
+                    <v-select v-model="form.category" :items="categoryFormItems" item-title="title" item-value="value"
                         label="카테고리" variant="outlined" class="modal-input" />
 
                     <v-text-field v-model="form.businessNumber" label="사업자번호" placeholder="555-22-14444"
@@ -107,7 +105,6 @@
                         추가
                     </v-btn>
                 </v-card-actions>
-
             </v-card>
         </v-dialog>
     </v-container>
@@ -121,11 +118,7 @@ import { registerLeadCompany, getLeadCompanies } from '@/apis/client'
 const router = useRouter()
 
 const goToCompanyDetail = (customer) => {
-    if (!customer.id) {
-        console.warn('고객사 id 없음, 이동 불가', customer)
-        return
-    }
-
+    if (!customer.id) return
     router.push({
         name: 'ClientCompanyDetail',
         params: { id: customer.id }
@@ -135,7 +128,7 @@ const goToCompanyDetail = (customer) => {
 // 검색
 const search = ref('')
 
-// 카테고리 필터
+// 카테고리 필터 (null = 전체)
 const selectedCategory = ref(null)
 
 // 서버에서 가져올 잠재 고객사 목록
@@ -157,7 +150,7 @@ const totalPages = computed(() => {
 // 모달
 const showModal = ref(false)
 
-// 폼 (백엔드 DTO와 1:1 매칭)
+// 폼
 const form = reactive({
     companyName: '',
     category: '',
@@ -169,17 +162,32 @@ const form = reactive({
     address: ''
 })
 
-// 카테고리 (client 등록과 동일)
+// 카테고리 (전체 + enum)
+const CATEGORY_LABEL_MAP = {
+    FASHION: '패션',
+    BEAUTY: '뷰티',
+    FOOD: '식음료',
+    LIFESTYLE: '리빙/라이프스타일',
+    ELECTRONICS: '가전/디지털',
+    ACCESSORY: '잡화/액세서리',
+    SPORTS: '스포츠/아웃도어',
+    SERVICE: '서비스/기타'
+}
+
+// 사이드바: 전체 + enum
 const categoryItems = [
-    { title: '패션', value: 'FASHION' },
-    { title: '뷰티', value: 'BEAUTY' },
-    { title: '식음료', value: 'FOOD' },
-    { title: '리빙/라이프스타일', value: 'LIFESTYLE' },
-    { title: '가전/디지털', value: 'ELECTRONICS' },
-    { title: '잡화/액세서리', value: 'ACCESSORY' },
-    { title: '스포츠/아웃도어', value: 'SPORTS' },
-    { title: '서비스/기타', value: 'SERVICE' }
+    { title: '전체', value: null },
+    ...Object.entries(CATEGORY_LABEL_MAP).map(([value, title]) => ({
+        title,
+        value
+    }))
 ]
+
+// 등록 폼: enum만
+const categoryFormItems = Object.entries(CATEGORY_LABEL_MAP).map(([value, title]) => ({
+    title,
+    value
+}))
 
 // 잠재 고객사 목록 조회
 const fetchLeadCompanies = async () => {
@@ -196,10 +204,11 @@ const fetchLeadCompanies = async () => {
         leadCompanies.value = (data.data || []).map(item => ({
             id: item.clientCompanyId,
             company: item.companyName,
-            owner: '-',                 // 아직 필드 없으면 임시값
-            phone: item.phone,
-            email: item.website ?? '-',
-            lastMeeting: '-'            // 프론트 전용
+            owner: item.mainContactName || '-',
+            phone: item.mainContactPhone || '-',
+            email: item.mainContactEmail || '-',
+            lastMeeting: item.latestActivityDate || '-',
+            category: item.category
         }))
 
         totalCount.value = data.totalCount
@@ -255,7 +264,6 @@ watch(selectedCategory, () => {
 </script>
 
 <style scoped>
-/* 사이드바 */
 .sidebar-card {
     border-radius: 16px;
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
@@ -273,7 +281,6 @@ watch(selectedCategory, () => {
     border-radius: 8px;
 }
 
-/* 잠재 고객 카드 */
 .customer-card {
     transition: box-shadow 0.3s, transform 0.2s;
     font-size: 0.9rem;
@@ -299,7 +306,6 @@ watch(selectedCategory, () => {
     color: #888;
 }
 
-/* 모달 카드 */
 .modal-card {
     border-radius: 20px;
     box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
@@ -325,14 +331,12 @@ watch(selectedCategory, () => {
     margin-top: 4px;
 }
 
-/* 모달 input 스타일 */
 :deep(.modal-input) .v-field__control {
     background-color: #ffffff !important;
     border-radius: 12px;
     box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
-/* 모달 버튼 */
 .modal-actions {
     margin-top: 12px;
 }
@@ -345,41 +349,5 @@ watch(selectedCategory, () => {
 .add-btn:hover {
     box-shadow: 0 4px 12px rgba(251, 140, 0, 0.4);
     transform: translateY(-2px);
-}
-
-/* 상태 체크박스 디자인 */
-.sidebar-checkbox .v-input--selection-controls__ripple {
-    display: none;
-}
-
-.sidebar-checkbox .v-input--selection-controls__input {
-    min-width: 28px;
-    min-height: 28px;
-}
-
-.sidebar-checkbox .v-label {
-    font-size: 0.75rem;
-    color: #1c1c1e;
-    font-weight: 500;
-}
-
-.sidebar-checkbox {
-    background-color: #ffffff;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    transition: background-color 0.2s, border-color 0.2s;
-}
-
-.sidebar-checkbox:hover {
-    background-color: #f9f9f9;
-    border-color: rgba(0, 0, 0, 0.2);
-}
-
-.sidebar-checkbox-group {
-    font-weight: 600;
-    color: #555;
-    font-size: 14px;
-    margin-bottom: 8px;
 }
 </style>
