@@ -17,10 +17,14 @@
     "axios": "^1.13.2",
     "bootstrap": "^5.3.8",
     "bootstrap-icons": "^1.13.1",
+    "chart.js": "^4.5.1",
+    "dayjs": "^1.11.19",
+    "event-source-polyfill": "^1.0.31",
     "image-map-resizer": "^1.0.10",
     "pinia": "^3.0.3",
     "vite-plugin-vuetify": "^2.1.2",
     "vue": "^3.5.22",
+    "vue-chartjs": "^5.3.3",
     "vue-router": "^4.6.3",
     "vuetify": "^3.10.9"
   },
@@ -34,5 +38,8 @@
     "tailwindcss": "^4.1.16",
     "vite": "^7.1.11",
     "vite-plugin-vue-devtools": "^8.0.3"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "4.53.3"
   }
 }

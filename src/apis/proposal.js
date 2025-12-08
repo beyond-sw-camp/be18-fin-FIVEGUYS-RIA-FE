@@ -33,3 +33,6 @@ export const updateProposal = (proposalId, payload) => {
 export const deleteProposal = (id) => {
   return api.delete(`/api/proposals/${id}`);
 };
+export const getProposalsByProject = (projectId) => {
+  return api.get(`/api/proposals/projects/${projectId}`);
+};

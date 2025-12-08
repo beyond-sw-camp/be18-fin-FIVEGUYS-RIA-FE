@@ -1,7 +1,7 @@
 // src/router/index.js
 import { createRouter, createWebHistory } from "vue-router";
 
-import AdminDangerPage from "@/modules/admin/views/AdminDangerPage.vue";
+import AdminDangerPage from "@/modules/admin/views/AdminDeletePage.vue";
 import AdminLayout from "@/layouts/AdminLayout.vue";
 import AdminLogPage from "@/modules/admin/views/AdminLogPage.vue";
 import AdminPage from "@/modules/admin/views/AdminPage.vue";
@@ -13,21 +13,24 @@ import ClientPage from "@/modules/client/views/ClientPage.vue";
 import ContractPage from "@/modules/sales/contract/view/ContractPage.vue";
 import CreateProjectPage from "@/modules/project/views/CreateProjectPage.vue";
 import CreateProposalPage from "@/modules/sales/proposal/view/CreateProposalPage.vue";
+import CreateEstimatePage from "@/modules/sales/estimate/view/CreateEstimatePage.vue";
 import EstimatePage from "@/modules/sales/estimate/view/EstimatePage.vue";
+import EstimateDetailPage from "@/modules/sales/estimate/view/EstimateDetailPage.vue";
+import EditEstimatePage from "@/modules/sales/estimate/view/EditEstimatePage.vue";
 import FileStoragePage from "@/modules/file/views/FileStoragePage.vue";
 import FloorPage from "@/modules/storemap/views/StoreMapPage.vue";
-import HomePage from "@/views/HomePage.vue";
 import LoginPage from "@/views/LoginPage.vue";
+import MyPage from "@/modules/user/MyPage.vue";
 import PotentialClientPage from "@/modules/client/views/PotentialClientPage.vue";
 import ProjectDetailPage from "@/modules/project/views/ProjectDetailPage.vue";
 import ProjectPage from "@/modules/project/views/ProjectPage.vue";
 import ProposalDetailPage from "@/modules/sales/proposal/view/ProposalDetailPage.vue";
 import ProposalPage from "@/modules/sales/proposal/view/ProposalPage.vue";
 import RevenuePage from "@/modules/sales/revenue/view/RevenuePage.vue";
+import StatsDashboard from "@/views/StatsDashboard.vue";
 import VipMemberListPage from "@/modules/member/views/VipMemberListPage.vue";
 import VipMemberPage from "@/modules/member/views/VipMemberPage.vue";
 import { useAuthStore } from "@/stores/auth";
-import MyPage from "@/modules/user/MyPage.vue"; // ← 추가
 
 const routes = [
   {
@@ -38,7 +41,7 @@ const routes = [
   },
   { path: "/", redirect: "/home" },
   { path: "/mypage", name: "MyPage", component: MyPage },
-  { path: "/home", name: "Home", component: HomePage },
+  { path: "/home", name: "Home", component: StatsDashboard },
   { path: "/calendar", name: "Calendar", component: CalendarPage },
   { path: "/project", name: "Project", component: ProjectPage },
   {
@@ -47,7 +50,7 @@ const routes = [
     component: CreateProjectPage,
   },
   { path: "/project/:id", name: "ProjectDetail", component: ProjectDetailPage },
-  { path: "/floor", name: "Floor", component: FloorPage },
+  {path: '/floor/:level',name: 'Floor',component: FloorPage,},
   { path: "/vipmember", name: "VipMember", component: VipMemberPage },
   {
     path: "/vipmemberlist",
@@ -84,6 +87,23 @@ const routes = [
     props: true,
   },
   { path: "/estimate", name: "Estimate", component: EstimatePage },
+  {
+    path: "/estimate/create",
+    name: "CreateEstimate",
+    component: CreateEstimatePage,
+  },
+  {
+    path: "/estimate/:id",
+    name: "EstimateDetail",
+    component: EstimateDetailPage,
+    props: true,
+  },
+  {
+    path: "/estimate/:id/edit",
+    name: "EstimateEdit",
+    component: EditEstimatePage,
+    props: true,
+  },
   { path: "/contract", name: "Contract", component: ContractPage },
   { path: "/revenue", name: "Revenue", component: RevenuePage },
   { path: "/filestorage", name: "FileStorage", component: FileStoragePage },
