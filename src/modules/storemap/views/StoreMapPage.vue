@@ -163,7 +163,7 @@ function centerMapOnLoad() {
 
   // 보정값 (px 단위)
   const OFFSET_X = 120; // ← 이 값만 조정하면 됨
-  const OFFSET_Y = -80;   // 필요하면 나중에 사용
+  const OFFSET_Y = -160;   // 필요하면 나중에 사용
 
   if (img.scrollWidth > container.clientWidth) {
     container.scrollLeft =
