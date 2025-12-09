@@ -31,6 +31,7 @@ import StatsDashboard from "@/views/StatsDashboard.vue";
 import VipMemberListPage from "@/modules/member/views/VipMemberListPage.vue";
 import VipMemberPage from "@/modules/member/views/VipMemberPage.vue";
 import { useAuthStore } from "@/stores/auth";
+import CreateContractPage from "@/modules/sales/contract/view/CreateContractPage.vue";
 
 const routes = [
   {
@@ -105,6 +106,11 @@ const routes = [
     props: true,
   },
   { path: "/contract", name: "Contract", component: ContractPage },
+  {
+    path: "/contract/create",
+    name: "CreateContract",
+    component: CreateContractPage
+  },
   { path: "/revenue", name: "Revenue", component: RevenuePage },
   { path: "/filestorage", name: "FileStorage", component: FileStoragePage },
 
