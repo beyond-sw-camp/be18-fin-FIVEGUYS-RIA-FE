@@ -749,7 +749,7 @@ export default {
   top: 60px;
   left: 50%;
   transform: translateX(-50%);  
-  background: #f2a23a;
+  background: #4a8cff;
   color: white;
   padding: 12px 18px;
   border-radius: 8px;

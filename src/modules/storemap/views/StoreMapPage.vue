@@ -139,6 +139,15 @@ function handleImageLoad(e) {
     };
   });
 
+  setTimeout(() => {
+    const container = containerRef.value;
+    if (!container) return;
+
+    container.scrollTop =
+      (container.scrollHeight - container.clientHeight) / 2;
+
+  });
+
   centerMapOnLoad();
 }
 
@@ -163,7 +172,7 @@ function centerMapOnLoad() {
 
   // 보정값 (px 단위)
   const OFFSET_X = 120; // ← 이 값만 조정하면 됨
-  const OFFSET_Y = -160;   // 필요하면 나중에 사용
+  const OFFSET_Y = -200;   // 필요하면 나중에 사용
 
   if (img.scrollWidth > container.clientWidth) {
     container.scrollLeft =
