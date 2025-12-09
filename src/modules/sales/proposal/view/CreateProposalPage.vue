@@ -15,68 +15,36 @@
         <!-- 제안명 -->
         <v-col cols="12" md="6">
           <div class="input-label">제안명</div>
-          <v-text-field
-            v-model="form.projectName"
-            placeholder="제안명을 입력하세요"
-            variant="outlined"
-            class="input-field"
-            hide-details
-          />
+          <v-text-field v-model="form.projectName" placeholder="제안명을 입력하세요" variant="outlined" class="input-field"
+            hide-details />
         </v-col>
 
         <!-- 프로젝트 -->
         <v-col cols="12" md="6">
           <div class="input-label">프로젝트</div>
-          <v-text-field
-            v-model="form.projectType"
-            placeholder="프로젝트를 선택하세요"
-            variant="outlined"
-            class="input-field"
-            hide-details
-            readonly
-            @click="opportunityDialog = true"
-          />
+          <v-text-field v-model="form.projectType" placeholder="프로젝트를 선택하세요" variant="outlined" class="input-field"
+            hide-details readonly @click="opportunityDialog = true" />
         </v-col>
 
         <!-- 고객사 -->
         <v-col cols="12" md="6">
           <div class="input-label">고객사</div>
-          <v-text-field
-            v-model="form.clientCompany"
-            placeholder="고객사를 선택하세요"
-            variant="outlined"
-            class="input-field"
-            hide-details
-            readonly
-            @click="clientDialog = true"
-          />
+          <v-text-field v-model="form.clientCompany" placeholder="고객사를 선택하세요" variant="outlined" class="input-field"
+            hide-details readonly @click="clientDialog = true" />
         </v-col>
 
         <!-- 고객(담당자) -->
         <v-col cols="12" md="6">
           <div class="input-label">고객 담당자</div>
-          <v-text-field
-            v-model="form.client"
-            placeholder="고객 담당자를 선택하세요"
-            variant="outlined"
-            class="input-field"
-            hide-details
-            readonly
-            @click="clientPersonDialog = true"
-          />
+          <v-text-field v-model="form.client" placeholder="고객 담당자를 선택하세요" variant="outlined" class="input-field"
+            hide-details readonly @click="clientPersonDialog = true" />
         </v-col>
 
         <!-- 내용 -->
         <v-col cols="12">
           <div class="input-label">내용</div>
-          <v-textarea
-            v-model="form.content"
-            placeholder="내용을 입력하세요"
-            variant="outlined"
-            class="input-field textarea-field"
-            hide-details
-            rows="4"
-          />
+          <v-textarea v-model="form.content" placeholder="내용을 입력하세요" variant="outlined"
+            class="input-field textarea-field" hide-details rows="4" />
         </v-col>
 
         <!-- 요청일 -->
@@ -84,20 +52,10 @@
           <div class="input-label">요청일</div>
           <v-menu v-model="startMenu" :close-on-content-click="false" offset-y>
             <template #activator="{ props }">
-              <v-text-field
-                :model-value="formatDate(form.startDate)"
-                placeholder="요청일"
-                variant="outlined"
-                class="input-field"
-                hide-details
-                readonly
-                v-bind="props"
-              />
+              <v-text-field :model-value="formatDate(form.startDate)" placeholder="요청일" variant="outlined"
+                class="input-field" hide-details readonly v-bind="props" />
             </template>
-            <v-date-picker
-              v-model="form.startDate"
-              @update:model-value="startMenu = false"
-            />
+            <v-date-picker v-model="form.startDate" @update:model-value="startMenu = false" />
           </v-menu>
         </v-col>
 
@@ -106,46 +64,24 @@
           <div class="input-label">제출일</div>
           <v-menu v-model="endMenu" :close-on-content-click="false" offset-y>
             <template #activator="{ props }">
-              <v-text-field
-                :model-value="formatDate(form.endDate)"
-                placeholder="제출일"
-                variant="outlined"
-                class="input-field"
-                hide-details
-                readonly
-                v-bind="props"
-              />
+              <v-text-field :model-value="formatDate(form.endDate)" placeholder="제출일" variant="outlined"
+                class="input-field" hide-details readonly v-bind="props" />
             </template>
-            <v-date-picker
-              v-model="form.endDate"
-              @update:model-value="endMenu = false"
-            />
+            <v-date-picker v-model="form.endDate" @update:model-value="endMenu = false" />
           </v-menu>
         </v-col>
 
         <!-- 비고 -->
         <v-col cols="12">
           <div class="input-label">비고</div>
-          <v-textarea
-            v-model="form.notes"
-            placeholder="비고를 입력하세요"
-            variant="outlined"
-            class="input-field textarea-field"
-            hide-details
-            rows="3"
-          />
+          <v-textarea v-model="form.notes" placeholder="비고를 입력하세요" variant="outlined" class="input-field textarea-field"
+            hide-details rows="3" />
         </v-col>
       </v-row>
 
       <!-- 저장 버튼 -->
       <div class="actions-row">
-        <v-btn
-          color="orange darken-2"
-          class="white--text px-6"
-          rounded="lg"
-          elevation="2"
-          @click="saveProposal"
-        >
+        <v-btn color="orange darken-2" class="white--text px-6" rounded="lg" elevation="2" @click="saveProposal">
           저장
         </v-btn>
       </div>
@@ -157,49 +93,25 @@
         <div class="dialog-title mb-4">고객사 선택</div>
 
         <div class="mb-3 d-flex">
-          <v-chip
-            class="mr-2"
-            :color="clientTypeFilter === 'ALL' ? 'orange darken-2' : undefined"
-            :text-color="clientTypeFilter === 'ALL' ? 'white' : undefined"
-            @click="clientTypeFilter = 'ALL'"
-          >
+          <v-chip class="mr-2" :color="clientTypeFilter === 'ALL' ? 'orange darken-2' : undefined"
+            :text-color="clientTypeFilter === 'ALL' ? 'white' : undefined" @click="clientTypeFilter = 'ALL'">
             전체
           </v-chip>
-          <v-chip
-            class="mr-2"
-            :color="
-              clientTypeFilter === 'CLIENT' ? 'orange darken-2' : undefined
-            "
-            :text-color="clientTypeFilter === 'CLIENT' ? 'white' : undefined"
-            @click="clientTypeFilter = 'CLIENT'"
-          >
+          <v-chip class="mr-2" :color="clientTypeFilter === 'CLIENT' ? 'orange darken-2' : undefined
+            " :text-color="clientTypeFilter === 'CLIENT' ? 'white' : undefined" @click="clientTypeFilter = 'CLIENT'">
             고객사
           </v-chip>
-          <v-chip
-            :color="clientTypeFilter === 'LEAD' ? 'orange darken-2' : undefined"
-            :text-color="clientTypeFilter === 'LEAD' ? 'white' : undefined"
-            @click="clientTypeFilter = 'LEAD'"
-          >
+          <v-chip :color="clientTypeFilter === 'LEAD' ? 'orange darken-2' : undefined"
+            :text-color="clientTypeFilter === 'LEAD' ? 'white' : undefined" @click="clientTypeFilter = 'LEAD'">
             잠재고객사
           </v-chip>
         </div>
 
-        <v-text-field
-          v-model="clientSearch"
-          placeholder="고객사명을 입력하세요"
-          prepend-inner-icon="mdi-magnify"
-          variant="outlined"
-          hide-details
-          class="mb-4"
-        />
+        <v-text-field v-model="clientSearch" placeholder="고객사명을 입력하세요" prepend-inner-icon="mdi-magnify"
+          variant="outlined" hide-details class="mb-4" />
 
         <v-list>
-          <v-list-item
-            v-for="item in filteredClients"
-            :key="item.id"
-            @click="selectClient(item)"
-            class="dialog-item"
-          >
+          <v-list-item v-for="item in filteredClients" :key="item.id" @click="selectClient(item)" class="dialog-item">
             {{ item.name }}
           </v-list-item>
         </v-list>
@@ -211,22 +123,12 @@
       <v-card class="pa-4">
         <div class="dialog-title mb-4">고객 담당자 선택</div>
 
-        <v-text-field
-          v-model="clientPersonSearch"
-          placeholder="검색"
-          prepend-inner-icon="mdi-magnify"
-          variant="outlined"
-          hide-details
-          class="mb-4"
-        />
+        <v-text-field v-model="clientPersonSearch" placeholder="검색" prepend-inner-icon="mdi-magnify" variant="outlined"
+          hide-details class="mb-4" />
 
         <v-list>
-          <v-list-item
-            v-for="p in filteredClientPersons"
-            :key="p.id"
-            @click="selectClientPerson(p)"
-            class="dialog-item"
-          >
+          <v-list-item v-for="p in filteredClientPersons" :key="p.id" @click="selectClientPerson(p)"
+            class="dialog-item">
             {{ p.name }}
           </v-list-item>
         </v-list>
@@ -238,22 +140,11 @@
       <v-card class="pa-4">
         <div class="dialog-title mb-4">프로젝트 선택</div>
 
-        <v-text-field
-          v-model="opportunitySearch"
-          placeholder="검색"
-          prepend-inner-icon="mdi-magnify"
-          variant="outlined"
-          hide-details
-          class="mb-4"
-        />
+        <v-text-field v-model="opportunitySearch" placeholder="검색" prepend-inner-icon="mdi-magnify" variant="outlined"
+          hide-details class="mb-4" />
 
         <v-list>
-          <v-list-item
-            v-for="o in filteredOpportunities"
-            :key="o.id"
-            @click="selectOpportunity(o)"
-            class="dialog-item"
-          >
+          <v-list-item v-for="o in filteredOpportunities" :key="o.id" @click="selectOpportunity(o)" class="dialog-item">
             {{ o.name }}
           </v-list-item>
         </v-list>
@@ -268,7 +159,7 @@ import { useRouter } from "vue-router";
 import { createProposal } from "@/apis/proposal";
 import {
   getProjectTitles,
-  getProjectMeta,
+  getProjectTitleMeta,
   getProjectsWithPipelines,
 } from "@/apis/project";
 import {
@@ -463,7 +354,7 @@ const selectOpportunity = async (o) => {
   form.projectType = o.name;
 
   // 2) 메타 데이터 조회
-  const { data } = await getProjectMeta(o.id);
+  const { data } = await getProjectTitleMeta(o.id);
 
   if (data.projectId) form.projectId = data.projectId;
   if (data.projectName) form.projectType = data.projectName;
@@ -473,25 +364,27 @@ const selectOpportunity = async (o) => {
     projectId: data.projectId,
   });
 
-  // projectId에 연결된 고객사가 1개인 구조라면
-  const company = clientRes.data.content?.[0];
 
-  if (company) {
-    form.clientCompanyId = company.id;
-    form.clientCompany = company.name;
+  if (data.projectId) form.projectId = data.projectId;
+  if (data.projectName) form.projectType = data.projectName;
 
-    // 고객 담당자 로딩
-    const personRes = await getSimpleClientsByCompany(company.id, {
+  if (data.clientCompanyId) {
+    form.clientCompanyId = data.clientCompanyId;
+    form.clientCompany = data.clientCompanyName || "";
+  }
+
+  if (data.clientId) {
+    form.clientId = data.clientId;
+    form.client = data.clientName || "";
+  }
+
+  // 필요하면 담당자 목록 로딩
+  if (form.clientCompanyId) {
+    const personRes = await getSimpleClientsByCompany(form.clientCompanyId, {
       page: 1,
       size: 50,
     });
-
-    const person = personRes.data.content?.[0];
-
-    if (person) {
-      form.clientId = person.id;
-      form.client = person.name;
-    }
+    clientPersonList.value = personRes.data.content || [];
   }
 
   opportunityDialog.value = false;
