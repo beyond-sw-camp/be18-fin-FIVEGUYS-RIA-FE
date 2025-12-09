@@ -13,7 +13,8 @@
           <v-btn value="ROLE_SALES_MEMBER" class="role-toggle-btn">
             팀원
           </v-btn>
-          <v-btn value="ROLE_SALES_LEAD" class="role-toggle-btn">
+          <!-- 팀장 권한 있을 때만 팀장 버튼 노출 -->
+          <v-btn v-if="canViewLead" value="ROLE_SALES_LEAD" class="role-toggle-btn">
             팀장
           </v-btn>
         </v-btn-toggle>
@@ -178,15 +179,18 @@ import {
   fetchStoreAreaEfficiencyRanking,
   fetchMonthlyFloorSales,
 } from "@/apis/dashboard";
+import { useAuthStore } from "@/stores/auth";
 
-const props = defineProps({
-  initialRole: {
-    type: String,
-    default: "ROLE_SALES_MEMBER",
-  },
-});
+// 로그인 정보/권한 Pinia에서 읽기
+const authStore = useAuthStore();
 
-const selectedRole = ref(props.initialRole);
+// 팀장 권한 여부
+const canViewLead = computed(() => authStore.role === "ROLE_SALES_LEAD");
+
+// 초기 선택 역할: 팀장이면 팀장, 아니면 팀원
+const selectedRole = ref(
+  canViewLead.value ? "ROLE_SALES_LEAD" : "ROLE_SALES_MEMBER"
+);
 
 const isMember = computed(() => selectedRole.value === "ROLE_SALES_MEMBER");
 const isLead = computed(() => selectedRole.value === "ROLE_SALES_LEAD");
@@ -650,13 +654,18 @@ const loadMonthlyStoreSales = async (year = null, month = null) => {
     ],
   };
 
+  // 팀원/팀장 공통 데이터
   await loadMonthlyPerformance(data.year, data.month);
   await loadBrandShare(data.year, data.month);
   await loadPopupDailySalesData(data.year, data.month);
-  await loadBrandMonthlyRanking(data.year, data.month);
-  await loadStoreAreaEfficiencyRanking(data.year, data.month);
-  await loadMonthlyFloorSales(data.year, data.month);
-  await loadMonthlySettlementTrend(data.year);
+
+  // 팀장 전용 데이터는 팀장 권한 있을 때만 호출
+  if (canViewLead.value) {
+    await loadBrandMonthlyRanking(data.year, data.month);
+    await loadStoreAreaEfficiencyRanking(data.year, data.month);
+    await loadMonthlyFloorSales(data.year, data.month);
+    await loadMonthlySettlementTrend(data.year);
+  }
 };
 
 /**
@@ -686,7 +695,10 @@ const goNextMonth = () => {
 watch(
   () => selectedRole.value,
   async (role) => {
-    if (role === "ROLE_SALES_LEAD" && currentYear.value) {
+    // 팀장 권한 없으면 팀장 전용 데이터 로딩 자체 차단
+    if (!canViewLead.value) return;
+
+    if (role === "ROLE_SALES_LEAD" && currentYear.value && currentMonth.value) {
       await loadMonthlySettlementTrend(currentYear.value);
       await loadBrandMonthlyRanking(currentYear.value, currentMonth.value);
       await loadStoreAreaEfficiencyRanking(currentYear.value, currentMonth.value);
@@ -714,6 +726,7 @@ const formatAmount = (v) => {
   return Number(v).toLocaleString();
 };
 </script>
+
 
 <style scoped>
 .stats-dashboard {
