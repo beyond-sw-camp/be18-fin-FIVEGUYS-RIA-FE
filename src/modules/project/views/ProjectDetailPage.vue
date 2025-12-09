@@ -739,6 +739,7 @@ const applyDetailDto = (dto) => {
   (dto.estimates || []).forEach((e) => {
     historyItems.value.push({
       type: "estimate",
+      id: e.estimateId,
       icon: "mdi-calculator-variant",
       label: "견적",
       title: e.title,
@@ -753,6 +754,7 @@ const applyDetailDto = (dto) => {
   (dto.revenues || []).forEach((r) => {
     historyItems.value.push({
       type: "revenue",
+      id: r.revenueId,
       icon: "mdi-cash-multiple",
       label: "매출",
       title: `[매출] 총 금액 ${formatAmount(r.totalPrice)}원`,
