@@ -27,6 +27,7 @@ import ProjectPage from "@/modules/project/views/ProjectPage.vue";
 import ProposalDetailPage from "@/modules/sales/proposal/view/ProposalDetailPage.vue";
 import ProposalPage from "@/modules/sales/proposal/view/ProposalPage.vue";
 import RevenuePage from "@/modules/sales/revenue/view/RevenuePage.vue";
+import RevenueDetailPage from "@/modules/sales/revenue/view/RevenueDetailPage.vue";
 import StatsDashboard from "@/views/StatsDashboard.vue";
 import VipMemberListPage from "@/modules/member/views/VipMemberListPage.vue";
 import VipMemberPage from "@/modules/member/views/VipMemberPage.vue";
@@ -39,7 +40,7 @@ const routes = [
     component: LoginPage,
     meta: { hideHeader: true, hideFooter: true },
   },
-  { path: "/", redirect: "/home" },
+  { path: "/", redirect: "/login" },
   { path: "/mypage", name: "MyPage", component: MyPage },
   { path: "/home", name: "Home", component: StatsDashboard },
   { path: "/calendar", name: "Calendar", component: CalendarPage },
@@ -50,7 +51,7 @@ const routes = [
     component: CreateProjectPage,
   },
   { path: "/project/:id", name: "ProjectDetail", component: ProjectDetailPage },
-  {path: '/floor/:level',name: 'Floor',component: FloorPage,},
+  { path: "/floor/:level", name: "Floor", component: FloorPage },
   { path: "/vipmember", name: "VipMember", component: VipMemberPage },
   {
     path: "/vipmemberlist",
@@ -84,6 +85,13 @@ const routes = [
     path: "/proposal/:id",
     name: "ProposalDetail",
     component: ProposalDetailPage,
+    props: true,
+  },
+  { path: "/revenue", name: "Revenue", component: RevenuePage },
+  {
+    path: "/revenue/:id",
+    name: "RevenueDetail",
+    component: RevenueDetailPage,
     props: true,
   },
   { path: "/estimate", name: "Estimate", component: EstimatePage },
