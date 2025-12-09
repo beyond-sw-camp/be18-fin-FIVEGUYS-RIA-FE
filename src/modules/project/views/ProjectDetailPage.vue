@@ -198,7 +198,7 @@
                 </div>
 
                 <div class="history-amount" v-if="item.amount">
-                  KRW {{ Number(item.amount).toLocaleString() }}
+                  KRW {{ formatAmount(item.amount) }}원
                 </div>
               </div>
             </div>
@@ -221,8 +221,8 @@
             " :text-color="clientTypeFilter === 'CLIENT' ? 'white' : undefined" @click="clientTypeFilter = 'CLIENT'">
             고객사
           </v-chip>
-          <v-chip :color="clientTypeFilter === 'LEAD' ? 'orange darken-2' : undefined"
-            :text-color="clientTypeFilter === 'LEAD' ? 'white' : undefined" @click="clientTypeFilter = 'LEAD'">
+          <v-chip :color="clientTypeFilter === 'LEAD' ? 'orange darken-2' : undefined
+            " :text-color="clientTypeFilter === 'LEAD' ? 'white' : undefined" @click="clientTypeFilter = 'LEAD'">
             잠재고객사
           </v-chip>
         </div>
@@ -365,6 +365,22 @@ const showSuccess = (msg = "저장이 완료되었습니다.") => {
   snackbar.value = true;
 };
 
+/* 날짜 라벨 포맷: yyyy-MM-dd만 사용 */
+const formatDateLabel = (value) => {
+  if (!value) return "";
+  const s = String(value);
+  return s.length >= 10 ? s.slice(0, 10) : s;
+};
+
+/* 금액 포맷: 소수점 없이 정수만 */
+const formatAmount = (val) => {
+  if (val == null || isNaN(val)) return "";
+  return Number(val).toLocaleString(undefined, {
+    maximumFractionDigits: 0,
+    minimumFractionDigits: 0,
+  });
+};
+
 /* 파이프라인 변경 확인용 상태 */
 const pipelineConfirmDialog = ref(false);
 const targetStageNo = ref(null);
@@ -393,8 +409,6 @@ const targetStageName = computed(() => {
 const changePipelineStage = async (targetStageNoParam) => {
   try {
     if (!project.pipelineId) {
-      // 실제 DTO에는 pipelineInfo.pipelineId 항상 내려오므로
-      // 여기 걸린다면 DTO 문제 또는 초기 로딩 이전 클릭 케이스
       showError(null, "파이프라인 ID를 찾을 수 없습니다.");
       return;
     }
@@ -496,17 +510,14 @@ const applyDetailDto = (dto) => {
   project.statusCode = dto.status;
   project.status = translateStatus(dto.status);
 
-  // 진행률
   project.progress = dto.pipelineInfo?.progressRate ?? 0;
 
-  // 파이프라인 스텝: DTO 그대로 사용
   project.pipeline = (dto.stageList || []).map((s) => ({
     stageNo: s.stageNo,
     name: s.stageName,
     completed: s.completed === true,
   }));
 
-  // 파이프라인 ID는 pipelineInfo에서만 사용
   project.pipelineId = dto.pipelineInfo?.pipelineId ?? null;
 
   form.projectName = dto.title;
@@ -524,36 +535,56 @@ const applyDetailDto = (dto) => {
       ? (dto.expectedRevenue * dto.expectedMarginRate) / 100
       : null;
 
+  historyItems.value = [];
+
   // 제안 이력
-  historyItems.value = (dto.proposals || []).map((p) => ({
-    type: "proposal",
-    icon: "mdi-file-document-outline",
-    label: "제안",
-    title: p.title,
-    description: `[${dto.clientCompanyName}] / [${p.writerName}]`,
-    meta: p.requestDate ? `요청일 : ${p.requestDate}` : "",
-    amount: dto.expectedRevenue || null,
-    date: p.submitDate || p.requestDate || "",
-  }));
+  (dto.proposals || []).forEach((p) => {
+    const dateSource = p.submitDate || p.requestDate || "";
+    historyItems.value.push({
+      type: "proposal",
+      icon: "mdi-file-document-outline",
+      label: "제안",
+      title: p.title,
+      description: `[${dto.clientCompanyName}] / [${p.writerName}]`,
+      meta: p.requestDate ? `요청일 : ${p.requestDate}` : "",
+      amount: dto.expectedRevenue || null,
+      date: formatDateLabel(dateSource),
+    });
+  });
 
   // 견적 이력
-  if (dto.estimates) {
-    dto.estimates.forEach((e) => {
-      historyItems.value.push({
-        type: "estimate",
-        icon: "mdi-calculator-variant",
-        label: "견적",
-        title: e.title,
-        description: `[${dto.clientCompanyName}] / [${e.writerName}]`,
-        meta: `작성일 : ${e.createdDate}`,
-        amount: e.totalAmount,
-        date: e.createdDate,
-      });
+  (dto.estimates || []).forEach((e) => {
+    historyItems.value.push({
+      type: "estimate",
+      icon: "mdi-calculator-variant",
+      label: "견적",
+      title: e.title,
+      description: `[${dto.clientCompanyName}] / [${e.writerName}]`,
+      meta: `작성일 : ${e.createdDate}`,
+      amount: e.totalAmount,
+      date: formatDateLabel(e.createdDate),
     });
-  }
+  });
+
+  // 매출 이력
+  (dto.revenues || []).forEach((r) => {
+    historyItems.value.push({
+      type: "revenue",
+      icon: "mdi-cash-multiple",
+      label: "매출",
+      title: `[매출] 총 금액 ${formatAmount(r.totalPrice)}원`,
+      description: r.remark || "",
+      meta:
+        r.baseRentSnapshot != null
+          ? `기준 임대료: ${formatAmount(r.baseRentSnapshot)}원`
+          : "",
+      amount: r.totalPrice,
+      date: formatDateLabel(r.createdAt),
+    });
+  });
 };
 
-/* 이하 나머지 코드는 기존과 동일 */
+/* 이하 기존 코드 동일 */
 
 const loadClients = async () => {
   const params = {
@@ -754,7 +785,6 @@ onMounted(async () => {
   applyDetailDto(res.data);
 });
 </script>
-
 
 <style scoped>
 .detail-container {
