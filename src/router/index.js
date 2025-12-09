@@ -40,7 +40,7 @@ const routes = [
     component: LoginPage,
     meta: { hideHeader: true, hideFooter: true },
   },
-  { path: "/", redirect: "/home" },
+  { path: "/", redirect: "/login" },
   { path: "/mypage", name: "MyPage", component: MyPage },
   { path: "/home", name: "Home", component: StatsDashboard },
   { path: "/calendar", name: "Calendar", component: CalendarPage },

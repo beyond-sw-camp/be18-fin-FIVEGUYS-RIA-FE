@@ -1,7 +1,13 @@
 <template>
   <v-container fluid class="detail-container">
     <!-- 스낵바 -->
-    <v-snackbar v-model="snackbar" :color="snackbarColor" timeout="2500" location="top center" class="toast-snackbar">
+    <v-snackbar
+      v-model="snackbar"
+      :color="snackbarColor"
+      timeout="2500"
+      location="top center"
+      class="toast-snackbar"
+    >
       {{ snackbarMessage }}
     </v-snackbar>
 
@@ -9,7 +15,11 @@
     <v-row class="align-center justify-space-between mb-4">
       <v-col cols="auto">
         <h2 class="project-title">{{ form.projectName }}</h2>
-        <v-chip :color="project.status === '진행중' ? 'orange darken-2' : 'grey'" size="small" class="mr-2 white--text">
+        <v-chip
+          :color="project.status === '진행중' ? 'orange darken-2' : 'grey'"
+          size="small"
+          class="mr-2 white--text"
+        >
           {{ project.status }}
         </v-chip>
       </v-col>
@@ -20,12 +30,20 @@
       <v-col cols="12">
         <div class="pipeline-full">
           <template v-for="(step, i) in project.pipeline" :key="i">
-            <div class="pipeline-step" :class="step.completed ? 'completed' : 'pending'"
-              @click="openPipelineConfirm(i + 1)">
+            <div
+              class="pipeline-step"
+              :class="step.completed ? 'completed' : 'pending'"
+              @click="openPipelineConfirm(i + 1)"
+            >
               {{ step.name }}
             </div>
-            <div v-if="i < project.pipeline.length - 1" class="pipeline-line" :class="project.pipeline[i + 1].completed ? 'completed' : 'pending'
-              "></div>
+            <div
+              v-if="i < project.pipeline.length - 1"
+              class="pipeline-line"
+              :class="
+                project.pipeline[i + 1].completed ? 'completed' : 'pending'
+              "
+            ></div>
           </template>
           <div class="progress-text">{{ project.progress }}%</div>
         </div>
@@ -42,81 +60,160 @@
               <!-- 프로젝트명 : 한 줄 전체 -->
               <v-col cols="12" md="12">
                 <div class="input-label">프로젝트명</div>
-                <v-text-field v-model="form.projectName" placeholder="프로젝트명을 입력하세요" variant="outlined"
-                  class="input-field" hide-details />
+                <v-text-field
+                  v-model="form.projectName"
+                  placeholder="프로젝트명을 입력하세요"
+                  variant="outlined"
+                  class="input-field"
+                  hide-details
+                />
               </v-col>
 
               <!-- 고객사 + 고객사 담당자 같은 라인 -->
               <v-col cols="12" md="6">
                 <div class="input-label">고객사</div>
-                <v-text-field v-model="form.clientCompany" placeholder="고객사를 선택하세요" variant="outlined"
-                  class="input-field" hide-details readonly @click="clientDialog = true" />
+                <v-text-field
+                  v-model="form.clientCompany"
+                  placeholder="고객사를 선택하세요"
+                  variant="outlined"
+                  class="input-field"
+                  hide-details
+                  readonly
+                  @click="clientDialog = true"
+                />
               </v-col>
 
               <v-col cols="12" md="6">
                 <div class="input-label">고객사 담당자</div>
-                <v-text-field v-model="form.client" placeholder="고객사 담당자를 선택하세요" variant="outlined" class="input-field"
-                  hide-details readonly @click="clientPersonDialog = true" />
+                <v-text-field
+                  v-model="form.client"
+                  placeholder="고객사 담당자를 선택하세요"
+                  variant="outlined"
+                  class="input-field"
+                  hide-details
+                  readonly
+                  @click="clientPersonDialog = true"
+                />
               </v-col>
 
               <!-- 설명 -->
               <v-col cols="12">
                 <div class="input-label">설명(메모)</div>
-                <v-textarea v-model="form.description" placeholder="프로젝트 관련 메모를 입력하세요" variant="outlined" rows="3"
-                  class="input-field textarea-field" hide-details />
+                <v-textarea
+                  v-model="form.description"
+                  placeholder="프로젝트 관련 메모를 입력하세요"
+                  variant="outlined"
+                  rows="3"
+                  class="input-field textarea-field"
+                  hide-details
+                />
               </v-col>
 
               <!-- 영업 담당 -->
               <v-col cols="12" md="6">
                 <div class="input-label">영업 담당</div>
-                <v-text-field v-model="form.salesManager" placeholder="담당 직원을 선택하세요" variant="outlined"
-                  class="input-field" hide-details readonly @click="managerDialog = true" />
+                <v-text-field
+                  v-model="form.salesManager"
+                  placeholder="담당 직원을 선택하세요"
+                  variant="outlined"
+                  class="input-field"
+                  hide-details
+                  readonly
+                  @click="managerDialog = true"
+                />
               </v-col>
 
               <!-- 유형 -->
               <v-col cols="12" md="6">
                 <div class="input-label">유형</div>
-                <v-select v-model="form.salesType" :items="typeList" placeholder="판매 유형을 선택하세요" variant="outlined"
-                  class="input-field" hide-details dense solo />
+                <v-select
+                  v-model="form.salesType"
+                  :items="typeList"
+                  placeholder="판매 유형을 선택하세요"
+                  variant="outlined"
+                  class="input-field"
+                  hide-details
+                  dense
+                  solo
+                />
               </v-col>
 
               <!-- 상태 (읽기 전용) -->
               <v-col cols="12" md="6">
                 <div class="input-label">상태</div>
-                <v-text-field :model-value="project.status" readonly class="input-field readonly-field" hide-details />
+                <v-text-field
+                  :model-value="project.status"
+                  readonly
+                  class="input-field readonly-field"
+                  hide-details
+                />
               </v-col>
 
               <!-- 시작일 -->
               <v-col cols="12" md="6">
                 <div class="input-label">시작일</div>
-                <v-menu v-model="startMenu" :close-on-content-click="false" transition="scale-transition" offset-y
-                  min-width="auto">
+                <v-menu
+                  v-model="startMenu"
+                  :close-on-content-click="false"
+                  transition="scale-transition"
+                  offset-y
+                  min-width="auto"
+                >
                   <template #activator="{ props }">
-                    <v-text-field :model-value="formattedStartDate" placeholder="시작일" readonly v-bind="props"
-                      class="input-field" hide-details />
+                    <v-text-field
+                      :model-value="formattedStartDate"
+                      placeholder="시작일"
+                      readonly
+                      v-bind="props"
+                      class="input-field"
+                      hide-details
+                    />
                   </template>
-                  <v-date-picker v-model="form.startDate" @update:model-value="startMenu = false" />
+                  <v-date-picker
+                    v-model="form.startDate"
+                    @update:model-value="startMenu = false"
+                  />
                 </v-menu>
               </v-col>
 
               <!-- 종료일 -->
               <v-col cols="12" md="6">
                 <div class="input-label">종료일</div>
-                <v-menu v-model="endMenu" :close-on-content-click="false" transition="scale-transition" offset-y
-                  min-width="auto">
+                <v-menu
+                  v-model="endMenu"
+                  :close-on-content-click="false"
+                  transition="scale-transition"
+                  offset-y
+                  min-width="auto"
+                >
                   <template #activator="{ props }">
-                    <v-text-field :model-value="formattedEndDate" placeholder="종료일" readonly v-bind="props"
-                      class="input-field" hide-details />
+                    <v-text-field
+                      :model-value="formattedEndDate"
+                      placeholder="종료일"
+                      readonly
+                      v-bind="props"
+                      class="input-field"
+                      hide-details
+                    />
                   </template>
-                  <v-date-picker v-model="form.endDate" @update:model-value="endMenu = false" />
+                  <v-date-picker
+                    v-model="form.endDate"
+                    @update:model-value="endMenu = false"
+                  />
                 </v-menu>
               </v-col>
 
               <!-- 예상 매출 -->
               <v-col cols="12" md="6">
                 <div class="input-label">예상 매출액</div>
-                <v-text-field :model-value="formattedRevenue" placeholder="금액을 입력하세요" variant="outlined"
-                  class="input-field suffix-input" hide-details @update:model-value="updateRevenue">
+                <v-text-field
+                  :model-value="formattedRevenue"
+                  placeholder="금액을 입력하세요"
+                  variant="outlined"
+                  class="input-field suffix-input"
+                  hide-details
+                  @update:model-value="updateRevenue"
+                >
                   <template #append-inner>
                     <span class="suffix-text">원</span>
                   </template>
@@ -126,8 +223,14 @@
               <!-- 마진율 -->
               <v-col cols="12" md="6">
                 <div class="input-label">예상 마진율</div>
-                <v-text-field v-model.number="form.expectedMarginRate" placeholder="0~100" type="number"
-                  variant="outlined" class="input-field suffix-input" hide-details>
+                <v-text-field
+                  v-model.number="form.expectedMarginRate"
+                  placeholder="0~100"
+                  type="number"
+                  variant="outlined"
+                  class="input-field suffix-input"
+                  hide-details
+                >
                   <template #append-inner>
                     <span class="suffix-text">%</span>
                   </template>
@@ -137,16 +240,31 @@
               <!-- 자동계산 예상 이익 -->
               <v-col cols="12" md="6">
                 <div class="input-label">예상 이익</div>
-                <v-text-field :model-value="formattedProfit" readonly variant="outlined"
-                  class="input-field result-field" hide-details />
+                <v-text-field
+                  :model-value="formattedProfit"
+                  readonly
+                  variant="outlined"
+                  class="input-field result-field"
+                  hide-details
+                />
               </v-col>
             </v-row>
           </v-card-text>
           <v-card-actions class="justify-end actions-row">
-            <v-btn color="red darken-2" class="white--text mr-2" small @click="onDeleteProject">
+            <v-btn
+              color="red darken-2"
+              class="white--text mr-2"
+              small
+              @click="onDeleteProject"
+            >
               삭제하기
             </v-btn>
-            <v-btn color="orange darken-2" class="white--text" small @click="saveProject">
+            <v-btn
+              color="orange darken-2"
+              class="white--text"
+              small
+              @click="saveProject"
+            >
               저장하기
             </v-btn>
           </v-card-actions>
@@ -168,7 +286,14 @@
           </v-card>
 
           <!-- 개별 이력 카드 -->
-          <v-card v-for="(item, index) in historyItems" :key="index" class="history-card mb-3" elevation="0">
+          <v-card
+            v-for="(item, index) in historyItems"
+            :key="index"
+            class="history-card mb-3"
+            elevation="0"
+            @click="goToHistoryDetail(item)"
+            style="cursor: pointer"
+          >
             <div class="history-inner">
               <!-- 왼쪽 아이콘 + 세로 라인 -->
               <div class="history-left">
@@ -198,7 +323,7 @@
                 </div>
 
                 <div class="history-amount" v-if="item.amount">
-                  KRW {{ Number(item.amount).toLocaleString() }}
+                  KRW {{ formatAmount(item.amount) }}원
                 </div>
               </div>
             </div>
@@ -213,25 +338,49 @@
         <div class="dialog-title mb-3">고객사 선택</div>
 
         <div class="mb-2 d-flex">
-          <v-chip class="mr-2" :color="clientTypeFilter === 'ALL' ? 'orange darken-2' : undefined"
-            :text-color="clientTypeFilter === 'ALL' ? 'white' : undefined" @click="clientTypeFilter = 'ALL'">
+          <v-chip
+            class="mr-2"
+            :color="clientTypeFilter === 'ALL' ? 'orange darken-2' : undefined"
+            :text-color="clientTypeFilter === 'ALL' ? 'white' : undefined"
+            @click="clientTypeFilter = 'ALL'"
+          >
             전체
           </v-chip>
-          <v-chip class="mr-2" :color="clientTypeFilter === 'CLIENT' ? 'orange darken-2' : undefined
-            " :text-color="clientTypeFilter === 'CLIENT' ? 'white' : undefined" @click="clientTypeFilter = 'CLIENT'">
+          <v-chip
+            class="mr-2"
+            :color="
+              clientTypeFilter === 'CLIENT' ? 'orange darken-2' : undefined
+            "
+            :text-color="clientTypeFilter === 'CLIENT' ? 'white' : undefined"
+            @click="clientTypeFilter = 'CLIENT'"
+          >
             고객사
           </v-chip>
-          <v-chip :color="clientTypeFilter === 'LEAD' ? 'orange darken-2' : undefined"
-            :text-color="clientTypeFilter === 'LEAD' ? 'white' : undefined" @click="clientTypeFilter = 'LEAD'">
+          <v-chip
+            :color="clientTypeFilter === 'LEAD' ? 'orange darken-2' : undefined"
+            :text-color="clientTypeFilter === 'LEAD' ? 'white' : undefined"
+            @click="clientTypeFilter = 'LEAD'"
+          >
             잠재고객사
           </v-chip>
         </div>
 
-        <v-text-field v-model="clientSearch" placeholder="고객사명을 입력하세요" prepend-inner-icon="mdi-magnify"
-          variant="outlined" hide-details class="mb-3 input-field" />
+        <v-text-field
+          v-model="clientSearch"
+          placeholder="고객사명을 입력하세요"
+          prepend-inner-icon="mdi-magnify"
+          variant="outlined"
+          hide-details
+          class="mb-3 input-field"
+        />
 
         <v-list>
-          <v-list-item v-for="item in filteredClients" :key="item.id" @click="selectClient(item)" class="dialog-item">
+          <v-list-item
+            v-for="item in filteredClients"
+            :key="item.id"
+            @click="selectClient(item)"
+            class="dialog-item"
+          >
             {{ item.name }}
           </v-list-item>
         </v-list>
@@ -243,12 +392,22 @@
       <v-card class="pa-4">
         <div class="dialog-title mb-3">고객 담당자 선택</div>
 
-        <v-text-field v-model="clientPersonSearch" placeholder="검색" prepend-inner-icon="mdi-magnify" variant="outlined"
-          hide-details class="mb-3 input-field" />
+        <v-text-field
+          v-model="clientPersonSearch"
+          placeholder="검색"
+          prepend-inner-icon="mdi-magnify"
+          variant="outlined"
+          hide-details
+          class="mb-3 input-field"
+        />
 
         <v-list>
-          <v-list-item v-for="p in filteredClientPersons" :key="p.id" @click="selectClientPerson(p)"
-            class="dialog-item">
+          <v-list-item
+            v-for="p in filteredClientPersons"
+            :key="p.id"
+            @click="selectClientPerson(p)"
+            class="dialog-item"
+          >
             {{ p.name }}
           </v-list-item>
         </v-list>
@@ -260,19 +419,34 @@
       <v-card class="pa-4">
         <div class="dialog-title mb-3">영업 관리자 선택</div>
 
-        <v-text-field v-model="managerSearch" placeholder="검색" prepend-inner-icon="mdi-magnify" variant="outlined"
-          hide-details class="mb-3 input-field" />
+        <v-text-field
+          v-model="managerSearch"
+          placeholder="검색"
+          prepend-inner-icon="mdi-magnify"
+          variant="outlined"
+          hide-details
+          class="mb-3 input-field"
+        />
 
         <v-list>
-          <v-list-item v-for="m in filteredManagers" :key="m.userId" @click="selectManager(m)" class="dialog-item"
-            :class="{ 'selected-item': selectedManagerId === m.userId }">
+          <v-list-item
+            v-for="m in filteredManagers"
+            :key="m.userId"
+            @click="selectManager(m)"
+            class="dialog-item"
+            :class="{ 'selected-item': selectedManagerId === m.userId }"
+          >
             <v-list-item-title>{{ m.name }}</v-list-item-title>
           </v-list-item>
         </v-list>
 
         <v-card-actions class="justify-end mt-2">
-          <v-btn color="orange darken-2" class="white--text" :disabled="!selectedManagerId"
-            @click="confirmManagerSelect">
+          <v-btn
+            color="orange darken-2"
+            class="white--text"
+            :disabled="!selectedManagerId"
+            @click="confirmManagerSelect"
+          >
             선택하기
           </v-btn>
         </v-card-actions>
@@ -291,10 +465,18 @@
           단계로 변경하시겠습니까?
         </div>
         <v-card-actions class="justify-end">
-          <v-btn variant="text" color="grey darken-1" @click="pipelineConfirmDialog = false">
+          <v-btn
+            variant="text"
+            color="grey darken-1"
+            @click="pipelineConfirmDialog = false"
+          >
             아니오
           </v-btn>
-          <v-btn color="orange darken-2" class="white--text" @click="confirmChangePipelineStage">
+          <v-btn
+            color="orange darken-2"
+            class="white--text"
+            @click="confirmChangePipelineStage"
+          >
             예
           </v-btn>
         </v-card-actions>
@@ -365,6 +547,22 @@ const showSuccess = (msg = "저장이 완료되었습니다.") => {
   snackbar.value = true;
 };
 
+/* 날짜 라벨 포맷: yyyy-MM-dd만 사용 */
+const formatDateLabel = (value) => {
+  if (!value) return "";
+  const s = String(value);
+  return s.length >= 10 ? s.slice(0, 10) : s;
+};
+
+/* 금액 포맷: 소수점 없이 정수만 */
+const formatAmount = (val) => {
+  if (val == null || isNaN(val)) return "";
+  return Number(val).toLocaleString(undefined, {
+    maximumFractionDigits: 0,
+    minimumFractionDigits: 0,
+  });
+};
+
 /* 파이프라인 변경 확인용 상태 */
 const pipelineConfirmDialog = ref(false);
 const targetStageNo = ref(null);
@@ -393,8 +591,6 @@ const targetStageName = computed(() => {
 const changePipelineStage = async (targetStageNoParam) => {
   try {
     if (!project.pipelineId) {
-      // 실제 DTO에는 pipelineInfo.pipelineId 항상 내려오므로
-      // 여기 걸린다면 DTO 문제 또는 초기 로딩 이전 클릭 케이스
       showError(null, "파이프라인 ID를 찾을 수 없습니다.");
       return;
     }
@@ -496,17 +692,14 @@ const applyDetailDto = (dto) => {
   project.statusCode = dto.status;
   project.status = translateStatus(dto.status);
 
-  // 진행률
   project.progress = dto.pipelineInfo?.progressRate ?? 0;
 
-  // 파이프라인 스텝: DTO 그대로 사용
   project.pipeline = (dto.stageList || []).map((s) => ({
     stageNo: s.stageNo,
     name: s.stageName,
     completed: s.completed === true,
   }));
 
-  // 파이프라인 ID는 pipelineInfo에서만 사용
   project.pipelineId = dto.pipelineInfo?.pipelineId ?? null;
 
   form.projectName = dto.title;
@@ -524,36 +717,59 @@ const applyDetailDto = (dto) => {
       ? (dto.expectedRevenue * dto.expectedMarginRate) / 100
       : null;
 
+  historyItems.value = [];
+
   // 제안 이력
-  historyItems.value = (dto.proposals || []).map((p) => ({
-    type: "proposal",
-    icon: "mdi-file-document-outline",
-    label: "제안",
-    title: p.title,
-    description: `[${dto.clientCompanyName}] / [${p.writerName}]`,
-    meta: p.requestDate ? `요청일 : ${p.requestDate}` : "",
-    amount: dto.expectedRevenue || null,
-    date: p.submitDate || p.requestDate || "",
-  }));
+  (dto.proposals || []).forEach((p) => {
+    const dateSource = p.submitDate || p.requestDate || "";
+    historyItems.value.push({
+      type: "proposal",
+      id: p.proposalId,
+      icon: "mdi-file-document-outline",
+      label: "제안",
+      title: p.title,
+      description: `[${dto.clientCompanyName}] / [${p.writerName}]`,
+      meta: p.requestDate ? `요청일 : ${p.requestDate}` : "",
+      amount: dto.expectedRevenue || null,
+      date: formatDateLabel(dateSource),
+    });
+  });
 
   // 견적 이력
-  if (dto.estimates) {
-    dto.estimates.forEach((e) => {
-      historyItems.value.push({
-        type: "estimate",
-        icon: "mdi-calculator-variant",
-        label: "견적",
-        title: e.title,
-        description: `[${dto.clientCompanyName}] / [${e.writerName}]`,
-        meta: `작성일 : ${e.createdDate}`,
-        amount: e.totalAmount,
-        date: e.createdDate,
-      });
+  (dto.estimates || []).forEach((e) => {
+    historyItems.value.push({
+      type: "estimate",
+      id: e.estimateId,
+      icon: "mdi-calculator-variant",
+      label: "견적",
+      title: e.title,
+      description: `[${dto.clientCompanyName}] / [${e.writerName}]`,
+      meta: `작성일 : ${e.createdDate}`,
+      amount: e.totalAmount,
+      date: formatDateLabel(e.createdDate),
     });
-  }
+  });
+
+  // 매출 이력
+  (dto.revenues || []).forEach((r) => {
+    historyItems.value.push({
+      type: "revenue",
+      id: r.revenueId,
+      icon: "mdi-cash-multiple",
+      label: "매출",
+      title: `[매출] 총 금액 ${formatAmount(r.totalPrice)}원`,
+      description: r.remark || "",
+      meta:
+        r.baseRentSnapshot != null
+          ? `기준 임대료: ${formatAmount(r.baseRentSnapshot)}원`
+          : "",
+      amount: r.totalPrice,
+      date: formatDateLabel(r.createdAt),
+    });
+  });
 };
 
-/* 이하 나머지 코드는 기존과 동일 */
+/* 이하 기존 코드 동일 */
 
 const loadClients = async () => {
   const params = {
@@ -747,6 +963,30 @@ const saveProject = async () => {
   }
 };
 
+const goToHistoryDetail = (item) => {
+  if (!item?.id) return;
+
+  switch (item.type) {
+    case "proposal":
+      router.push(`/proposal/${item.id}`);
+      break;
+
+    case "estimate":
+      router.push(`/estimate/${item.id}`);
+      break;
+
+    case "contract":
+      router.push(`/contract/${item.id}`);
+      break;
+
+    case "revenue":
+      router.push(`/revenue/${item.id}`);
+      break;
+
+    default:
+      console.warn("Unknown history type:", item.type);
+  }
+};
 onMounted(async () => {
   const projectId = route.params.projectId || route.params.id;
   if (!projectId) return;
@@ -754,7 +994,6 @@ onMounted(async () => {
   applyDetailDto(res.data);
 });
 </script>
-
 
 <style scoped>
 .detail-container {
