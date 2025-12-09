@@ -2,7 +2,6 @@
 <template>
     <v-container fluid class="pa-0 full-height">
         <v-row no-gutters class="full-height">
-
             <!-- 좌측: 고객사 정보 -->
             <v-col cols="12" md="4" class="pa-4">
                 <v-card outlined class="pa-3 full-height-card">
@@ -19,8 +18,12 @@
                             <template v-for="(value, key) in clientCompany" :key="key">
                                 <v-list-item v-if="shouldShowCompanyField(key)">
                                     <v-list-item>
-                                        <v-list-item-title>{{ value }}</v-list-item-title>
-                                        <v-list-item-subtitle>{{ formatCompanyLabel(key) }}</v-list-item-subtitle>
+                                        <v-list-item-title>
+                                            {{ formatCompanyValue(key, value) }}
+                                        </v-list-item-title>
+                                        <v-list-item-subtitle>
+                                            {{ formatCompanyLabel(key) }}
+                                        </v-list-item-subtitle>
                                     </v-list-item>
                                 </v-list-item>
                             </template>
@@ -32,8 +35,7 @@
             <!-- 중앙 컬럼: 고객 담당자 목록 / 상세 -->
             <v-col cols="12" md="4" class="pa-4 d-flex flex-column">
                 <v-card outlined class="pa-3 full-height-card"
-                    style="display: flex; flex-direction: column; width:100%; box-sizing:border-box;">
-
+                    style="display: flex; flex-direction: column; width: 100%; box-sizing: border-box;">
                     <!-- 상단: 고객 검색 + 즐겨찾기 버튼 -->
                     <div class="d-flex mb-2">
                         <v-text-field v-model="customerSearch" append-inner-icon="mdi-magnify" placeholder="고객 검색" dense
@@ -49,9 +51,10 @@
                     <div class="scroll-area list-area mb-2">
                         <v-row dense no-gutters>
                             <v-col v-for="customer in filteredCustomers" :key="customer.id" cols="12" class="mb-2">
-                                <v-card outlined class="pa-2 customer-item-card"
-                                    :class="{ 'selected-card': selectedCustomer && selectedCustomer.id === customer.id }"
-                                    @click="toggleSelectCustomer(customer)">
+                                <v-card outlined class="pa-2 customer-item-card" :class="{
+                                    'selected-card':
+                                        selectedCustomer && selectedCustomer.id === customer.id
+                                }" @click="toggleSelectCustomer(customer)">
                                     <v-row align="center" justify="space-between" no-gutters>
                                         <v-col class="pa-0">
                                             <div class="label text-caption mb-1">이름</div>
@@ -71,9 +74,7 @@
 
                     <!-- 고객 등록 버튼 -->
                     <div class="d-flex justify-end mb-2">
-                        <v-btn color="#ff9500" outlined @click="openModal">
-                            고객 등록
-                        </v-btn>
+                        <v-btn color="#ff9500" outlined @click="openModal">고객 등록</v-btn>
                     </div>
 
                     <!-- 하단: 선택된 고객 상세 정보 -->
@@ -115,7 +116,6 @@
                             </v-row>
                         </div>
                     </v-card>
-
                 </v-card>
             </v-col>
 
@@ -131,14 +131,14 @@
                             <v-row no-gutters>
                                 <v-col>
                                     <div class="text-subtitle-2 font-weight-bold">
-                                        {{ item.title }}
+                                        {{ formatHistoryText(item.title) }}
                                     </div>
                                     <div class="text-body-2 grey--text text--darken-1 mt-1">
-                                        {{ item.content }}
+                                        {{ formatHistoryText(item.content) }}
                                     </div>
                                     <div class="text-caption mt-2">
-                                        {{ item.projectTitle }} ({{ item.projectTypeLabel }} · {{
-                                        item.projectStatusLabel }})
+                                        {{ item.projectTitle }} ({{ item.projectTypeLabel }} ·
+                                        {{ item.projectStatusLabel }})
                                     </div>
                                 </v-col>
                                 <v-col cols="4" class="d-flex flex-column align-end">
@@ -323,14 +323,14 @@ const EVENT_ORDER = {
     REVENUE: 5
 }
 
-const toKoreanProjectType = (t) => {
+const toKoreanProjectType = t => {
     if (t === 'RENTAL') return '입점'
     if (t === 'POPUP') return '팝업'
     if (t === 'EXHIBITION') return '전시회'
     return t || '-'
 }
 
-const toKoreanProjectStatus = (s) => {
+const toKoreanProjectStatus = s => {
     if (s === 'ACTIVE') return '진행중'
     if (s === 'PENDING') return '준비중'
     if (s === 'COMPLETED') return '완료'
@@ -338,7 +338,7 @@ const toKoreanProjectStatus = (s) => {
     return s || '-'
 }
 
-const loadHistoryByClient = async (clientId) => {
+const loadHistoryByClient = async clientId => {
     try {
         if (!clientId) {
             historyEvents.value = []
@@ -419,19 +419,19 @@ const filteredCustomers = computed(() => {
     return list
 })
 
-const toggleSelectCustomer = async (customer) => {
+const toggleSelectCustomer = async customer => {
     if (selectedCustomer.value?.id === customer.id) {
         selectedCustomer.value = null
         historyEvents.value = []
     } else {
         selectedCustomer.value = customer
-        await loadHistoryByClient(customer.clientId) // LEAD/CLIENT 구분 없이 clientId로 조회
+        await loadHistoryByClient(customer.clientId)
     }
 }
 
 const filteredHistory = computed(() => historyEvents.value)
 
-const toggleFavorite = (customer) => {
+const toggleFavorite = customer => {
     customer.favorite = !customer.favorite
 }
 
@@ -479,8 +479,8 @@ const submitClient = async () => {
     }
 }
 
-// 회사 필드 포맷
-const formatCompanyLabel = (key) => {
+// 회사 필드 포맷: 라벨
+const formatCompanyLabel = key => {
     const map = {
         website: '웹 사이트',
         businessNumber: '사업자 번호',
@@ -492,7 +492,7 @@ const formatCompanyLabel = (key) => {
         area: '면적',
         openingDate: '입점일',
         contractPeriod: '계약 기간',
-        totalRent: '임대료',
+        totalRent: '누적 임대료',
         commissionRate: '매출 수수료율',
         category: '카테고리',
         type: '유형',
@@ -500,6 +500,52 @@ const formatCompanyLabel = (key) => {
         updatedAt: '수정일'
     }
     return map[key] || key
+}
+
+// 금액 포맷 공통 함수: 소숫점 제거 + 천단위 콤마 + 원 추가
+const formatMoneyValue = (raw) => {
+    if (raw === null || raw === undefined || raw === '') return '-'
+
+    const str = String(raw)
+    const match = str.match(/(\d[\d.,]*)/)
+    if (!match) return raw
+
+    const prefix = str.slice(0, match.index)
+    const suffix = str.slice(match.index + match[0].length)
+    const numericStr = match[0].replace(/,/g, '')
+    const num = Number(numericStr)
+
+    if (Number.isNaN(num)) return raw
+
+    const intPart = Math.trunc(num)
+
+    // 금액이 아닌 일반 숫자(예: 연도 등)는 원 붙이지 않음
+    if (!match[0].includes('.') && Math.abs(intPart) < 10000) {
+        return raw
+    }
+
+    const formatted = intPart.toLocaleString('ko-KR')
+
+    return `${prefix}${formatted} 원${suffix}`
+}
+
+
+// 회사 필드 포맷: 값
+const formatCompanyValue = (key, value) => {
+    if (value === null || value === undefined || value === '') return '-'
+
+    const moneyKeyPattern = /(amount|total|rent|revenue|sales)/i
+    if (moneyKeyPattern.test(key)) {
+        return formatMoneyValue(value)
+    }
+
+    return value
+}
+
+// History 타이틀/내용 포맷
+const formatHistoryText = text => {
+    if (!text) return ''
+    return formatMoneyValue(text)
 }
 
 const hiddenCommonKeys = ['id', 'name', 'category', 'type', 'createdAt', 'updatedAt']
@@ -513,8 +559,7 @@ const leaseOnlyKeys = [
     'commissionRate'
 ]
 
-// LEAD여도 여기서는 그대로 보여주고 싶으면 조건 제거하면 됨
-const shouldShowCompanyField = (key) => {
+const shouldShowCompanyField = key => {
     if (hiddenCommonKeys.includes(key)) return false
     if (clientCompany.type === 'LEAD' && leaseOnlyKeys.includes(key)) {
         return false
