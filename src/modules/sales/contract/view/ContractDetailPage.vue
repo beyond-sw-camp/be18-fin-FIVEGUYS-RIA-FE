@@ -180,7 +180,14 @@
 
             <v-row justify="center" class="mt-4">
               <v-col cols="12" md="8">
-                <v-btn color="success" block @click="onComplete">계약 완료</v-btn>
+                <v-btn
+                  color="success"
+                  block
+                  :disabled="completing || form.status === 'COMPLETED' || form.status === 'CANCELLED'"
+                  @click="onComplete"
+                >
+                  계약 완료
+                </v-btn>
               </v-col>
             </v-row>
           </v-card>
@@ -217,7 +224,7 @@
 <script setup>
 import { reactive, ref, computed, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { getContractDetail, cancelContract } from "@/apis/contract";
+import { getContractDetail, cancelContract, completeContract } from "@/apis/contract";
 
 const route = useRoute();
 const router = useRouter();
@@ -316,8 +323,52 @@ const onDelete = async () => {
   }
 };
 
-const onComplete = () => {
-  console.log("계약 완료 클릭");
+const completing = ref(false);
+const onComplete = async () => {
+  if (completing.value) return;
+  if (form.status === "COMPLETED") {
+    alert("이미 완료된 계약입니다.");
+    return;
+  }
+  if (form.status === "CANCELLED") {
+    alert("취소된 계약은 완료할 수 없습니다.");
+    return;
+  }
+
+
+  console.log("📝 onComplete 클릭됨");
+  console.log("📝 contractId:", contractId);
+  console.log("📝 form.spaces:", form.spaces);
+
+  const payload = {
+    contractId,
+    spaces: form.spaces.map(sp => ({
+      storeId: sp.storeId,
+      storeType: sp.storeType,
+      floorId: sp.floorId,
+      storeNumber: sp.storeNumber,
+    })),
+  };
+  console.log("📝 completeContract payload:", payload);
+
+  const ok = window.confirm("계약을 완료하시겠습니까?");
+  if (!ok) return;
+
+  completing.value = true;
+
+  try {
+
+    const { data } = await completeContract(contractId);
+    form.status = "COMPLETED";
+
+    alert("계약이 완료되었습니다.");
+    
+  } catch (err) {
+    console.error("계약 완료 실패", err);
+    alert("계약 완료 중 오류가 발생했습니다.");
+  } finally {
+    completing.value = false;
+  }
 };
 </script>
 
