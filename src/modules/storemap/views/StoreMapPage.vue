@@ -156,6 +156,12 @@ const dialog = ref(false);
 const selectedStoreId = ref(null);
 
 function openModal(area) {
+  selectedStoreId.value = null;
+
+  if (!area.storeId) {
+    dialog.value = true; // 공실 모달
+    return;
+  }
   selectedStoreId.value = area.storeId;
   dialog.value = true;
 }

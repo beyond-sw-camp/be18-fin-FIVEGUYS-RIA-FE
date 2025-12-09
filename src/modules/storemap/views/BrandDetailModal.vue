@@ -227,7 +227,13 @@ const displayName = computed(() =>
 watch(
   () => props.storeId,
   async (id) => {
-    if (!id) return;
+    
+    brand.value = {};
+    error.value = null;
+    loading.value = false;
+
+    if (id === null || id === undefined) return;
+
     await loadStoreDetail(id);
   },
   { immediate: true }
