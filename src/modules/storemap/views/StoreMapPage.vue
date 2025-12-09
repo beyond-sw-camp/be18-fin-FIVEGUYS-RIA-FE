@@ -1,16 +1,10 @@
 <template>
   <div class="map-container" ref="containerRef">
-
-    <!-- zoom + pan wrapper -->
+    
     <div
       class="zoom-wrapper"
-      :style="{
-        transform: `translate(${translateX}px, ${translateY}px) scale(${zoomLevel})`,
-        transformOrigin: 'top left'
-      }"
       ref="zoomWrapperRef"
     >
-
       <!-- floor image -->
       <div class="image-wrapper">
         <img
@@ -28,8 +22,8 @@
             :key="area.id"
             class="label-item"
             :style="{
-              left: area.textX + 'px',
-              top: area.textY + 'px',
+              left: area.textXPct + '%',
+              top: area.textYPct + '%',
               maxWidth: area.maxWidth + 'px'
             }"
           >
@@ -93,105 +87,71 @@ const currentFloor = computed(() => floorConfig[currentLevel.value]);
 const reloadSrc = ref("");
 watch(
   () => currentFloor.value.img,
-  img => (reloadSrc.value = `${img}?v=${Date.now()}`),
+  img => {
+    reloadSrc.value = img;
+  },
   { immediate: true }
 );
 
-/* ---------------------------
-   storeNamesMap (DB 매장 이름)
-----------------------------*/
+/* store names */
 const storeNamesMap = ref(new Map());
 
 async function loadStoreNames() {
-  try {
-    const res = await fetchStoreNames();
-    const map = new Map();
-    res.data.forEach(s => {
-      map.set(s.storeId, s.storeDisplayName);
-    });
-    storeNamesMap.value = map;
-  } catch (e) {
-    console.error("❌ Failed to load store names", e);
-  }
+  const res = await fetchStoreNames();
+  const map = new Map();
+  res.data.forEach(s => map.set(s.storeId, s.storeDisplayName));
+  storeNamesMap.value = map;
 }
 
 onMounted(loadStoreNames);
 
-/* ---------------------------
-   이미지 로드 이후 렌더링 다시 실행
-----------------------------*/
+/* 좌표 처리 */
 const imageRef = ref(null);
-
-watch(storeNamesMap, () => {
-  if (imageRef.value) {
-    handleImageLoad({ target: imageRef.value });
-  }
-});
-
-/* ---------------------------
-   좌표 스케일링
-----------------------------*/
 const renderedAreas = ref([]);
 
-watch(currentLevel, () => {
-  renderedAreas.value = [];
+watch(storeNamesMap, () => {
+  if (imageRef.value) handleImageLoad({ target: imageRef.value });
 });
 
-function getAreaBox(originalCoords, scaleX, scaleY) {
-  const nums = originalCoords.split(",").map(Number);
-  const xs = [], ys = [];
-
-  for (let i = 0; i < nums.length; i += 2) {
-    xs.push(nums[i] * scaleX);
-    ys.push(nums[i + 1] * scaleY);
-  }
-
-  return {
-    width: Math.max(...xs) - Math.min(...xs),
-  };
-}
-
-function scaleCoords(original, scaleX, scaleY) {
-  return original
-    .split(",")
-    .map(Number)
-    .map((c, i) => (i % 2 === 0 ? c * scaleX : c * scaleY))
-    .join(",");
-}
-
-/* ---------------------------
-   이미지 로딩 시 오버레이 적용
-----------------------------*/
-function handleImageLoad(event) {
-  const img = event.target;
-
+function handleImageLoad(e) {
+  const img = e.target;
   const scaleX = img.clientWidth / img.naturalWidth;
   const scaleY = img.clientHeight / img.naturalHeight;
 
   renderedAreas.value = currentFloor.value.areas.map(a => {
-    const sid = a.storeId ?? Number(a.id);
-
-    const storeName = storeNamesMap.value.get(sid);
-    const displayName =
-      storeName && storeName.trim() !== "" ? storeName : "공실";
-
-    const box = getAreaBox(a.coords, scaleX, scaleY);
+    const coordsNums = a.coords.split(",").map(Number);
 
     return {
       ...a,
-      storeId: sid,
-      scaledCoords: scaleCoords(a.coords, scaleX, scaleY),
-      textX: a.x * scaleX,
-      textY: a.y * scaleY,
-      maxWidth: box.width * 0.9,
-      displayName
+      // 이미지맵 영역은 여전히 스케일된 px 좌표 사용
+      scaledCoords: coordsNums
+        .map((c, i) => (i % 2 === 0 ? c * scaleX : c * scaleY))
+        .join(","),
+
+      
+      textXPct: (a.x / img.naturalWidth) * 100,
+      textYPct: (a.y / img.naturalHeight) * 100,
+
+      // 박스 폭은 그대로 px로 (브라우저 줌이 함께 키워줌)
+      maxWidth: 120,
+
+      displayName: storeNamesMap.value.get(a.storeId) || "공실"
     };
   });
+
+  setTimeout(() => {
+    const container = containerRef.value;
+    if (!container) return;
+
+    container.scrollTop =
+      (container.scrollHeight - container.clientHeight) / 2;
+
+  });
+
+  centerMapOnLoad();
 }
 
-/* ---------------------------
-   모달
-----------------------------*/
+/* modal */
 const dialog = ref(false);
 const selectedStoreId = ref(null);
 
@@ -200,78 +160,69 @@ function openModal(area) {
   dialog.value = true;
 }
 
-/* ---------------------------
-   zoom + pan
-----------------------------*/
-const zoomLevel = ref(1);
-const translateX = ref(0);
-const translateY = ref(0);
-
+/* zoom only (커스텀 줌 제거: 브라우저 줌만 사용) */
 const containerRef = ref(null);
 const zoomWrapperRef = ref(null);
 
-let isPanning = false;
-let startX = 0;
-let startY = 0;
+function centerMapOnLoad() {
+  const container = containerRef.value;
+  const img = imageRef.value;
 
-onMounted(() => {
-  containerRef.value.addEventListener(
-    "wheel",
-    e => {
-      if (e.ctrlKey) {
-        e.preventDefault();
-        zoomLevel.value += e.deltaY < 0 ? 0.1 : -0.1;
-        zoomLevel.value = Math.min(Math.max(zoomLevel.value, 0.5), 3);
-      }
-    },
-    { passive: false }
-  );
+  if (!container || !img) return;
 
-  zoomWrapperRef.value.addEventListener("mousedown", e => {
-    isPanning = true;
-    startX = e.clientX - translateX.value;
-    startY = e.clientY - translateY.value;
-  });
+  // 보정값 (px 단위)
+  const OFFSET_X = 120; // ← 이 값만 조정하면 됨
+  const OFFSET_Y = -200;   // 필요하면 나중에 사용
 
-  window.addEventListener("mousemove", e => {
-    if (!isPanning) return;
-    translateX.value = e.clientX - startX;
-    translateY.value = e.clientY - startY;
-  });
+  if (img.scrollWidth > container.clientWidth) {
+    container.scrollLeft =
+      (img.scrollWidth - container.clientWidth) / 2 + OFFSET_X;
+  }
 
-  window.addEventListener("mouseup", () => {
-    isPanning = false;
-  });
+  if (img.scrollHeight > container.clientHeight) {
+    container.scrollTop =
+      (img.scrollHeight - container.clientHeight) / 2 + OFFSET_Y;
+  }
+}
 
-  zoomWrapperRef.value.addEventListener("dblclick", () => {
-    zoomLevel.value = Math.min(zoomLevel.value + 0.2, 3);
-  });
-});
 </script>
 
 <style scoped>
 .map-container {
   width: 100%;
-  height: calc(100vh - 80px);
-  overflow: hidden;
+  height: 100%;
+
+  
+  overflow-x: auto;   /* 좌우 스크롤 유지 */
+  overflow-y: auto;   
+
   position: relative;
 }
-.zoom-wrapper { position: absolute; left: 0; top: 0; cursor: grab; }
-.zoom-wrapper:active { cursor: grabbing; }
-.image-wrapper { position: relative; }
-.map-image { max-width: 100%; display: block; }
-.label-overlay { position: absolute; top: 0; left: 0; width:100%; height:100%; pointer-events:none; }
+.zoom-wrapper {
+  position: relative;
+  display: inline-block;
+  cursor: default;
+}
+
+.image-wrapper {
+  position: relative;
+}
+
+.map-image {
+  display: block;
+}
+
+.label-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
 .label-item {
   position: absolute;
   transform: translate(-50%, -50%);
-  background: none;
-  padding: 0;
   font-size: 13px;
   font-weight: 600;
-  white-space: normal;
-  word-break: keep-all;
-  overflow-wrap: break-word;
-  line-height: 1.2;
   text-align: center;
 }
 </style>

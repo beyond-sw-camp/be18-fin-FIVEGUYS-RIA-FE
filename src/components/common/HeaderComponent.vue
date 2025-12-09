@@ -18,23 +18,23 @@
 
         <v-list>
         <v-list-item :to="{ name: 'Floor', params: { level: 'B1' } }">
-          <v-list-item-title>B1 HIGH JEWELRY & WATCH</v-list-item-title>
+          <v-list-item-title>B1</v-list-item-title>
         </v-list-item>
 
         <v-list-item :to="{ name: 'Floor', params: { level: '1F' } }">
-          <v-list-item-title>1F LUXURY BOUTIQUE & COSMETICS</v-list-item-title>
+          <v-list-item-title>1F</v-list-item-title>
         </v-list-item>
 
         <v-list-item :to="{ name: 'Floor', params: { level: '2F' } }">
-          <v-list-item-title>2F LUXURY BOUTIQUE & WOMEN'S COLLECTION</v-list-item-title>
+          <v-list-item-title>2F</v-list-item-title>
         </v-list-item>
 
         <v-list-item :to="{ name: 'Floor', params: { level: '3F' } }">
-          <v-list-item-title>3F WOMEN'S COLLECTION</v-list-item-title>
+          <v-list-item-title>3F</v-list-item-title>
         </v-list-item>
 
         <v-list-item :to="{ name: 'Floor', params: { level: '4F' } }">
-          <v-list-item-title>4F MEN'S LUXURY BOUTIQUE</v-list-item-title>
+          <v-list-item-title>4F</v-list-item-title>
             </v-list-item>
           </v-list>
         </v-menu>

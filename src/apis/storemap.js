@@ -24,7 +24,7 @@ export const getSpaces = async (floorId) => {
 // GET /api/stores/{storeId}/detailstats
 // ------------------------------------------------------
 export function fetchStoreDetailStats(storeId) {
-  return api.get(`/api/stores/${storeId}/detailstats`);
+  return api.get(`/api/stores/${storeId}/details`);
 }
 
 // ------------------------------------------------------
