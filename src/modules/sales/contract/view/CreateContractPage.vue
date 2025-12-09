@@ -18,7 +18,9 @@
             <v-row dense>
               <!-- 계약 제목 -->
               <v-col cols="12">
-                <div class="input-label">계약 제목</div>
+                <div class="input-label">
+                  계약 제목 <span class="required">*</span>
+                </div>
                 <v-text-field
                   v-model="form.contractTitle"
                   class="input-field"
@@ -30,7 +32,9 @@
 
               <!-- 프로젝트 선택 -->
               <v-col cols="12">
-                <div class="input-label">프로젝트</div>
+                <div class="input-label">
+                  프로젝트 <span class="required">*</span>
+                </div>
                 <v-text-field
                   v-model="form.projectName"
                   placeholder="프로젝트 선택"
@@ -40,18 +44,28 @@
                   readonly
                   @click="projectDialog = true"
                 />
+                <v-btn
+                  v-if="form.projectId"
+                  icon
+                  @click.stop="clearProject"
+                  small
+                  class="ml-2 ios-clear-btn"
+                >
+                  <v-icon size="20">mdi-close-circle</v-icon>
+                </v-btn>
                 <ProjectSelectModal
                   v-model="projectDialog"
                   @select="onSelectProject"
                 />
               </v-col>
+              
 
-              <!-- 견적 선택 -->
+              <!-- 견적 선택 (옵션) -->
               <v-col cols="12">
                 <div class="input-label">견적 선택</div>
                 <v-text-field
                   v-model="selectedEstimateTitle"
-                  placeholder="견적 선택"
+                  placeholder="견적 선택 (선택 사항)"
                   class="input-field"
                   variant="outlined"
                   hide-details
@@ -61,13 +75,25 @@
                 <EstimateSelectModal
                   v-model="estimateDialog"
                   :project-id="form.projectId"
+                  :nullable="true"
                   @select="onSelectEstimate"
                 />
+                <v-btn
+                  v-if="form.estimateId"
+                  icon
+                  @click.stop="clearEstimate"
+                  small
+                  class="ml-2 ios-clear-btn"
+                >
+                  <v-icon size="20">mdi-close-circle</v-icon>
+                </v-btn>
               </v-col>
 
               <!-- 고객사 / 담당 고객 -->
               <v-col cols="12" md="6">
-                <div class="input-label">고객사</div>
+                <div class="input-label">
+                  고객사 <span class="required">*</span>
+                </div>
                 <v-text-field
                   v-model="form.clientCompanyName"
                   class="input-field"
@@ -78,7 +104,9 @@
                 />
               </v-col>
               <v-col cols="12" md="6">
-                <div class="input-label">담당 고객</div>
+                <div class="input-label">
+                  담당 고객 <span class="required">*</span>
+                </div>
                 <v-text-field
                   v-model="form.clientName"
                   class="input-field"
@@ -91,7 +119,9 @@
 
               <!-- 계약 시작일 / 마감일 -->
               <v-col cols="12" md="6">
-                <div class="input-label">계약 시작일</div>
+                <div class="input-label">
+                  계약 시작일 <span class="required">*</span>
+                </div>
                 <v-menu v-model="contractStartMenu" :close-on-content-click="false">
                   <template #activator="{ props }">
                     <v-text-field
@@ -111,7 +141,9 @@
                 </v-menu>
               </v-col>
               <v-col cols="12" md="6">
-                <div class="input-label">계약 마감일</div>
+                <div class="input-label">
+                  계약 마감일 <span class="required">*</span>
+                </div>
                 <v-menu v-model="contractEndMenu" :close-on-content-click="false">
                   <template #activator="{ props }">
                     <v-text-field
@@ -133,7 +165,9 @@
 
               <!-- 계약 유형 / 계약일 -->
               <v-col cols="12" md="6">
-                <div class="input-label">계약 유형</div>
+                <div class="input-label">
+                  계약 유형 <span class="required">*</span>
+                </div>
                 <v-select
                   v-model="form.contractType"
                   :items="contractTypes"
@@ -145,7 +179,9 @@
                 />
               </v-col>
               <v-col cols="12" md="6">
-                <div class="input-label">계약일</div>
+                <div class="input-label">
+                  계약일 <span class="required">*</span>
+                </div>
                 <v-menu v-model="contractDateMenu" :close-on-content-click="false">
                   <template #activator="{ props }">
                     <v-text-field
@@ -186,6 +222,7 @@
                   variant="outlined"
                   hide-details
                   placeholder="예: 10"
+                  :readonly="form.contractType === 'LEASE'"
                 />
               </v-col>
 
@@ -209,7 +246,9 @@
 
               <!-- 결제 조건 / 화폐 -->
               <v-col cols="12" md="6">
-                <div class="input-label">결제 조건</div>
+                <div class="input-label">
+                  결제 조건 <span class="required">*</span>
+                </div>
                 <v-select
                   v-model="form.paymentCondition"
                   :items="paymentOptions"
@@ -221,7 +260,9 @@
                 />
               </v-col>
               <v-col cols="12" md="6">
-                <div class="input-label">화폐</div>
+                <div class="input-label">
+                  화폐 <span class="required">*</span>
+                </div>
                 <v-select
                   v-model="form.currency"
                   :items="currencyOptions"
@@ -250,7 +291,9 @@
         <!-- 우측 공간 정보 카드 -->
         <v-col cols="12" md="6">
           <v-card elevation="2" class="space-info-card pa-4">
-            <div class="section-title">공간 정보</div>
+            <div class="section-title">
+              공간 정보 <span class="required">*</span>
+            </div>
             <v-divider class="section-divider mb-3"></v-divider>
 
             <v-card
@@ -313,7 +356,7 @@
                 <v-col cols="12" md="6">
                   <div class="input-label">임대료</div>
                   <v-text-field
-                    :value="sp.rentPrice ? sp.rentPrice.toLocaleString() + '원' : ''"
+                    :value="form.contractType === 'CONSIGNMENT' ? '0원' : (sp.rentPrice ? sp.rentPrice.toLocaleString() + '원' : '')"
                     class="input-field"
                     readonly
                   />
@@ -390,7 +433,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from "vue";
+import { ref, reactive, computed, watch } from "vue";
 import { useRouter } from "vue-router";
 
 import ProjectSelectModal from "@/modules/sales/contract/components/ProjectSelectModal.vue";
@@ -400,13 +443,13 @@ import { createContract, getContractEstimateDetail } from "@/apis/contract";
 import { getSimpleClientCompanies, getSimpleClientsByCompany } from "@/apis/client";
 import { getFloors, getSpaces } from "@/apis/storemap";
 
-// ------------------ 다이얼로그 상태 ------------------
+/* ---- 다이얼로그 상태 ---- */
 const projectDialog = ref(false);
 const estimateDialog = ref(false);
 const companyDialog = ref(false);
 const clientDialog = ref(false);
 
-// ------------------ 스낵바 ------------------
+/* ---- 스낵바 ---- */
 const snackbar = ref(false);
 const snackbarMessage = ref("");
 const snackbarColor = ref("red");
@@ -423,7 +466,7 @@ const showSuccess = (msg = "계약이 생성되었습니다.") => {
 
 const router = useRouter();
 
-// ------------------ 폼 상태 ------------------
+/* ---- 폼 상태 ---- */
 const today = new Date();
 const form = reactive({
   contractTitle: "",
@@ -438,8 +481,8 @@ const form = reactive({
   contractEndDate: null,
   contractDate: today,
   contractAmount: null,
-  commissionRate: null,
-  contractType: "LEASE",
+  commissionRate: 0, // 초기값 0
+  contractType: "MIX",
   rentType: "MONTHLY",
   paymentCondition: "PREPAY",
   currency: "KRW",
@@ -460,13 +503,12 @@ const form = reactive({
   ],
 });
 
-// 선택한 견적명
 const selectedEstimateTitle = ref("");
 
 // 계약 유형 / 결제 / 화폐
 const contractTypes = [
-  { label: "임대차", value: "LEASE" },
-  { label: "위탁", value: "CONSIGNMENT" },
+  { label: "임대형", value: "LEASE" },
+  { label: "수수료형", value: "CONSIGNMENT" },
   { label: "혼합", value: "MIX" },
 ];
 const paymentOptions = [
@@ -479,25 +521,27 @@ const currencyOptions = [
   { label: "EUR", value: "EUR" },
 ];
 
-const storeTypeOptions = [
-  { label: "일반 매장", value: "REGULAR" },
-  { label: "팝업 스토어", value: "POPUP" },
-  { label: "전시회", value: "EXHIBITION" }
-];
-
 // 메뉴 상태
 const contractStartMenu = ref(false);
 const contractEndMenu = ref(false);
 const contractDateMenu = ref(false);
 
-// ------------------ 프로젝트 선택 ------------------
+/* ---- watch: 계약 유형 변경 시 수수료율 자동 조정 ---- */
+watch(() => form.contractType, (newType) => {
+  if (newType === "LEASE") {
+    form.commissionRate = 0;
+  }
+});
+
+/* ---- 프로젝트 선택 ---- */
 const onSelectProject = async (project) => {
   form.projectId = project.projectId;
-  form.projectName = project.title;
+  form.projectName = project.projectName;
 
-  form.clientCompanyId = null;
+  form.clientCompanyId = project.clientCompanyId ?? "";
   form.clientCompanyName = project.clientCompanyName || "";
-  form.clientId = null;
+
+  form.clientId = project.clientId ?? "";
   form.clientName = project.clientName || "";
 
   form.estimateId = null;
@@ -522,21 +566,59 @@ const onSelectProject = async (project) => {
   projectDialog.value = false;
 };
 
-// ------------------ 견적 선택 ------------------
+const clearProject = () => {
+  form.projectId = null;
+  form.projectName = "";
+  form.clientCompanyId = null;
+  form.clientCompanyName = "";
+  form.clientId = null;
+  form.clientName = "";
+  
+  // 견적도 같이 초기화할 경우
+  form.estimateId = null;
+  selectedEstimateTitle.value = "";
+  
+  // 공간 초기화
+  form.spaces = [
+    {
+      floorId: null,
+      floorName: "",
+      storeId: null,
+      storeNumber: "",
+      areaSize: null,
+      storeType: "",
+      rentPrice: null,
+      additionalFee: 0,
+      discountAmount: 0,
+      description: "",
+    },
+  ];
+  spaceStoreOptions.value = [[]];
+};
+
+
+/* ---- 견적 선택 ---- */
 const onSelectEstimate = async (estimate) => {
+  if (!estimate) {
+    form.estimateId = null;
+    selectedEstimateTitle.value = "";
+    return;
+  }
+
   if (!estimate?.estimateId) return showError("유효한 견적을 선택해주세요.");
+
   try {
     const { data } = await getContractEstimateDetail(estimate.estimateId);
+
     selectedEstimateTitle.value = data.estimateTitle;
     form.estimateId = data.estimateId;
 
-    form.clientCompanyId = data.clientCompanyId || form.clientCompanyId;
-    form.clientCompanyName = data.clientCompanyName || form.clientCompanyName;
-    form.clientId = data.clientId || form.clientId;
-    form.clientName = data.clientName || form.clientName;
-
-    form.paymentCondition = data.paymentCondition || form.paymentCondition;
-    form.remark = data.remark || form.remark;
+    if (data.clientCompanyId) form.clientCompanyId = data.clientCompanyId;
+    if (data.clientCompanyName) form.clientCompanyName = data.clientCompanyName;
+    if (data.clientId) form.clientId = data.clientId;
+    if (data.clientName) form.clientName = data.clientName;
+    if (data.paymentCondition) form.paymentCondition = data.paymentCondition;
+    if (data.remark) form.remark = data.remark;
 
     if (data.spaces?.length) {
       form.spaces = data.spaces.map(s => ({
@@ -546,28 +628,12 @@ const onSelectEstimate = async (estimate) => {
         storeNumber: s.storeNumber || "",
         areaSize: s.areaSize || "",
         storeType: s.storeType || "",
-        rentPrice: s.rentPrice || 0,
+        rentPrice: s.rentPrice != null ? s.rentPrice : 0,
         additionalFee: s.additionalFee || 0,
         discountAmount: s.discountAmount || 0,
         description: s.description || "",
       }));
       spaceStoreOptions.value = form.spaces.map(() => []);
-    } else {
-      form.spaces = [
-        {
-          floorId: null,
-          floorName: "",
-          storeId: null,
-          storeNumber: "",
-          areaSize: null,
-          storeType: "",
-          rentPrice: null,
-          additionalFee: 0,
-          discountAmount: 0,
-          description: "",
-        },
-      ];
-      spaceStoreOptions.value = [[]];
     }
   } catch (err) {
     showError(err, "견적 상세 조회 실패");
@@ -576,7 +642,30 @@ const onSelectEstimate = async (estimate) => {
   }
 };
 
-// ------------------ 고객사 / 담당 고객 ------------------
+const clearEstimate = () => {
+  form.estimateId = null;
+  selectedEstimateTitle.value = "";
+
+  form.remark = "";
+
+  // 공간 초기화
+  form.spaces = [
+    {
+      floorId: null,
+      floorName: "",
+      storeId: null,
+      storeNumber: "",
+      areaSize: null,
+      storeType: "",
+      rentPrice: null,
+      additionalFee: 0,
+      discountAmount: 0,
+      description: "",
+    },
+  ];
+  spaceStoreOptions.value = [[]];
+};
+/* ---- 고객사 / 담당 고객 ---- */
 const clientCompanies = ref([]);
 const clientPersons = ref([]);
 
@@ -598,29 +687,13 @@ const loadClients = async (companyId) => {
   }
 };
 
-const selectCompany = async (company) => {
-  form.clientCompanyId = company.companyId;
-  form.clientCompanyName = company.name;
-  form.clientId = null;
-  form.clientName = "";
-  await loadClients(company.companyId);
-  companyDialog.value = false;
-};
-
-const selectClient = (client) => {
-  form.clientId = client.clientId;
-  form.clientName = client.name;
-  clientDialog.value = false;
-};
-
-// ------------------ 공간 관련 ------------------
+/* ---- 공간 관련 ---- */
 const floorOptions = ref([]);
 const spaceStoreOptions = ref([[]]);
 
-// 층 목록 불러오기
 const loadFloors = async () => {
   try {
-    const { data } = await getFloors(1); // 빌딩 ID 1 예시
+    const { data } = await getFloors(1); 
     floorOptions.value = data.floors.map(f => ({
       id: f.floorId,
       label: f.floorName,
@@ -630,17 +703,14 @@ const loadFloors = async () => {
   }
 };
 
-// 층 선택 시 해당 층의 매장 목록 불러오기
 const onFloorChange = async (idx) => {
   const floorId = form.spaces[idx].floorId;
   if (!floorId) return;
 
   try {
     const { data } = await getSpaces(floorId);
-    console.log("매장 목록:", data.stores);
     spaceStoreOptions.value[idx] = data.stores ? [...data.stores] : [];
 
-    // 매장 초기화
     form.spaces[idx].storeId = null;
     form.spaces[idx].storeNumber = "";
     form.spaces[idx].areaSize = null;
@@ -651,7 +721,6 @@ const onFloorChange = async (idx) => {
   }
 };
 
-// 매장 선택 시 상세 정보 반영
 const onStoreChange = (idx) => {
   const sp = form.spaces[idx];
   const selected = spaceStoreOptions.value[idx].find(
@@ -659,18 +728,15 @@ const onStoreChange = (idx) => {
   );
   if (!selected) return;
 
-  console.log("선택된 매장:", selected);
-  console.log("storeType 타입:", typeof selected.storeType);
-
   sp.areaSize = selected.areaSize || null;
-  sp.storeType = selected.storeType || ""; // Enum 그대로, 화면에 표시
-  sp.rentPrice = selected.rentPrice || 0;
+  sp.storeType = selected.storeType || "";
   sp.storeNumber = selected.storeNumber || "";
   sp.description = selected.description || "";
-  sp.floorName = floorOptions.value.find(f => f.id === sp.floorId)?.label || "";
+
+  // CONSIGNMENT일 경우 임대료 0
+  sp.rentPrice = form.contractType === "CONSIGNMENT" ? 0 : (selected.rentPrice || 0);
 };
 
-// 공간 추가
 const addSpace = () => {
   form.spaces.push({
     floorId: null,
@@ -687,14 +753,13 @@ const addSpace = () => {
   spaceStoreOptions.value.push([]);
 };
 
-// 공간 삭제 (최소 1개 유지)
 const removeSpace = (idx) => {
   if (form.spaces.length <= 1) return;
   form.spaces.splice(idx, 1);
   spaceStoreOptions.value.splice(idx, 1);
 };
 
-// ------------------ 총 계약금액 ------------------
+/* ---- 총 계약금액 ---- */
 const totalContractAmount = computed(() => {
   const spaceTotal = form.spaces.reduce((sum, sp) => {
     const rent = sp.rentPrice || 0;
@@ -704,58 +769,61 @@ const totalContractAmount = computed(() => {
   }, 0);
 
   const contractAmount = form.contractAmount || 0;
-
   return spaceTotal + contractAmount;
 });
 
-// ------------------ 저장 ------------------
+/* ---- 저장 ---- */
 const saveContract = async () => {
+  if (!form.contractTitle) return showError("계약 제목을 입력해주세요!");
+  if (!form.projectId) return showError("프로젝트를 선택해주세요!");
+  if (!form.contractStartDate) return showError("계약 시작일을 선택해주세요!");
+  if (!form.contractEndDate) return showError("계약 마감일을 선택해주세요!");
+  if (!form.contractType) return showError("계약 유형을 선택해주세요!");
+  if (!form.contractDate) return showError("계약일을 선택해주세요!");
+  if (!form.paymentCondition) return showError("결제 조건을 선택해주세요!");
+  if (!form.currency) return showError("화폐를 선택해주세요!");
   if (!form.clientCompanyId) return showError("고객사를 선택해주세요!");
   if (!form.clientId) return showError("담당 고객을 선택해주세요!");
+  if (!form.spaces.length) return showError("최소 1개의 공간이 필요합니다!");
 
   const payload = {
-  contractTitle: form.contractTitle,
-  projectId: form.projectId,
-  estimateId: form.estimateId || null,
-  clientCompanyId: Number(form.clientCompanyId),
-  clientId: Number(form.clientId),
-  contractAmount: Number(form.contractAmount), // 보증금
-  commissionRate: form.commissionRate ? Number(form.commissionRate) : null,
-  contractType: form.contractType,       // LEASE, CONSIGNMENT, MIX
-  rentType: form.rentType || null,       // MONTHLY, YEARLY, FIXED
-  paymentCondition: form.paymentCondition || null, // PREPAY, POSTPAY
-  currency: form.currency,               // KRW, USD, EUR
-  contractStartDate: form.contractStartDate ? formatDate(form.contractStartDate) : null,
-  contractEndDate: form.contractEndDate ? formatDate(form.contractEndDate) : null,
-  contractDate: form.contractDate ? formatDate(form.contractDate) : null,
-  remark: form.remark || null,
-  spaces: form.spaces.map(sp => ({
-    storeId: sp.storeId ? Number(sp.storeId) : null,
-    additionalFee: sp.additionalFee ? Number(sp.additionalFee) : 0,
-    discountAmount: sp.discountAmount ? Number(sp.discountAmount) : 0,
-    description: sp.description || "",
-  })),
-};
-
-  console.log(this.payload);
+    contractTitle: form.contractTitle,
+    projectId: form.projectId,
+    estimateId: form.estimateId || null,
+    clientCompanyId: Number(form.clientCompanyId),
+    clientId: Number(form.clientId),
+    contractAmount: Number(form.contractAmount || 0),
+    commissionRate: form.contractType === "LEASE" ? 0 : (form.commissionRate != null ? Number(form.commissionRate) : null),
+    contractType: form.contractType,
+    rentType: form.rentType || null,
+    paymentCondition: form.paymentCondition,
+    currency: form.currency,
+    contractStartDate: formatDate(form.contractStartDate),
+    contractEndDate: formatDate(form.contractEndDate),
+    contractDate: formatDate(form.contractDate),
+    remark: form.remark || null,
+    spaces: form.spaces.map(sp => ({
+      storeId: sp.storeId ? Number(sp.storeId) : null,
+      additionalFee: sp.additionalFee ? Number(sp.additionalFee) : 0,
+      discountAmount: sp.discountAmount ? Number(sp.discountAmount) : 0,
+      description: sp.description || "",
+    })),
+  };
 
   try {
     await createContract(payload);
-    showSuccess("계약이 생성되었습니다.");
+    showSuccess();
     router.push("/contracts");
   } catch (err) {
-    console.log(err);             // 전체 에러 객체 확인
-    console.log(err.response);    // Axios 응답 확인
-    console.log(err.response?.data); // 서버가 보내는 데이터
     showError(err?.response?.data?.message || "계약 생성 실패");
   }
 };
 
-// ------------------ 초기화 ------------------
+/* ---- 초기화 ---- */
 loadFloors();
 loadCompanies();
 
-// ------------------ 헬퍼 ------------------
+/* ---- 헬퍼 ---- */
 const formatDate = (d) => {
   if (!d) return "";
   const dt = new Date(d);
@@ -863,5 +931,17 @@ const formatDate = (d) => {
   display: flex;
   justify-content: flex-end;
   margin-top: 12px;
+}
+
+.required {
+  color: red;
+}
+
+.ios-clear-btn {
+  background-color: transparent; /* 배경 없음 */
+  color: #888; /* 기본 아이콘 색 */
+  min-width: 0;
+  padding: 0;
+  transition: color 0.2s;
 }
 </style>

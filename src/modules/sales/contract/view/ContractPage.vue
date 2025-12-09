@@ -72,7 +72,7 @@
                         rounded="xl"
                     >
                     <!-- v-col 안 카드 -->
-                    <v-card outlined class="contract-card" elevation="2" rounded="xl">
+                    <v-card outlined class="contract-card" elevation="2" rounded="xl" @click="goToContractDetail(contract.contractId)">
                     <!-- 즐겨찾기 -->
                     <v-btn
                         small
@@ -246,6 +246,10 @@ onMounted(() => fetchContracts());
 
 const goToCreateContract = () => {
     router.push({ name: 'CreateContract' });
+};
+
+const goToContractDetail = (contractId) => {
+    router.push({ name: 'ContractDetail', params: { id: contractId } });
 };
 </script>
 
