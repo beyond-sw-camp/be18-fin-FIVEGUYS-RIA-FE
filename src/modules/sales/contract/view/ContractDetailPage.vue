@@ -73,55 +73,31 @@
               <!-- 계약 시작/마감일 -->
               <v-col cols="12" md="6">
                 <div class="input-label">계약 시작일</div>
-                <v-text-field
-                  :value="formatDate(form.contractStartDate)"
-                  class="input-field"
-                  readonly
-                />
+                <v-text-field :value="formatDate(form.contractStartDate)" class="input-field" readonly />
               </v-col>
               <v-col cols="12" md="6">
                 <div class="input-label">계약 마감일</div>
-                <v-text-field
-                  :value="formatDate(form.contractEndDate)"
-                  class="input-field"
-                  readonly
-                />
+                <v-text-field :value="formatDate(form.contractEndDate)" class="input-field" readonly />
               </v-col>
 
               <!-- 계약 유형 / 계약일 -->
               <v-col cols="12" md="6">
                 <div class="input-label">계약 유형</div>
-                <v-text-field
-                  :value="contractTypesMap[form.contractType]"
-                  class="input-field"
-                  readonly
-                />
+                <v-text-field :value="contractTypesMap[form.contractType]" class="input-field" readonly />
               </v-col>
               <v-col cols="12" md="6">
                 <div class="input-label">계약일</div>
-                <v-text-field
-                  :value="formatDate(form.contractDate)"
-                  class="input-field"
-                  readonly
-                />
+                <v-text-field :value="formatDate(form.contractDate)" class="input-field" readonly />
               </v-col>
 
               <!-- 보증금 / 수수료율 -->
               <v-col cols="6" md="6">
                 <div class="input-label">보증금</div>
-                <v-text-field
-                  :value="form.contractAmount?.toLocaleString()"
-                  class="input-field"
-                  readonly
-                />
+                <v-text-field :value="form.contractAmount?.toLocaleString()" class="input-field" readonly />
               </v-col>
               <v-col cols="6" md="6">
                 <div class="input-label">수수료율(%)</div>
-                <v-text-field
-                  :value="form.commissionRate"
-                  class="input-field"
-                  readonly
-                />
+                <v-text-field :value="form.commissionRate" class="input-field" readonly />
               </v-col>
 
               <!-- 총 계약 금액 -->
@@ -143,30 +119,17 @@
               <!-- 결제 조건 / 화폐 -->
               <v-col cols="12" md="6">
                 <div class="input-label">결제 조건</div>
-                <v-text-field
-                  :value="paymentOptionsMap[form.paymentCondition]"
-                  class="input-field"
-                  readonly
-                />
+                <v-text-field :value="paymentOptionsMap[form.paymentCondition]" class="input-field" readonly />
               </v-col>
               <v-col cols="12" md="6">
                 <div class="input-label">화폐</div>
-                <v-text-field
-                  :value="currencyOptionsMap[form.currency]"
-                  class="input-field"
-                  readonly
-                />
+                <v-text-field :value="currencyOptionsMap[form.currency]" class="input-field" readonly />
               </v-col>
 
               <!-- 비고 -->
               <v-col cols="12">
                 <div class="input-label">비고</div>
-                <v-textarea
-                  v-model="form.remark"
-                  class="textarea-field"
-                  rows="3"
-                  readonly
-                />
+                <v-textarea v-model="form.remark" class="textarea-field" rows="3" readonly />
               </v-col>
             </v-row>
           </v-card>
@@ -178,11 +141,7 @@
             <div class="section-title">공간 정보</div>
             <v-divider class="section-divider mb-3"></v-divider>
 
-            <v-card
-              v-for="(sp, idx) in form.spaces"
-              :key="idx"
-              class="space-card pa-3 mb-3"
-            >
+            <v-card v-for="(sp, idx) in form.spaces" :key="idx" class="space-card pa-3 mb-3">
               <v-row dense>
                 <v-col cols="12" md="6">
                   <div class="input-label">층 선택</div>
@@ -202,11 +161,7 @@
                 </v-col>
                 <v-col cols="12" md="6">
                   <div class="input-label">임대료</div>
-                  <v-text-field
-                    :value="sp.rentPrice?.toLocaleString() + '원'"
-                    readonly
-                    class="input-field"
-                  />
+                  <v-text-field :value="sp.rentPrice?.toLocaleString() + '원'" readonly class="input-field" />
                 </v-col>
                 <v-col cols="12" md="6">
                   <div class="input-label">추가 비용</div>
@@ -222,24 +177,56 @@
                 </v-col>
               </v-row>
             </v-card>
+
+            <v-row justify="center" class="mt-4">
+              <v-col cols="12" md="8">
+                <v-btn color="success" block @click="onComplete">계약 완료</v-btn>
+              </v-col>
+            </v-row>
           </v-card>
         </v-col>
       </v-row>
+
+      <!-- 편집 / 삭제 버튼 -->
+      <div class="d-flex justify-end gap-3 mt-4">
+        <v-btn
+          color="orange darken-2"
+          class="white--text px-6"
+          rounded="lg"
+          elevation="2"
+          @click="editMode = true"
+        >
+          편집
+        </v-btn>
+
+        <v-btn
+          color="red darken-2"
+          class="white--text px-6"
+          rounded="lg"
+          elevation="2"
+          :disabled="deleting || form.status === 'CANCELLED'"
+          @click="onDelete"
+        >
+          삭제
+        </v-btn>
+      </div>
     </div>
   </v-container>
 </template>
 
 <script setup>
 import { reactive, ref, computed, onMounted } from "vue";
-import { useRoute } from "vue-router";
-import { getContractDetail } from "@/apis/contract";
+import { useRoute, useRouter } from "vue-router";
+import { getContractDetail, cancelContract } from "@/apis/contract";
 
 const route = useRoute();
+const router = useRouter();
 const contractId = route.params.id;
 
 const form = reactive({
   contractTitle: "",
   estimateId: null,
+  estimateName: "",
   projectId: null,
   projectName: "",
   clientCompanyId: null,
@@ -257,9 +244,11 @@ const form = reactive({
   currency: "",
   remark: "",
   spaces: [],
+  status: "", // 계약 상태
 });
 
 const selectedEstimateTitle = ref("");
+const deleting = ref(false);
 
 // 맵핑용
 const contractTypesMap = { LEASE: "임대형", CONSIGNMENT: "수수료형", MIX: "혼합" };
@@ -290,15 +279,46 @@ const totalContractAmount = computed(() => {
 onMounted(async () => {
   try {
     const { data } = await getContractDetail(contractId);
-
-    console.log("계약 상세 API 응답:", data);
-
     Object.assign(form, data);
-    selectedEstimateTitle.value = data.estimateTitle || "";
+    selectedEstimateTitle.value = data.estimateName || "";
   } catch (err) {
     console.error("계약 상세 조회 실패", err);
   }
 });
+
+const onEdit = () => {
+  console.log("편집 클릭");
+};
+
+// 삭제
+const onDelete = async () => {
+  if (deleting.value) return;
+  if (form.status === "CANCELLED") {
+    alert("이미 취소된 계약입니다.");
+    return;
+  }
+
+  const ok = window.confirm("계약을 취소하시겠습니까?");
+  if (!ok) return;
+
+  deleting.value = true;
+  try {
+    await cancelContract(contractId);
+    form.status = "CANCELLED"; // 상태 업데이트
+    alert("계약이 취소되었습니다.");
+
+    await router.push({ name: "Contract" });
+  } catch (err) {
+    console.error("계약 취소 실패", err);
+    alert("계약 취소 중 오류가 발생했습니다.");
+  } finally {
+    deleting.value = false;
+  }
+};
+
+const onComplete = () => {
+  console.log("계약 완료 클릭");
+};
 </script>
 
 <style scoped>
