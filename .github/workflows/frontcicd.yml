@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - develop
   pull_request:
     branches:
       - main
@@ -52,11 +53,11 @@ jobs:
           name: fe-dist
           path: dist
 
-  # 2) main 브랜치 push 시에만 S3 배포 + CloudFront 캐시 무효화
+  # 2) main / develop 브랜치 push 시 S3 배포 + CloudFront 캐시 무효화
   deploy-to-s3:
     needs: build
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
 
     steps:
       - name: Checkout

@@ -198,7 +198,7 @@
                 </div>
 
                 <div class="history-amount" v-if="item.amount">
-                  KRW {{ Number(item.amount).toLocaleString() }}원
+                  KRW {{ formatAmount(item.amount) }}원
                 </div>
               </div>
             </div>
@@ -217,12 +217,12 @@
             :text-color="clientTypeFilter === 'ALL' ? 'white' : undefined" @click="clientTypeFilter = 'ALL'">
             전체
           </v-chip>
-          <v-chip class="mr-2" :color="clientTypeFilter === 'CLIENT' ? 'orange darken-2' : undefined"
-            :text-color="clientTypeFilter === 'CLIENT' ? 'white' : undefined" @click="clientTypeFilter = 'CLIENT'">
+          <v-chip class="mr-2" :color="clientTypeFilter === 'CLIENT' ? 'orange darken-2' : undefined
+            " :text-color="clientTypeFilter === 'CLIENT' ? 'white' : undefined" @click="clientTypeFilter = 'CLIENT'">
             고객사
           </v-chip>
-          <v-chip :color="clientTypeFilter === 'LEAD' ? 'orange darken-2' : undefined"
-            :text-color="clientTypeFilter === 'LEAD' ? 'white' : undefined" @click="clientTypeFilter = 'LEAD'">
+          <v-chip :color="clientTypeFilter === 'LEAD' ? 'orange darken-2' : undefined
+            " :text-color="clientTypeFilter === 'LEAD' ? 'white' : undefined" @click="clientTypeFilter = 'LEAD'">
             잠재고객사
           </v-chip>
         </div>
@@ -363,6 +363,22 @@ const showSuccess = (msg = "저장이 완료되었습니다.") => {
   snackbarMessage.value = msg;
   snackbarColor.value = "success";
   snackbar.value = true;
+};
+
+/* 날짜 라벨 포맷: yyyy-MM-dd만 사용 */
+const formatDateLabel = (value) => {
+  if (!value) return "";
+  const s = String(value);
+  return s.length >= 10 ? s.slice(0, 10) : s;
+};
+
+/* 금액 포맷: 소수점 없이 정수만 */
+const formatAmount = (val) => {
+  if (val == null || isNaN(val)) return "";
+  return Number(val).toLocaleString(undefined, {
+    maximumFractionDigits: 0,
+    minimumFractionDigits: 0,
+  });
 };
 
 /* 파이프라인 변경 확인용 상태 */
@@ -523,6 +539,7 @@ const applyDetailDto = (dto) => {
 
   // 제안 이력
   (dto.proposals || []).forEach((p) => {
+    const dateSource = p.submitDate || p.requestDate || "";
     historyItems.value.push({
       type: "proposal",
       icon: "mdi-file-document-outline",
@@ -531,7 +548,7 @@ const applyDetailDto = (dto) => {
       description: `[${dto.clientCompanyName}] / [${p.writerName}]`,
       meta: p.requestDate ? `요청일 : ${p.requestDate}` : "",
       amount: dto.expectedRevenue || null,
-      date: p.submitDate || p.requestDate || "",
+      date: formatDateLabel(dateSource),
     });
   });
 
@@ -545,7 +562,7 @@ const applyDetailDto = (dto) => {
       description: `[${dto.clientCompanyName}] / [${e.writerName}]`,
       meta: `작성일 : ${e.createdDate}`,
       amount: e.totalAmount,
-      date: e.createdDate,
+      date: formatDateLabel(e.createdDate),
     });
   });
 
@@ -555,14 +572,14 @@ const applyDetailDto = (dto) => {
       type: "revenue",
       icon: "mdi-cash-multiple",
       label: "매출",
-      title: `[매출] 총 금액 ${Number(r.totalPrice).toLocaleString()}원`,
+      title: `[매출] 총 금액 ${formatAmount(r.totalPrice)}원`,
       description: r.remark || "",
       meta:
         r.baseRentSnapshot != null
-          ? `기준 임대료: ${Number(r.baseRentSnapshot).toLocaleString()}원`
+          ? `기준 임대료: ${formatAmount(r.baseRentSnapshot)}원`
           : "",
       amount: r.totalPrice,
-      date: r.createdAt,
+      date: formatDateLabel(r.createdAt),
     });
   });
 };
