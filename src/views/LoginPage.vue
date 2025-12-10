@@ -46,7 +46,7 @@ const handleLogin = async () => {
 
     <div class="right-section">
       <div class="login-box">
-        <h2>로그인 V1</h2>
+        <h2>로그인 V2</h2>
 
         <div class="input-group">
           <input
