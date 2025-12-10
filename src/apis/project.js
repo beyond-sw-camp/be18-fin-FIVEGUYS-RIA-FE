@@ -38,7 +38,7 @@ export const getProjectTitleMeta = (projectId) => {
 
 // 필요 없으면 나중에 정리
 export const getProjectMeta = (projectId) => {
-  return apiClient.get(`/api/projects/${projectId}`);
+  return apiClient.get(`/api/projects/titles/${projectId}`);
 };
 
 export const deleteProject = (projectId) => {
