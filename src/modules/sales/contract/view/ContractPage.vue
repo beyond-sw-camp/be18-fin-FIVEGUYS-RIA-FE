@@ -152,10 +152,14 @@ const totalPages = ref(0);
 const totalElements = ref(0);
 const loading = ref(false);
 
+const snackbar = ref(false);
+const snackbarMessage = ref("");
+const snackbarColor = ref("error");
+
 const router = useRouter();
 
 const sidebares = reactive([
-    { label: '제출됨', value: 'SUBMITTED', checked: false },
+    { label: '제출됨', value: 'SUBMITTED', checked: true },
     { label: '완료', value: 'COMPLETED', checked: false },
     { label: '취소됨', value: 'CANCELED', checked: false },
 ]);
@@ -187,25 +191,42 @@ const formatPrice = (price) => price?.toLocaleString() + '원';
 const fetchContracts = async (resetPage = false) => {
     if (resetPage) page.value = 1;
     loading.value = true;
+
     try {
         const activeStatuses = sidebares.filter(s => s.checked).map(s => s.value);
 
-        const { data } = await getContracts({
-        keyword: search.value || undefined,
-        status: activeStatuses.length === 1 ? activeStatuses[0] : undefined,
-        page: page.value,
-        size: size.value,
-    });
+        const response = await getContracts({
+            keyword: search.value || undefined,
+            status: activeStatuses.length === 1 ? activeStatuses[0] : undefined,
+            page: page.value,
+            size: size.value,
+        });
 
-    contracts.value = (data.data || []).map(c => ({
-        ...c,
-        isFavorite: c.isFavorite ?? false,
-    }));
+        const data = response?.data;
 
-    page.value = data.page;
-    size.value = data.size;
-    totalElements.value = data.totalCount;
-    totalPages.value = Math.ceil(data.totalCount / data.size);
+        if (!data || !data.data) {
+            snackbarMessage.value = "계약 정보를 불러올 수 없습니다.";
+            snackbarColor.value = "error";
+            snackbar.value = true;
+            contracts.value = [];
+            return;
+        }
+
+        contracts.value = data.data.map(c => ({
+            ...c,
+            isFavorite: c.isFavorite ?? false,
+        }));
+
+        page.value = data.page ?? 1;
+        size.value = data.size ?? 12;
+        totalElements.value = data.totalCount ?? 0;
+        totalPages.value = Math.max(1, Math.ceil((data.totalCount ?? 0) / size.value));
+
+    } catch (err) {
+        console.error(err);
+        snackbarMessage.value = "계약을 불러오는 중 오류가 발생했습니다.";
+        snackbarColor.value = "error";
+        snackbar.value = true;
     } finally {
         loading.value = false;
     }
@@ -249,6 +270,13 @@ const goToCreateContract = () => {
 };
 
 const goToContractDetail = (contractId) => {
+    if (!contractId) {
+        snackbarMessage.value = "계약 정보를 찾을 수 없습니다.";
+        snackbarColor.value = "error";
+        snackbar.value = true;
+        return;
+    }
+
     router.push({ name: 'ContractDetail', params: { id: contractId } });
 };
 </script>

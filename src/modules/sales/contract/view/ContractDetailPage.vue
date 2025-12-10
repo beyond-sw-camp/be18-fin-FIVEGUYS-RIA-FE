@@ -1,6 +1,10 @@
 <template>
   <v-container fluid class="page-wrapper">
     <div class="page-inner">
+      <!-- 스낵바 -->
+      <v-snackbar v-model="snackbar" :color="snackbarColor" timeout="2500">
+        {{ snackbarMessage }}
+      </v-snackbar>
       <div class="page-title">계약 상세</div>
 
       <v-row dense>
@@ -71,13 +75,17 @@
               </v-col>
 
               <!-- 계약 시작/마감일 -->
-              <v-col cols="12" md="6">
+              <v-col cols="12" md="4">
                 <div class="input-label">계약 시작일</div>
                 <v-text-field :value="formatDate(form.contractStartDate)" class="input-field" readonly />
               </v-col>
-              <v-col cols="12" md="6">
+              <v-col cols="12" md="4">
                 <div class="input-label">계약 마감일</div>
                 <v-text-field :value="formatDate(form.contractEndDate)" class="input-field" readonly />
+              </v-col>
+              <v-col cols="12" md="4">
+                <div class="input-label">계약일</div>
+                <v-text-field :value="formatDate(form.contractDate)" class="input-field" readonly />
               </v-col>
 
               <!-- 계약 유형 / 계약일 -->
@@ -85,9 +93,10 @@
                 <div class="input-label">계약 유형</div>
                 <v-text-field :value="contractTypesMap[form.contractType]" class="input-field" readonly />
               </v-col>
+              <!-- 담당자 -->
               <v-col cols="12" md="6">
-                <div class="input-label">계약일</div>
-                <v-text-field :value="formatDate(form.contractDate)" class="input-field" readonly />
+                <div class="input-label">담당자</div>
+                <v-text-field :value="form.createUserName" class="input-field" readonly />
               </v-col>
 
               <!-- 보증금 / 수수료율 -->
@@ -201,7 +210,7 @@
           class="white--text px-6"
           rounded="lg"
           elevation="2"
-          @click="editMode = true"
+          @click="goToEdit"
         >
           편집
         </v-btn>
@@ -229,6 +238,29 @@ import { getContractDetail, cancelContract, completeContract } from "@/apis/cont
 const route = useRoute();
 const router = useRouter();
 const contractId = route.params.id;
+
+/* ---- 스낵바 ---- */
+const snackbar = ref(false);
+const snackbarMessage = ref("");
+const snackbarColor = ref("red");
+
+// 오류용
+const showError = (errOrMsg, fallback = "오류가 발생했습니다.") => {
+  const msg = typeof errOrMsg === "string"
+    ? errOrMsg
+    : errOrMsg?.response?.data?.message || fallback;
+
+  snackbarMessage.value = msg;
+  snackbarColor.value = "red";
+  snackbar.value = true;
+};
+
+// 성공용
+const showSuccess = (msg = "성공했습니다.") => {
+  snackbarMessage.value = msg;
+  snackbarColor.value = "green";
+  snackbar.value = true;
+};
 
 const form = reactive({
   contractTitle: "",
@@ -290,18 +322,23 @@ onMounted(async () => {
     selectedEstimateTitle.value = data.estimateName || "";
   } catch (err) {
     console.error("계약 상세 조회 실패", err);
+    showError(err, "계약 상세 조회 실패");
   }
 });
 
-const onEdit = () => {
-  console.log("편집 클릭");
+const goToEdit = () => {
+  if (form.status === "COMPLETED" || form.status === "CANCELED") {
+    showError("완료되거나 취소된 계약은 편집할 수 없습니다.");
+    return;
+  }
+  router.push(`/contract/${route.params.id}/edit`);
 };
 
 // 삭제
 const onDelete = async () => {
   if (deleting.value) return;
   if (form.status === "CANCELLED") {
-    alert("이미 취소된 계약입니다.");
+    showError("이미 취소된 계약입니다.");
     return;
   }
 
@@ -312,12 +349,11 @@ const onDelete = async () => {
   try {
     await cancelContract(contractId);
     form.status = "CANCELLED"; // 상태 업데이트
-    alert("계약이 취소되었습니다.");
-
+    showSuccess("계약이 취소되었습니다.");
     await router.push({ name: "Contract" });
   } catch (err) {
     console.error("계약 취소 실패", err);
-    alert("계약 취소 중 오류가 발생했습니다.");
+    showError(err, "계약 취소 중 오류가 발생했습니다.");
   } finally {
     deleting.value = false;
   }
@@ -326,46 +362,27 @@ const onDelete = async () => {
 const completing = ref(false);
 const onComplete = async () => {
   if (completing.value) return;
+
   if (form.status === "COMPLETED") {
-    alert("이미 완료된 계약입니다.");
+    showError("이미 완료된 계약입니다.");
     return;
   }
   if (form.status === "CANCELLED") {
-    alert("취소된 계약은 완료할 수 없습니다.");
+    showError("취소된 계약은 완료할 수 없습니다.");
     return;
   }
-
-
-  console.log("📝 onComplete 클릭됨");
-  console.log("📝 contractId:", contractId);
-  console.log("📝 form.spaces:", form.spaces);
-
-  const payload = {
-    contractId,
-    spaces: form.spaces.map(sp => ({
-      storeId: sp.storeId,
-      storeType: sp.storeType,
-      floorId: sp.floorId,
-      storeNumber: sp.storeNumber,
-    })),
-  };
-  console.log("📝 completeContract payload:", payload);
 
   const ok = window.confirm("계약을 완료하시겠습니까?");
   if (!ok) return;
 
   completing.value = true;
-
   try {
-
     const { data } = await completeContract(contractId);
     form.status = "COMPLETED";
-
-    alert("계약이 완료되었습니다.");
-    
+    showSuccess("계약이 완료되었습니다.");
   } catch (err) {
     console.error("계약 완료 실패", err);
-    alert("계약 완료 중 오류가 발생했습니다.");
+    showError(err, "계약 완료 중 오류가 발생했습니다.");
   } finally {
     completing.value = false;
   }
@@ -433,5 +450,14 @@ const onComplete = async () => {
   padding-top: 3px !important;
   padding-bottom: 3px !important;
   border-radius: 6px !important;
+}
+
+.input-field :deep(.v-field::before),
+.textarea-field :deep(.v-field::before),
+.input-field :deep(.v-field::after),
+.textarea-field :deep(.v-field::after) {
+  opacity: 0 !important;
+  background: transparent !important;
+  display: none !important;
 }
 </style>
