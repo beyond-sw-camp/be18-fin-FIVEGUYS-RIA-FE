@@ -521,7 +521,9 @@ const showSuccess = (msg) => {
 /* ------------ Utils ------------ */
 const formatDate = (date) => {
   if (!date) return null;
-  return new Date(date).toISOString().substring(0, 10);
+  const d = new Date(date);
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().substring(0, 10);
 };
 
 /* ====================================================================== */
