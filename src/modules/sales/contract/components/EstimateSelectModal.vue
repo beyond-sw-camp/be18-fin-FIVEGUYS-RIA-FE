@@ -92,7 +92,7 @@ const loadEstimates = async () => {
     const { data } = await api.get("/api/contracts/estimates", {
       params: {
         projectId: props.projectId,
-        status: "COMPLETED",
+        status: "SUBMITTED",
         limit: 50,
       },
     });
