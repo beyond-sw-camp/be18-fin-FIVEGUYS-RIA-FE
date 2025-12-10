@@ -498,7 +498,12 @@ const showSuccess = (msg) => {
 };
 
 /* ===================== Utils ===================== */
-const formatDate = (d) => (d ? new Date(d).toISOString().substring(0, 10) : "");
+const formatDate = (date) => {
+  if (!date) return null;
+  const d = new Date(date);
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().substring(0, 10);
+};
 
 /* ===================== FILTER LIST ===================== */
 const filteredProjects = computed(() =>
