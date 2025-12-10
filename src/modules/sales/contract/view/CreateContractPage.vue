@@ -58,7 +58,6 @@
                   @select="onSelectProject"
                 />
               </v-col>
-              
 
               <!-- 견적 선택 (옵션) -->
               <v-col cols="12">
@@ -122,7 +121,10 @@
                 <div class="input-label">
                   계약 시작일 <span class="required">*</span>
                 </div>
-                <v-menu v-model="contractStartMenu" :close-on-content-click="false">
+                <v-menu
+                  v-model="contractStartMenu"
+                  :close-on-content-click="false"
+                >
                   <template #activator="{ props }">
                     <v-text-field
                       :value="formatDate(form.contractStartDate)"
@@ -144,7 +146,10 @@
                 <div class="input-label">
                   계약 마감일 <span class="required">*</span>
                 </div>
-                <v-menu v-model="contractEndMenu" :close-on-content-click="false">
+                <v-menu
+                  v-model="contractEndMenu"
+                  :close-on-content-click="false"
+                >
                   <template #activator="{ props }">
                     <v-text-field
                       :value="formatDate(form.contractEndDate)"
@@ -182,7 +187,10 @@
                 <div class="input-label">
                   계약일 <span class="required">*</span>
                 </div>
-                <v-menu v-model="contractDateMenu" :close-on-content-click="false">
+                <v-menu
+                  v-model="contractDateMenu"
+                  :close-on-content-click="false"
+                >
                   <template #activator="{ props }">
                     <v-text-field
                       :value="formatDate(form.contractDate)"
@@ -236,7 +244,7 @@
                     ₩{{ totalContractAmount.toLocaleString() }}
                     <span
                       v-if="form.commissionRate && form.commissionRate > 0"
-                      style="font-size: 0.8rem; color: #555; margin-left: 6px;"
+                      style="font-size: 0.8rem; color: #555; margin-left: 6px"
                     >
                       + α × {{ form.commissionRate }}%
                     </span>
@@ -356,7 +364,13 @@
                 <v-col cols="12" md="6">
                   <div class="input-label">임대료</div>
                   <v-text-field
-                    :value="form.contractType === 'CONSIGNMENT' ? '0원' : (sp.rentPrice ? sp.rentPrice.toLocaleString() + '원' : '')"
+                    :value="
+                      form.contractType === 'CONSIGNMENT'
+                        ? '0원'
+                        : sp.rentPrice
+                        ? sp.rentPrice.toLocaleString() + '원'
+                        : ''
+                    "
                     class="input-field"
                     readonly
                   />
@@ -440,7 +454,10 @@ import ProjectSelectModal from "@/modules/sales/contract/components/ProjectSelec
 import EstimateSelectModal from "@/modules/sales/contract/components/EstimateSelectModal.vue";
 
 import { createContract, getContractEstimateDetail } from "@/apis/contract";
-import { getSimpleClientCompanies, getSimpleClientsByCompany } from "@/apis/client";
+import {
+  getSimpleClientCompanies,
+  getSimpleClientsByCompany,
+} from "@/apis/client";
 import { getFloors, getSpaces } from "@/apis/storemap";
 
 /* ---- 다이얼로그 상태 ---- */
@@ -531,11 +548,14 @@ const contractEndMenu = ref(false);
 const contractDateMenu = ref(false);
 
 /* ---- watch: 계약 유형 변경 시 수수료율 자동 조정 ---- */
-watch(() => form.contractType, (newType) => {
-  if (newType === "LEASE") {
-    form.commissionRate = 0;
+watch(
+  () => form.contractType,
+  (newType) => {
+    if (newType === "LEASE") {
+      form.commissionRate = 0;
+    }
   }
-});
+);
 
 /* ---- 프로젝트 선택 ---- */
 const onSelectProject = async (project) => {
@@ -577,11 +597,11 @@ const clearProject = () => {
   form.clientCompanyName = "";
   form.clientId = null;
   form.clientName = "";
-  
+
   // 견적도 같이 초기화할 경우
   form.estimateId = null;
   selectedEstimateTitle.value = "";
-  
+
   // 공간 초기화
   form.spaces = [
     {
@@ -599,7 +619,6 @@ const clearProject = () => {
   ];
   spaceStoreOptions.value = [[]];
 };
-
 
 /* ---- 견적 선택 ---- */
 const onSelectEstimate = async (estimate) => {
@@ -625,7 +644,7 @@ const onSelectEstimate = async (estimate) => {
     if (data.remark) form.remark = data.remark;
 
     if (data.spaces?.length) {
-      form.spaces = data.spaces.map(s => ({
+      form.spaces = data.spaces.map((s) => ({
         floorId: s.floorId,
         floorName: s.floorName || "",
         storeId: s.storeId,
@@ -697,8 +716,8 @@ const spaceStoreOptions = ref([[]]);
 
 const loadFloors = async () => {
   try {
-    const { data } = await getFloors(1); 
-    floorOptions.value = data.floors.map(f => ({
+    const { data } = await getFloors(1);
+    floorOptions.value = data.floors.map((f) => ({
       id: f.floorId,
       label: f.floorName,
     }));
@@ -728,7 +747,7 @@ const onFloorChange = async (idx) => {
 const onStoreChange = (idx) => {
   const sp = form.spaces[idx];
   const selected = spaceStoreOptions.value[idx].find(
-    s => String(s.storeId) === String(sp.storeId)
+    (s) => String(s.storeId) === String(sp.storeId)
   );
   if (!selected) return;
 
@@ -738,7 +757,8 @@ const onStoreChange = (idx) => {
   sp.description = selected.description || "";
 
   // CONSIGNMENT일 경우 임대료 0
-  sp.rentPrice = form.contractType === "CONSIGNMENT" ? 0 : (selected.rentPrice || 0);
+  sp.rentPrice =
+    form.contractType === "CONSIGNMENT" ? 0 : selected.rentPrice || 0;
 };
 
 const addSpace = () => {
@@ -778,6 +798,47 @@ const totalContractAmount = computed(() => {
 
 /* ---- 저장 ---- */
 const saveContract = async () => {
+  if (!form.contractTitle) return showError("계약 제목을 입력해주세요!");
+  if (!form.projectId) return showError("프로젝트를 선택해주세요!");
+  if (!form.contractStartDate) return showError("계약 시작일을 선택해주세요!");
+  if (!form.contractEndDate) return showError("계약 마감일을 선택해주세요!");
+  if (!form.contractType) return showError("계약 유형을 선택해주세요!");
+  if (!form.contractDate) return showError("계약일을 선택해주세요!");
+  if (!form.paymentCondition) return showError("결제 조건을 선택해주세요!");
+  if (!form.currency) return showError("화폐를 선택해주세요!");
+  if (!form.clientCompanyId) return showError("고객사를 선택해주세요!");
+  if (!form.clientId) return showError("담당 고객을 선택해주세요!");
+  if (!form.spaces.length) return showError("최소 1개의 공간이 필요합니다!");
+
+  const payload = {
+    contractTitle: form.contractTitle,
+    projectId: form.projectId,
+    estimateId: form.estimateId || null,
+    clientCompanyId: Number(form.clientCompanyId),
+    clientId: Number(form.clientId),
+    contractAmount: Number(form.contractAmount || 0),
+    commissionRate:
+      form.contractType === "LEASE"
+        ? 0
+        : form.commissionRate != null
+        ? Number(form.commissionRate)
+        : null,
+    contractType: form.contractType,
+    rentType: form.rentType || null,
+    paymentCondition: form.paymentCondition,
+    currency: form.currency,
+    contractStartDate: formatDate(form.contractStartDate),
+    contractEndDate: formatDate(form.contractEndDate),
+    contractDate: formatDate(form.contractDate),
+    remark: form.remark || null,
+    spaces: form.spaces.map((sp) => ({
+      storeId: sp.storeId ? Number(sp.storeId) : null,
+      additionalFee: sp.additionalFee ? Number(sp.additionalFee) : 0,
+      discountAmount: sp.discountAmount ? Number(sp.discountAmount) : 0,
+      description: sp.description || "",
+    })),
+  };
+
   try {
     // --- 1. 필수값 체크 ---
     if (!form.contractTitle) return showError("계약 제목을 입력해주세요!");
@@ -850,7 +911,7 @@ const saveContract = async () => {
     await createContract(payload);
     router.push("/contract");
     showSuccess();
-
+    router.push("/contract");
   } catch (err) {
     showError(err?.response?.data?.message || "계약 생성 실패");
   }

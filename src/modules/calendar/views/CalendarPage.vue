@@ -341,7 +341,7 @@ export default {
 
       const summary =
         this.selectedMemo.summary ||
-        this.selectedMemo.description.slice(0, 5) + "...";
+        this.selectedMemo.description.slice(0, 5) + "..."
 
       const memo = {
         summary,
@@ -533,7 +533,7 @@ export default {
   font-size: 13px;
 }
 
-/* 버튼 */
+/* 버튼: outline 스타일로 변경 */
 .action-btn,
 .delete-btn {
   width: 100%;
@@ -541,18 +541,19 @@ export default {
   border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
-  border: none;
   cursor: pointer;
+  background: transparent;
+  border: 2px solid;
 }
 
 .action-btn {
-  background: #4a8cff;
-  color: white;
+  color: #f2a23a;
+  border-color: #f2a23a;
 }
 
 .delete-btn {
-  background: #ff6b6b;
-  color: white;
+  color: #ff6b6b;
+  border-color: #ff6b6b;
 }
 
 /* 달력 */
@@ -567,10 +568,11 @@ export default {
   margin-bottom: 6px;
 }
 
+/* 네비게이션 버튼도 outline */
 .nav-btn {
-  background: #e7f1ff;
-  border: 1px solid #bcd0f7;
-  color: #0d47a1;
+  background: transparent;
+  border: 2px solid #f2a23a;
+  color: #f2a23a;
   padding: 6px 12px;
   border-radius: 10px;
   cursor: pointer;
@@ -593,7 +595,7 @@ export default {
 }
 
 .today {
-  border: 2px solid #1976d2;
+  border: 2px solid #3a53f2;
 }
 
 .memo-item {
@@ -693,25 +695,32 @@ export default {
   margin-top: 10px;
 }
 
+/* 메모 패널 버튼도 outline 형태 */
 .popup-buttons button {
   padding: 10px 16px;
   border-radius: 10px;
-  border: none;
   cursor: pointer;
   font-weight: 600;
-  color: white;
+  background: transparent;
+  border: 2px solid;
 }
 
 .popup-buttons button:first-child {
-  background: #1976d2;
+  color: #f2a23a;
+  border-color: #f2a23a;
+  background: transparent;
 }
 
 .popup-buttons button:nth-child(2) {
-  background: #ef4444;
+  color: #ef4444;
+  border-color: #ef4444;
+  background: transparent;
 }
 
 .popup-buttons button:last-child {
-  background: #9ca3af;
+  color: #9ca3af;
+  border-color: #9ca3af;
+  background: transparent;
 }
 
 /* =======================

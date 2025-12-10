@@ -25,7 +25,7 @@
         <!-- Tabs -->
         <v-tabs
           v-model="tab"
-          color="primary"
+          color=#f2a23a
           align-tabs="center"
           class="fixed-tabs"
         >
@@ -174,7 +174,7 @@
 
       <v-card-actions>
         <v-spacer />
-        <v-btn color="primary" variant="flat" @click="close">확인</v-btn>
+        <v-btn color=#f2a23a variant="flat" @click="close">확인</v-btn>
       </v-card-actions>
 
     </v-card>
@@ -227,7 +227,13 @@ const displayName = computed(() =>
 watch(
   () => props.storeId,
   async (id) => {
-    if (!id) return;
+    
+    brand.value = {};
+    error.value = null;
+    loading.value = false;
+
+    if (id === null || id === undefined) return;
+
     await loadStoreDetail(id);
   },
   { immediate: true }

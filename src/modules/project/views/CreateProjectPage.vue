@@ -254,7 +254,7 @@ const loadManagers = async () => {
   managerList.value = (res.data || []).filter((u) => u.roleName !== 'ROLE_ADMIN')
 }
 
-const typeList = ['팝업 스토어', '전시회', '임대']
+const typeList = ['팝업 스토어', '전시회', '입점']
 
 const form = reactive({
   projectName: '',
@@ -390,7 +390,7 @@ const mapSalesTypeToEnum = (label) => {
       return 'POPUP'
     case '전시회':
       return 'EXHIBITION'
-    case '임대':
+    case '입점':
       return 'RENTAL'
     default:
       return null
