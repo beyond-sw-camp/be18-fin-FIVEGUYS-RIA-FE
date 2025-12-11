@@ -46,7 +46,7 @@ const handleLogin = async () => {
 
     <div class="right-section">
       <div class="login-box">
-        <h2>로그인 V2</h2>
+        <h2>로그인</h2>
 
         <div class="input-group">
           <input
@@ -65,11 +65,6 @@ const handleLogin = async () => {
             autocomplete="current-password"
             @keyup.enter="handleLogin"
           />
-        </div>
-
-        <div class="options">
-          <label><input type="checkbox" /> 아이디 저장</label>
-          <label><input type="checkbox" /> 자동 로그인</label>
         </div>
 
         <button class="login-btn" :disabled="loading" @click="handleLogin">
