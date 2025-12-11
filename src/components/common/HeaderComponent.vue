@@ -17,21 +17,16 @@
         </v-btn>
       </template>
       <v-list>
-        <v-list-item :to="{ name: 'Floor', params: { level: 'B1' } }"
-          ><v-list-item-title>B1</v-list-item-title></v-list-item
-        >
-        <v-list-item :to="{ name: 'Floor', params: { level: '1F' } }"
-          ><v-list-item-title>1F</v-list-item-title></v-list-item
-        >
-        <v-list-item :to="{ name: 'Floor', params: { level: '2F' } }"
-          ><v-list-item-title>2F</v-list-item-title></v-list-item
-        >
-        <v-list-item :to="{ name: 'Floor', params: { level: '3F' } }"
-          ><v-list-item-title>3F</v-list-item-title></v-list-item
-        >
-        <v-list-item :to="{ name: 'Floor', params: { level: '4F' } }"
-          ><v-list-item-title>4F</v-list-item-title></v-list-item
-        >
+        <v-list-item
+          :to="{ name: 'Floor', params: { level: 'B1' } }"><v-list-item-title>B1</v-list-item-title></v-list-item>
+        <v-list-item
+          :to="{ name: 'Floor', params: { level: '1F' } }"><v-list-item-title>1F</v-list-item-title></v-list-item>
+        <v-list-item
+          :to="{ name: 'Floor', params: { level: '2F' } }"><v-list-item-title>2F</v-list-item-title></v-list-item>
+        <v-list-item
+          :to="{ name: 'Floor', params: { level: '3F' } }"><v-list-item-title>3F</v-list-item-title></v-list-item>
+        <v-list-item
+          :to="{ name: 'Floor', params: { level: '4F' } }"><v-list-item-title>4F</v-list-item-title></v-list-item>
       </v-list>
     </v-menu>
 
@@ -44,12 +39,8 @@
         </v-btn>
       </template>
       <v-list>
-        <v-list-item :to="{ name: 'VipMemberList' }"
-          ><v-list-item-title>회원</v-list-item-title></v-list-item
-        >
-        <v-list-item :to="{ name: 'VipMember' }"
-          ><v-list-item-title>매출현황</v-list-item-title></v-list-item
-        >
+        <v-list-item :to="{ name: 'VipMemberList' }"><v-list-item-title>회원</v-list-item-title></v-list-item>
+        <v-list-item :to="{ name: 'VipMember' }"><v-list-item-title>매출현황</v-list-item-title></v-list-item>
       </v-list>
     </v-menu>
 
@@ -138,6 +129,7 @@ const logoutHandler = async () => {
   width: 32px;
   height: 32px;
   object-fit: contain;
-  margin-top: 3px; /* UI 균형 맞춤 */
+  margin-top: 3px;
+  /* UI 균형 맞춤 */
 }
 </style>

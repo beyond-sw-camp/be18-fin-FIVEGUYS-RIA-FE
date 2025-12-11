@@ -129,6 +129,11 @@ const totalElements = ref(0)
 
 const sales = ref([])
 
+// 담당자 드롭다운용 별도 상태
+const managerOptions = ref([
+    { title: '전체', value: null },
+])
+
 const mapStoreTypeToLabel = (type) => {
     if (type === 'REGULAR') return '입점'
     if (type === 'POPUP') return '팝업'
@@ -143,22 +148,23 @@ const mapLabelToStoreType = (label) => {
     return null
 }
 
+// 목록 조회 (필터 적용된 데이터)
 const loadSales = async (reset = false) => {
     if (reset) {
         page.value = 1
     }
 
     const params = {
-        page: page.value - 1, // 서버는 0-based
+        page: page.value - 1,
         size: size.value,
         keyword: keyword.value.trim() || null,
         storeType: mapLabelToStoreType(saleType.value),
-        sort: dateSort.value === '날짜 최신순' ? 'LATEST' : 'OLDEST'
+        sort: dateSort.value === '날짜 최신순' ? 'LATEST' : 'OLDEST',
     }
 
-    // 담당자 선택된 경우에만 파라미터 전송
+    // 담당자 필터 적용
     if (managerFilter.value != null) {
-        params.managerId = managerFilter.value // 백엔드 @RequestParam("managerId") Long managerId 기준
+        params.managerId = managerFilter.value
     }
 
     const res = await fetchRevenueList(params)
@@ -178,7 +184,7 @@ const loadSales = async (reset = false) => {
         settlementMonth: item.settlementMonth,
         saleAmount: Number(item.finalRevenue ?? 0),
         saleType: mapStoreTypeToLabel(item.storeType),
-        isFavorite: false
+        isFavorite: false,
     }))
 
     const totalCount = Number(data.totalCount ?? 0)
@@ -188,26 +194,43 @@ const loadSales = async (reset = false) => {
     totalPages.value = totalCount > 0 ? Math.ceil(totalCount / pageSize) : 0
 }
 
-onMounted(() => loadSales(true))
+// 담당자 옵션용 데이터는 필터 없이 한 번만 가져온다
+const loadManagerOptions = async () => {
+    const res = await fetchRevenueList({
+        page: 0,
+        size: 1000, // 충분히 크게
+        sort: 'LATEST',
+        // managerId 절대 넣지 않는다
+        // 다른 필터도 걸지 말고 전체 기준으로 가져오는 것이 안정적
+    })
 
-watch([saleType, dateSort, managerFilter, keyword], () => {
-    loadSales(true)
-})
-
-const managerOptions = computed(() => {
-    const result = [{ title: '전체', value: null }]
+    const data = res.data || {}
+    const items = Array.isArray(data.data) ? data.data : []
 
     const seen = new Set()
-    sales.value.forEach((s) => {
-        if (!s.managerId || seen.has(s.managerId)) return
-        seen.add(s.managerId)
-        result.push({
-            title: s.salesManager || '-',
-            value: s.managerId
+    const list = [{ title: '전체', value: null }]
+
+    items.forEach((item) => {
+        if (!item.managerId || seen.has(item.managerId)) return
+        seen.add(item.managerId)
+        list.push({
+            title: item.managerName || '-',
+            value: item.managerId,
         })
     })
 
-    return result
+    managerOptions.value = list
+}
+
+onMounted(async () => {
+    await Promise.all([
+        loadSales(true),
+        loadManagerOptions(),
+    ])
+})
+
+watch([saleType, dateSort, managerFilter, keyword], () => {
+    loadSales(true)
 })
 
 const toggleFavorite = (sale) => {
@@ -217,7 +240,6 @@ const toggleFavorite = (sale) => {
 const filteredSales = computed(() => {
     let list = sales.value.slice()
 
-    // 프론트에서 한 번 더 안전하게 담당자 필터
     if (managerFilter.value != null) {
         list = list.filter((s) => s.managerId === managerFilter.value)
     }
@@ -242,7 +264,7 @@ const goDetail = (sale) => {
     if (!sale?.id) return
     router.push({
         name: 'RevenueDetail',
-        params: { id: sale.id }
+        params: { id: sale.id },
     })
 }
 </script>

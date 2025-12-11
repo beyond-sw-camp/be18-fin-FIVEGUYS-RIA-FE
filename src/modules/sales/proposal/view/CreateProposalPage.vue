@@ -14,7 +14,7 @@
       <v-row dense class="container">
         <!-- 제안명 -->
         <v-col cols="12" md="6">
-          <div class="input-label">제안명</div>
+          <div class="input-label">제안명<span class="required">*</span></div>
           <v-text-field v-model="form.projectName" placeholder="제안명을 입력하세요" variant="outlined" class="input-field"
             hide-details />
         </v-col>
@@ -28,14 +28,14 @@
 
         <!-- 고객사 -->
         <v-col cols="12" md="6">
-          <div class="input-label">고객사</div>
+          <div class="input-label">고객사<span class="required">*</span></div>
           <v-text-field v-model="form.clientCompany" placeholder="고객사를 선택하세요" variant="outlined" class="input-field"
             hide-details readonly @click="clientDialog = true" />
         </v-col>
 
         <!-- 고객(담당자) -->
         <v-col cols="12" md="6">
-          <div class="input-label">고객 담당자</div>
+          <div class="input-label">고객 담당자<span class="required">*</span></div>
           <v-text-field v-model="form.client" placeholder="고객 담당자를 선택하세요" variant="outlined" class="input-field"
             hide-details readonly @click="clientPersonDialog = true" />
         </v-col>
@@ -52,7 +52,7 @@
           <div class="input-label">요청일</div>
           <v-menu v-model="startMenu" :close-on-content-click="false" offset-y>
             <template #activator="{ props }">
-              <v-text-field :model-value="formatDate(form.startDate)" placeholder="요청일" variant="outlined"
+              <v-text-field :model-value="formatDate(form.startDate)" placeholder="요청일을 선택하세요" variant="outlined"
                 class="input-field" hide-details readonly v-bind="props" />
             </template>
             <v-date-picker v-model="form.startDate" @update:model-value="startMenu = false" />
@@ -61,10 +61,10 @@
 
         <!-- 제출일 -->
         <v-col cols="12" md="3">
-          <div class="input-label">제출일</div>
+          <div class="input-label">제출일<span class="required">*</span></div>
           <v-menu v-model="endMenu" :close-on-content-click="false" offset-y>
             <template #activator="{ props }">
-              <v-text-field :model-value="formatDate(form.endDate)" placeholder="제출일" variant="outlined"
+              <v-text-field :model-value="formatDate(form.endDate)" placeholder="제안 최종 제출일을 선택하세요" variant="outlined"
                 class="input-field" hide-details readonly v-bind="props" />
             </template>
             <v-date-picker v-model="form.endDate" @update:model-value="endMenu = false" />
@@ -513,7 +513,7 @@ const saveProposal = async () => {
 
 .textarea-field :deep(.v-field__input) {
   font-size: 0.8rem !important;
-  padding-top: 14px !important;
+  padding-top: 16px !important;
   padding-bottom: 6px !important;
   align-items: flex-start !important;
 }
@@ -544,5 +544,9 @@ const saveProposal = async () => {
 
 .dialog-item:hover {
   background: #fff3e0 !important;
+}
+
+.required {
+  color: red;
 }
 </style>

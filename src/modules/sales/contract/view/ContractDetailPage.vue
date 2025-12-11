@@ -18,60 +18,32 @@
               <!-- 계약 제목 -->
               <v-col cols="12">
                 <div class="input-label">계약 제목</div>
-                <v-text-field
-                  v-model="form.contractTitle"
-                  class="input-field"
-                  variant="outlined"
-                  hide-details
-                  readonly
-                />
+                <v-text-field v-model="form.contractTitle" class="input-field" variant="outlined" hide-details
+                  readonly />
               </v-col>
 
               <!-- 프로젝트 -->
               <v-col cols="12">
                 <div class="input-label">프로젝트</div>
-                <v-text-field
-                  v-model="form.projectName"
-                  class="input-field"
-                  variant="outlined"
-                  hide-details
-                  readonly
-                />
+                <v-text-field v-model="form.projectName" class="input-field" variant="outlined" hide-details readonly />
               </v-col>
 
               <!-- 견적 (nullable) -->
               <v-col cols="12">
                 <div class="input-label">견적</div>
-                <v-text-field
-                  v-model="selectedEstimateTitle"
-                  class="input-field"
-                  variant="outlined"
-                  hide-details
-                  readonly
-                  placeholder="선택된 견적 없음"
-                />
+                <v-text-field v-model="selectedEstimateTitle" class="input-field" variant="outlined" hide-details
+                  readonly placeholder="선택된 견적 없음" />
               </v-col>
 
               <!-- 고객사 / 담당 고객 -->
               <v-col cols="12" md="6">
                 <div class="input-label">고객사</div>
-                <v-text-field
-                  v-model="form.clientCompanyName"
-                  class="input-field"
-                  variant="outlined"
-                  hide-details
-                  readonly
-                />
+                <v-text-field v-model="form.clientCompanyName" class="input-field" variant="outlined" hide-details
+                  readonly />
               </v-col>
               <v-col cols="12" md="6">
                 <div class="input-label">담당 고객</div>
-                <v-text-field
-                  v-model="form.clientName"
-                  class="input-field"
-                  variant="outlined"
-                  hide-details
-                  readonly
-                />
+                <v-text-field v-model="form.clientName" class="input-field" variant="outlined" hide-details readonly />
               </v-col>
 
               <!-- 계약 시작/마감일 -->
@@ -115,10 +87,8 @@
                   <div class="total-title">총 계약 금액</div>
                   <div class="total-price">
                     ₩{{ totalContractAmount.toLocaleString() }}
-                    <span
-                      v-if="form.commissionRate && form.commissionRate > 0"
-                      style="font-size: 0.8rem; color: #555; margin-left: 6px;"
-                    >
+                    <span v-if="form.commissionRate && form.commissionRate > 0"
+                      style="font-size: 0.8rem; color: #555; margin-left: 6px;">
                       + α × {{ form.commissionRate }}%
                     </span>
                   </div>
@@ -138,7 +108,8 @@
               <!-- 비고 -->
               <v-col cols="12">
                 <div class="input-label">비고</div>
-                <v-textarea v-model="form.remark" class="textarea-field" rows="3" readonly />
+                <v-textarea v-model="form.remark" class="textarea-field no-gradient-textarea" rows="3"
+                  variant="outlined" readonly />
               </v-col>
             </v-row>
           </v-card>
@@ -182,19 +153,17 @@
                 </v-col>
                 <v-col cols="12">
                   <div class="input-label">공간 설명</div>
-                  <v-textarea :value="sp.description" rows="2" readonly class="textarea-field" />
+                  <v-textarea :value="sp.description" rows="2" readonly class="textarea-field no-gradient-textarea"
+                    variant="outlined" />
                 </v-col>
               </v-row>
             </v-card>
 
             <v-row justify="center" class="mt-4">
               <v-col cols="12" md="8">
-                <v-btn
-                  color="success"
-                  block
+                <v-btn color="success" block
                   :disabled="completing || form.status === 'COMPLETED' || form.status === 'CANCELLED'"
-                  @click="onComplete"
-                >
+                  @click="onComplete">
                   계약 완료
                 </v-btn>
               </v-col>
@@ -204,25 +173,13 @@
       </v-row>
 
       <!-- 편집 / 삭제 버튼 -->
-      <div class="d-flex justify-end gap-3 mt-4">
-        <v-btn
-          color="orange darken-2"
-          class="white--text px-6"
-          rounded="lg"
-          elevation="2"
-          @click="goToEdit"
-        >
+      <div class="d-flex justify-end gap-3 mt-4" v-if="form.status !== 'COMPLETED' && form.status !== 'CANCELLED'">
+        <v-btn color="orange darken-2" class="white--text px-6" rounded="lg" elevation="2" @click="goToEdit">
           편집
         </v-btn>
 
-        <v-btn
-          color="red darken-2"
-          class="white--text px-6"
-          rounded="lg"
-          elevation="2"
-          :disabled="deleting || form.status === 'CANCELLED'"
-          @click="onDelete"
-        >
+        <v-btn color="red darken-2" class="white--text px-6" rounded="lg" elevation="2" :disabled="deleting"
+          @click="onDelete">
           삭제
         </v-btn>
       </div>
@@ -395,16 +352,19 @@ const onComplete = async () => {
   min-height: 100vh;
   padding: 16px 0;
 }
+
 .page-inner {
   max-width: 1140px;
   margin: 0 auto;
   padding: 0 24px;
 }
+
 .page-title {
   font-size: 2rem;
   font-weight: 700;
   margin: 16px 0 24px;
 }
+
 .contract-card,
 .space-info-card {
   background: #fff;
@@ -413,17 +373,21 @@ const onComplete = async () => {
   width: 100%;
   padding: 16px;
 }
+
 .section-title {
   font-size: 1rem;
   font-weight: 600;
   margin-bottom: 8px;
 }
+
 .section-divider {
   border-color: #e0e0e0;
 }
-.v-row > .v-col {
+
+.v-row>.v-col {
   margin-bottom: 16px;
 }
+
 .total-card {
   border-radius: 10px;
   border: 1px solid #eee;
@@ -432,24 +396,40 @@ const onComplete = async () => {
   padding: 12px;
   margin-bottom: 12px;
 }
+
 .total-title {
   font-size: 0.9rem;
   font-weight: 600;
 }
+
 .total-price {
   font-size: 1.2rem;
   font-weight: 800;
   margin-top: 4px;
   text-align: right;
 }
+
 .input-field :deep(.v-field__input),
 .textarea-field :deep(.v-field__input) {
-  background-color: #fff !important;
+  background: #fff !important;
+  /* 그라데이션 제거 */
+  background-image: none !important;
+  /* 혹시 남아있을 배경 이미지 완전 제거 */
   min-height: 30px !important;
   font-size: 0.8rem !important;
   padding-top: 3px !important;
   padding-bottom: 3px !important;
   border-radius: 6px !important;
+}
+
+.textarea-field :deep(textarea) {
+  resize: none !important;
+}
+
+/* v-textarea 래퍼에 묻어 있는 배경도 강제 제거 */
+.textarea-field :deep(.v-field) {
+  background: #fff !important;
+  background-image: none !important;
 }
 
 .input-field :deep(.v-field::before),
@@ -459,5 +439,16 @@ const onComplete = async () => {
   opacity: 0 !important;
   background: transparent !important;
   display: none !important;
+}
+
+.no-gradient-textarea :deep(.v-field__input) {
+  padding: 16px 12px !important;
+  /* 원하는 값으로 조정 */
+}
+
+/* 실제 textarea 요소 패딩 */
+.no-gradient-textarea :deep(textarea) {
+  padding: 10px 12px !important;
+  /* 원하는 값으로 조정 */
 }
 </style>
