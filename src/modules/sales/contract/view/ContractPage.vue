@@ -31,6 +31,18 @@
                     class="mb-4"
                 />
 
+                <v-select
+                v-model="selectedUser"
+                :items="users"
+                item-title="name"
+                item-value="userId"
+                label="작성자"
+                variant="outlined"
+                hide-details
+                density="comfortable"
+                class="mb-4 sidebar-input"
+                />
+
                 <!-- 상태 체크박스 그룹 -->
                 <div class="sidebar-checkbox-group mt-4">진행 상태
                     <v-checkbox
@@ -140,10 +152,14 @@
 <script setup>
 import { reactive, ref, computed, watch, onMounted } from 'vue';
 import { getContracts } from '@/apis/contract';
+import { getUserList } from '@/apis/user';
 import { useRouter } from 'vue-router';
 
 const search = ref('');
 const showFavoritesOnly = ref(false);
+
+const selectedUser = ref('');
+const users = ref([]);
 
 const contracts = ref([]);
 const page = ref(1);
@@ -198,6 +214,7 @@ const fetchContracts = async (resetPage = false) => {
         const response = await getContracts({
             keyword: search.value || undefined,
             status: activeStatuses.length === 1 ? activeStatuses[0] : undefined,
+            userId: selectedUser.value || undefined,
             page: page.value,
             size: size.value,
         });
@@ -232,6 +249,19 @@ const fetchContracts = async (resetPage = false) => {
     }
 };
 
+function fuzzyMatch(source, keyword) {
+    source = source.replace(/\s+/g, '').toLowerCase();
+    keyword = keyword.replace(/\s+/g, '').toLowerCase();
+
+    let i = 0;
+    for (let j = 0; j < source.length && i < keyword.length; j++) {
+        if (source[j] === keyword[i]) {
+        i++;
+        }
+    }
+    return i === keyword.length;
+}
+
 const filteredContracts = computed(() => {
     const searchText = (search.value || '').trim();
     const activeStatuses = sidebares.filter(s => s.checked).map(s => s.value);
@@ -239,9 +269,9 @@ const filteredContracts = computed(() => {
     return contracts.value.filter(c => {
         const matchesSearch =
         !searchText ||
-        c.contractTitle?.includes(searchText) ||
-        c.clientCompanyName?.includes(searchText) ||
-        c.clientName?.includes(searchText);
+        fuzzyMatch(c.contractTitle || '', searchText) ||
+        fuzzyMatch(c.clientCompanyName || '', searchText) ||
+        fuzzyMatch(c.clientName || '', searchText);
 
         const matchesStatus =
         activeStatuses.length === 0 || activeStatuses.includes(String(c.status || '').toUpperCase());
@@ -263,7 +293,21 @@ watch(
 
 watch(search, () => fetchContracts(true));
 
-onMounted(() => fetchContracts());
+watch(selectedUser, () => fetchContracts(true));
+watch(selectedUser, (val) => console.log('selectedUser.value:', val));
+
+onMounted(async () => {
+    fetchContracts();
+
+    try {
+        const res = await getUserList();
+        const userList = res?.data || [];
+
+        users.value = [{ userId: '', name: '전체' }, ...userList];
+    } catch (err) {
+        console.error('작성자 목록 불러오기 실패', err);
+    }
+});
 
 const goToCreateContract = () => {
     router.push({ name: 'CreateContract' });
@@ -294,6 +338,7 @@ const goToContractDetail = (contractId) => {
     box-shadow: 0 6px 20px rgba(0,0,0,0.06);
     background-color: #ffffff;
 }
+
 
 /* 즐겨찾기 */
 .favorite-toggle-btn {
