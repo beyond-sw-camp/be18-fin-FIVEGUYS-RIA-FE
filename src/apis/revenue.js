@@ -8,15 +8,24 @@ export const fetchRevenueList = ({
   page = 0,
   size = 9,
   storeType,
-  creatorId,
+  managerId, // ← 프론트에서 쓰는 이름
+  keyword,
 } = {}) => {
   const params = { page, size };
 
+  // 매장 유형
   if (storeType) {
-    params.storeType = storeType;
+    params.storeType = storeType; // 백엔드 storeType
   }
-  if (creatorId) {
-    params.creatorId = creatorId;
+
+  // 담당자
+  if (managerId !== null && managerId !== undefined) {
+    params.creatorId = managerId; // 백엔드 creatorId
+  }
+
+  // 키워드
+  if (keyword && keyword.trim() !== "") {
+    params.keyword = keyword.trim(); // 백엔드 keyword
   }
 
   return api.get("/api/revenues", { params });
