@@ -98,13 +98,13 @@
         </v-card>
       </v-col>
 
-      <!-- 우측: 매장 / 수수료 정보 – 최신 정산 카드 -->
+      <!-- 우측: 매장 / 수수료 정보 – 최신 정산 카드 (매장별 카드 반복) -->
       <v-col cols="12" md="6" class="project-col">
         <v-card class="project-card mb-3" elevation="2">
           <v-card-title class="card-title">매장 및 수수료 정보</v-card-title>
 
           <v-card-text class="pa-0">
-            <div class="history-card settlement-card">
+            <div class="history-card settlement-card" v-for="store in detail.stores" :key="store.storeTenantMapId">
               <div class="history-inner">
                 <!-- 왼쪽 아이콘 + 세로 라인 -->
                 <div class="history-left">
@@ -124,7 +124,7 @@
                   </div>
 
                   <div class="history-title">
-                    {{ storeLocationText }} 정산
+                    {{ formatStoreLocation(store) }} 정산
                   </div>
 
                   <div class="history-desc">
@@ -142,7 +142,7 @@
 
                   <!-- 내역 보기 버튼 -->
                   <div class="history-more-row">
-                    <v-btn variant="text" size="small" class="history-more-btn" @click="openHistoryDialog">
+                    <v-btn variant="text" size="small" class="history-more-btn" @click="openHistoryDialog(store)">
                       내역 보기
                     </v-btn>
                   </div>
@@ -379,14 +379,25 @@ const detail = reactive({
   latestFinalRevenue: 0,
 })
 
-const currentStore = computed(() => detail.stores[0] || null)
+// 선택된 매장 (모달에서 사용)
+const selectedStore = ref(null)
 
-const storeLocationText = computed(() => {
-  if (!currentStore.value) return '- › - › -'
-  const { floorName, storeNumber, storeDisplayName } = currentStore.value
+const currentStore = computed(
+  () => selectedStore.value || detail.stores[0] || null,
+)
+
+function formatStoreLocation(store) {
+  if (!store) return '-'
+  const { floorName, storeNumber, storeDisplayName } = store
   return [floorName, storeNumber, storeDisplayName]
     .filter((v) => v && v !== '')
     .join(' › ')
+}
+
+const storeLocationText = computed(() => {
+  const store = currentStore.value
+  if (!store) return '- › - › -'
+  return formatStoreLocation(store)
 })
 
 const contractPeriodText = computed(() => {
@@ -400,7 +411,6 @@ const latestSettlementText = computed(() => {
   return `${detail.latestSettlementYear}.${m}`
 })
 
-// 숫자 포맷 (소수점 버림)
 function formatNumber(v) {
   if (v === null || v === undefined) return ''
   const n = Number(v)
@@ -418,7 +428,6 @@ const formattedContractCommissionRate = computed(() =>
   formatNumber(detail.commissionRate),
 )
 
-// 누적 매출액(총 매출) / 누적 수익(임대료+수수료)
 const formattedAccumulatedSales = computed(() =>
   withWon(detail.totalSalesAccumulated),
 )
@@ -587,7 +596,8 @@ async function loadDailyHistory() {
   }
 }
 
-function openHistoryDialog() {
+function openHistoryDialog(store) {
+  selectedStore.value = store || detail.stores[0] || null
   showHistoryDialog.value = true
   activeHistoryTab.value = 'settlement'
   settlementError.value = ''
