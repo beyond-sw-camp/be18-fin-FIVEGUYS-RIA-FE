@@ -322,9 +322,20 @@
                   {{ item.meta }}
                 </div>
 
-                <div class="history-amount" v-if="item.amount">
-                  KRW {{ formatAmount(item.amount) }}원
+                <!-- 계약 -->
+                <div class="history-amount-row" v-if="item.type === 'contract'">
+                  <span class="history-amount">
+                    KRW {{ Number(item.amount).toLocaleString() }}
+                    + α × {{ item.commissionRate }}%
+                  </span>
+                  <span class="history-writer" v-if="item.writer">{{ item.writer }}</span>
                 </div>
+
+                <!-- 제안/견적 -->
+                <div class="history-amount-row" v-else-if="item.amount">
+                  <span class="history-amount">KRW {{ Number(item.amount).toLocaleString() }}</span>
+                </div>
+                
               </div>
             </div>
           </v-card>
@@ -750,7 +761,24 @@ const applyDetailDto = (dto) => {
     });
   });
 
-  // 매출 이력
+  // 계약 이력
+  (dto.contracts || []).forEach((c) => {
+      historyItems.value.push({
+        type: "contract",
+        id:c.contractId,
+        icon: "mdi-handshake",
+        label: "계약",
+        title: c.contractTitle,
+        description: `[${c.clientCompanyName}] / [${c.clientName}]`,
+        meta: `계약 기간: ${c.contractStartDate ?? '-'} ~ ${c.contractEndDate ?? '-'}`,
+        amount: c.totalAmount,
+        commissionRate: c.commissionRate,
+        writer: c.createdUserName,
+        date: c.createdAt ? new Date(c.createdAt).toISOString().slice(0, 10) : '-'
+      });
+    });
+
+    // 매출 이력
   (dto.revenues || []).forEach((r) => {
     historyItems.value.push({
       type: "revenue",
@@ -767,9 +795,7 @@ const applyDetailDto = (dto) => {
       date: formatDateLabel(r.createdAt),
     });
   });
-};
-
-/* 이하 기존 코드 동일 */
+}
 
 const loadClients = async () => {
   const params = {
@@ -1267,6 +1293,22 @@ onMounted(async () => {
   font-size: 0.75rem;
   color: #777;
   margin-bottom: 2px;
+}
+
+.history-amount-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  color: #888;
+}
+
+.history-writer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  color: #888;
 }
 
 .history-amount {

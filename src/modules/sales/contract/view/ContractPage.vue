@@ -6,25 +6,55 @@
             <v-col cols="12" md="2" class="pa-4 sidebar">
                 <v-card class="sidebar-card pa-6" flat>
 
-                    <!-- 즐겨찾기 버튼 -->
-                    <div class="d-flex justify-end mb-4">
-                        <v-btn small class="favorite-toggle-btn" @click="showFavoritesOnly = !showFavoritesOnly"
-                            elevation="1">
-                            <v-icon :color="showFavoritesOnly ? '#FFD60A' : '#8e8e93'">
-                                {{ showFavoritesOnly ? 'mdi-star' : 'mdi-star-outline' }}
-                            </v-icon>
-                        </v-btn>
-                    </div>
+                <!-- 즐겨찾기 버튼 -->
+                <div class="d-flex justify-end mb-4">
+                    <v-btn
+                    small
+                    class="favorite-toggle-btn"
+                    @click="showFavoritesOnly = !showFavoritesOnly"
+                    elevation="1"
+                    >
+                    <v-icon :color="showFavoritesOnly ? '#FFD60A' : '#8e8e93'">
+                        {{ showFavoritesOnly ? 'mdi-star' : 'mdi-star-outline' }}
+                    </v-icon>
+                    </v-btn>
+                </div>
 
-                    <!-- 검색 -->
-                    <v-text-field v-model="search" append-inner-icon="mdi-magnify" label="검색" variant="outlined"
-                        hide-details density="comfortable" class="mb-4" />
+                <!-- 검색 -->
+                <v-text-field
+                    v-model="search"
+                    append-inner-icon="mdi-magnify"
+                    label="검색"
+                    variant="outlined"
+                    hide-details
+                    density="comfortable"
+                    class="mb-4"
+                />
 
-                    <!-- 상태 체크박스 그룹 -->
-                    <div class="sidebar-checkbox-group mt-4">진행 상태
-                        <v-checkbox v-for="sidebar in sidebares" :key="sidebar.value" v-model="sidebar.checked"
-                            :label="sidebar.label" hide-details dense class="sidebar-checkbox"></v-checkbox>
-                    </div>
+                <v-select
+                v-model="selectedUser"
+                :items="users"
+                item-title="name"
+                item-value="userId"
+                label="작성자"
+                variant="outlined"
+                hide-details
+                density="comfortable"
+                class="mb-4 sidebar-input"
+                />
+
+                <!-- 상태 체크박스 그룹 -->
+                <div class="sidebar-checkbox-group mt-4">진행 상태
+                    <v-checkbox
+                    v-for="sidebar in sidebares"
+                    :key="sidebar.value"
+                    v-model="sidebar.checked"
+                    :label="sidebar.label"
+                    hide-details
+                    dense
+                    class="sidebar-checkbox"
+                    ></v-checkbox>
+                </div>
 
                 </v-card>
             </v-col>
@@ -103,10 +133,14 @@
 <script setup>
 import { reactive, ref, computed, watch, onMounted } from 'vue';
 import { getContracts } from '@/apis/contract';
+import { getUserList } from '@/apis/user';
 import { useRouter } from 'vue-router';
 
 const search = ref('');
 const showFavoritesOnly = ref(false);
+
+const selectedUser = ref('');
+const users = ref([]);
 
 const contracts = ref([]);
 const page = ref(1);
@@ -115,10 +149,14 @@ const totalPages = ref(0);
 const totalElements = ref(0);
 const loading = ref(false);
 
+const snackbar = ref(false);
+const snackbarMessage = ref("");
+const snackbarColor = ref("error");
+
 const router = useRouter();
 
 const sidebares = reactive([
-    { label: '제출됨', value: 'SUBMITTED', checked: false },
+    { label: '제출됨', value: 'SUBMITTED', checked: true },
     { label: '완료', value: 'COMPLETED', checked: false },
     { label: '취소됨', value: 'CANCELED', checked: false },
 ]);
@@ -150,29 +188,60 @@ const formatPrice = (price) => price?.toLocaleString() + '원';
 const fetchContracts = async (resetPage = false) => {
     if (resetPage) page.value = 1;
     loading.value = true;
+
     try {
         const activeStatuses = sidebares.filter(s => s.checked).map(s => s.value);
 
-        const { data } = await getContracts({
+        const response = await getContracts({
             keyword: search.value || undefined,
             status: activeStatuses.length === 1 ? activeStatuses[0] : undefined,
+            userId: selectedUser.value || undefined,
             page: page.value,
             size: size.value,
         });
 
-        contracts.value = (data.data || []).map(c => ({
+        const data = response?.data;
+
+        if (!data || !data.data) {
+            snackbarMessage.value = "계약 정보를 불러올 수 없습니다.";
+            snackbarColor.value = "error";
+            snackbar.value = true;
+            contracts.value = [];
+            return;
+        }
+
+        contracts.value = data.data.map(c => ({
             ...c,
             isFavorite: c.isFavorite ?? false,
         }));
 
-        page.value = data.page;
-        size.value = data.size;
-        totalElements.value = data.totalCount;
-        totalPages.value = Math.ceil(data.totalCount / data.size);
+        page.value = data.page ?? 1;
+        size.value = data.size ?? 12;
+        totalElements.value = data.totalCount ?? 0;
+        totalPages.value = Math.max(1, Math.ceil((data.totalCount ?? 0) / size.value));
+
+    } catch (err) {
+        console.error(err);
+        snackbarMessage.value = "계약을 불러오는 중 오류가 발생했습니다.";
+        snackbarColor.value = "error";
+        snackbar.value = true;
     } finally {
         loading.value = false;
     }
 };
+
+function fuzzyMatch(source, keyword) {
+    source = source.replace(/\s+/g, '').toLowerCase();
+    keyword = keyword.replace(/\s+/g, '').toLowerCase();
+
+    let i = 0;
+    for (let j = 0; j < source.length && i < keyword.length; j++) {
+        if (source[j] === keyword[i]) {
+        i++;
+        }
+    }
+    return i === keyword.length;
+}
 
 const filteredContracts = computed(() => {
     const searchText = (search.value || '').trim();
@@ -180,10 +249,10 @@ const filteredContracts = computed(() => {
 
     return contracts.value.filter(c => {
         const matchesSearch =
-            !searchText ||
-            c.contractTitle?.includes(searchText) ||
-            c.clientCompanyName?.includes(searchText) ||
-            c.clientName?.includes(searchText);
+        !searchText ||
+        fuzzyMatch(c.contractTitle || '', searchText) ||
+        fuzzyMatch(c.clientCompanyName || '', searchText) ||
+        fuzzyMatch(c.clientName || '', searchText);
 
         const matchesStatus =
             activeStatuses.length === 0 || activeStatuses.includes(String(c.status || '').toUpperCase());
@@ -205,13 +274,34 @@ watch(
 
 watch(search, () => fetchContracts(true));
 
-onMounted(() => fetchContracts());
+watch(selectedUser, () => fetchContracts(true));
+watch(selectedUser, (val) => console.log('selectedUser.value:', val));
+
+onMounted(async () => {
+    fetchContracts();
+
+    try {
+        const res = await getUserList();
+        const userList = res?.data || [];
+
+        users.value = [{ userId: '', name: '전체' }, ...userList];
+    } catch (err) {
+        console.error('작성자 목록 불러오기 실패', err);
+    }
+});
 
 const goToCreateContract = () => {
     router.push({ name: 'CreateContract' });
 };
 
 const goToContractDetail = (contractId) => {
+    if (!contractId) {
+        snackbarMessage.value = "계약 정보를 찾을 수 없습니다.";
+        snackbarColor.value = "error";
+        snackbar.value = true;
+        return;
+    }
+
     router.push({ name: 'ContractDetail', params: { id: contractId } });
 };
 </script>
@@ -229,6 +319,7 @@ const goToContractDetail = (contractId) => {
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
     background-color: #ffffff;
 }
+
 
 /* 즐겨찾기 */
 .favorite-toggle-btn {
