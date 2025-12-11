@@ -11,11 +11,11 @@
 
         <v-btn-toggle v-model="selectedRole" mandatory class="role-toggle" rounded="xl">
           <v-btn value="ROLE_SALES_MEMBER" class="role-toggle-btn">
-            팀원
+            개인
           </v-btn>
           <!-- 팀장 권한 있을 때만 팀장 버튼 노출 -->
           <v-btn v-if="canViewLead" value="ROLE_SALES_LEAD" class="role-toggle-btn">
-            팀장
+            운영
           </v-btn>
         </v-btn-toggle>
       </div>
