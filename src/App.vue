@@ -51,10 +51,6 @@ onMounted(async () => {
   console.log('connectSSE 호출 전')
   notificationStore.connectSSE()
 })
-
-// onBeforeUnmount(() => {
-//   notificationStore.disconnectSSE()
-// })
 </script>
 
 <style>

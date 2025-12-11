@@ -1,46 +1,41 @@
 <template>
   <v-app-bar app fixed flat color="white" height="64" class="px-8">
-    <router-link to="/home" class="text-decoration-none mr-6">
-      <v-toolbar-title class="font-weight-bold text-orange text-h5">
-        Galleria
-      </v-toolbar-title>
+    <!-- 🔥 로고만 표시 -->
+    <router-link to="/home" class="logo-container mr-3">
+      <img :src="logoSrc" alt="logo" class="nav-logo" />
     </router-link>
 
-        <v-btn text to="/calendar">캘린더</v-btn>
-        <v-btn text to="/project">프로젝트</v-btn>
-        <v-menu>
-        <template #activator="{ props }">
-          <v-btn text v-bind="props">
-            배치도
-            <v-icon>mdi-menu-down</v-icon>
-          </v-btn>
-        </template>
+    <v-btn text to="/calendar">캘린더</v-btn>
+    <v-btn text to="/project">프로젝트</v-btn>
 
-        <v-list>
-        <v-list-item :to="{ name: 'Floor', params: { level: 'B1' } }">
-          <v-list-item-title>B1 HIGH JEWELRY & WATCH</v-list-item-title>
-        </v-list-item>
+    <!-- 배치도 -->
+    <v-menu>
+      <template #activator="{ props }">
+        <v-btn text v-bind="props">
+          배치도
+          <v-icon>mdi-menu-down</v-icon>
+        </v-btn>
+      </template>
+      <v-list>
+        <v-list-item :to="{ name: 'Floor', params: { level: 'B1' } }"
+          ><v-list-item-title>B1</v-list-item-title></v-list-item
+        >
+        <v-list-item :to="{ name: 'Floor', params: { level: '1F' } }"
+          ><v-list-item-title>1F</v-list-item-title></v-list-item
+        >
+        <v-list-item :to="{ name: 'Floor', params: { level: '2F' } }"
+          ><v-list-item-title>2F</v-list-item-title></v-list-item
+        >
+        <v-list-item :to="{ name: 'Floor', params: { level: '3F' } }"
+          ><v-list-item-title>3F</v-list-item-title></v-list-item
+        >
+        <v-list-item :to="{ name: 'Floor', params: { level: '4F' } }"
+          ><v-list-item-title>4F</v-list-item-title></v-list-item
+        >
+      </v-list>
+    </v-menu>
 
-        <v-list-item :to="{ name: 'Floor', params: { level: '1F' } }">
-          <v-list-item-title>1F LUXURY BOUTIQUE & COSMETICS</v-list-item-title>
-        </v-list-item>
-
-        <v-list-item :to="{ name: 'Floor', params: { level: '2F' } }">
-          <v-list-item-title>2F LUXURY BOUTIQUE & WOMEN'S COLLECTION</v-list-item-title>
-        </v-list-item>
-
-        <v-list-item :to="{ name: 'Floor', params: { level: '3F' } }">
-          <v-list-item-title>3F WOMEN'S COLLECTION</v-list-item-title>
-        </v-list-item>
-
-        <v-list-item :to="{ name: 'Floor', params: { level: '4F' } }">
-          <v-list-item-title>4F MEN'S LUXURY BOUTIQUE</v-list-item-title>
-            </v-list-item>
-          </v-list>
-        </v-menu>
-        <!-- <v-btn text to="/vipmember">VIP 회원</v-btn> -->
-
-    <!-- 변경: VIP 드롭다운 메뉴 -->
+    <!-- VIP -->
     <v-menu>
       <template #activator="{ props }">
         <v-btn text v-bind="props">
@@ -48,35 +43,36 @@
           <v-icon>mdi-menu-down</v-icon>
         </v-btn>
       </template>
-
       <v-list>
-        <!-- 회원 → vipmemberlist -->
-        <v-list-item :to="{ name: 'VipMemberList' }">
-          <v-list-item-title>회원</v-list-item-title>
-        </v-list-item>
-
-        <!-- 매출현황 → vipmember -->
-        <v-list-item :to="{ name: 'VipMember' }">
-          <v-list-item-title>매출현황</v-list-item-title>
-        </v-list-item>
+        <v-list-item :to="{ name: 'VipMemberList' }"
+          ><v-list-item-title>회원</v-list-item-title></v-list-item
+        >
+        <v-list-item :to="{ name: 'VipMember' }"
+          ><v-list-item-title>매출현황</v-list-item-title></v-list-item
+        >
       </v-list>
     </v-menu>
 
+    <!-- 고객 -->
     <v-menu>
       <template #activator="{ props }">
-        <v-btn text v-bind="props"> 고객 <v-icon>mdi-menu-down</v-icon> </v-btn>
+        <v-btn text v-bind="props">
+          고객
+          <v-icon>mdi-menu-down</v-icon>
+        </v-btn>
       </template>
       <v-list>
         <v-list-item to="/potentialclient">잠재 고객</v-list-item>
-        <!-- <v-list-item to="/client">고객</v-list-item> -->
         <v-list-item to="/clientcompany">고객사</v-list-item>
       </v-list>
     </v-menu>
 
+    <!-- 영업관리 -->
     <v-menu>
       <template #activator="{ props }">
         <v-btn text v-bind="props">
-          영업관리 <v-icon>mdi-menu-down</v-icon>
+          영업관리
+          <v-icon>mdi-menu-down</v-icon>
         </v-btn>
       </template>
       <v-list>
@@ -113,12 +109,8 @@
         </v-menu>
 
     <v-btn icon><v-icon>mdi-cog-outline</v-icon></v-btn>
-    <v-btn icon to="/mypage">
-      <v-icon>mdi-account-circle</v-icon>
-    </v-btn>
-    <v-btn icon @click="logoutHandler">
-      <v-icon>mdi-logout</v-icon>
-    </v-btn>
+    <v-btn icon to="/mypage"><v-icon>mdi-account-circle</v-icon></v-btn>
+    <v-btn icon @click="logoutHandler"><v-icon>mdi-logout</v-icon></v-btn>
   </v-app-bar>
 </template>
 
@@ -129,6 +121,7 @@ import { useAuthStore } from "@/stores/auth";
 import { useNotificationStore } from '@/modules/notification/store/notificationStore'
 import { logout as logoutApi } from "@/apis/auth";
 import NotificationDropdown from '@/modules/notification/components/NotificationDropdown.vue'
+import logoSrc from "@/assets/로고.png";
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -145,14 +138,14 @@ const unreadCount = computed(() =>
 // 로그아웃 핸들러
 const logoutHandler = async () => {
   try {
-    await logoutApi(); // 서버 로그아웃 호출
+    await logoutApi();
   } catch (e) {
     console.error(e);
   } finally {
-    authStore.forceLogout(); // 토큰/상태 초기화
-    router.push("/login"); // 로그인으로 이동
-  };
-}
+    authStore.forceLogout();
+    router.push("/login");
+  }
+};
 </script>
 
 <style>
@@ -164,5 +157,20 @@ const logoutHandler = async () => {
   font-family: "Pretendard", sans-serif !important;
   font-weight: 500;
   letter-spacing: 0.3px;
+}
+
+/* 🔥 로고 컨테이너 */
+.logo-container {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+/* 🔥 로고만 표시 */
+.nav-logo {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  margin-top: 3px; /* UI 균형 맞춤 */
 }
 </style>

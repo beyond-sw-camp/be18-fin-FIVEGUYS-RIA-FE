@@ -22,6 +22,7 @@ export const updateProject = (projectId, payload) => {
   return apiClient.patch(`/api/projects/${projectId}`, payload);
 };
 
+// 프로젝트 제목/고객사 검색용 리스트
 export const getProjectTitles = (keyword) => {
   return apiClient.get("/api/projects/titles", {
     params: {
@@ -29,9 +30,17 @@ export const getProjectTitles = (keyword) => {
     },
   });
 };
-export const getProjectMeta = (projectId) => {
-  return apiClient.get(`/api/projects/${projectId}`);
+
+// ★ 여기: /api/projects/titles/{id} 호출용
+export const getProjectTitleMeta = (projectId) => {
+  return apiClient.get(`/api/projects/titles/${projectId}`);
 };
+
+// 필요 없으면 나중에 정리
+export const getProjectMeta = (projectId) => {
+  return apiClient.get(`/api/projects/titles/${projectId}`);
+};
+
 export const deleteProject = (projectId) => {
   return apiClient.delete(`/api/projects/${projectId}`);
 };
