@@ -762,8 +762,7 @@ const applyDetailDto = (dto) => {
   });
 
   // 계약 이력
-  if (dto.contracts) {
-    dto.contracts.forEach((c) => {
+  (dto.contracts || []).forEach((c) => {
       historyItems.value.push({
         type: "contract",
         id:c.contractId,
@@ -778,9 +777,8 @@ const applyDetailDto = (dto) => {
         date: c.createdAt ? new Date(c.createdAt).toISOString().slice(0, 10) : '-'
       });
     });
-  }
 
-  // 매출 이력
+    // 매출 이력
   (dto.revenues || []).forEach((r) => {
     historyItems.value.push({
       type: "revenue",
@@ -797,8 +795,7 @@ const applyDetailDto = (dto) => {
       date: formatDateLabel(r.createdAt),
     });
   });
-};
-
+}
 
 const loadClients = async () => {
   const params = {
