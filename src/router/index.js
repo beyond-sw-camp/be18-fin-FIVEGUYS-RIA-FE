@@ -35,6 +35,7 @@ import { useAuthStore } from "@/stores/auth";
 
 import CreateContractPage from "@/modules/sales/contract/view/CreateContractPage.vue";
 import ContractDetailPage from "@/modules/sales/contract/view/ContractDetailPage.vue";
+import EditContractPage from "@/modules/sales/contract/view/EditContractPage.vue";
 
 const routes = [
   {
@@ -125,6 +126,12 @@ const routes = [
     path: "/contract/:id",
     name: "ContractDetail",
     component: ContractDetailPage
+  },
+  {
+    path: "/contract/:id/edit",
+    name: "EditContract",
+    component: EditContractPage,
+    props: true
   },
   { path: "/revenue", name: "Revenue", component: RevenuePage },
   { path: "/filestorage", name: "FileStorage", component: FileStoragePage },

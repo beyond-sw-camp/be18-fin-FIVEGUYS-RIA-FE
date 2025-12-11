@@ -49,7 +49,7 @@
                   icon
                   @click.stop="clearProject"
                   small
-                  class="ml-2 ios-clear-btn"
+                  class="ml-1 ios-clear-btn"
                 >
                   <v-icon size="20">mdi-close-circle</v-icon>
                 </v-btn>
@@ -470,8 +470,12 @@ const clientDialog = ref(false);
 const snackbar = ref(false);
 const snackbarMessage = ref("");
 const snackbarColor = ref("red");
-const showError = (err, fallback = "오류가 발생했습니다.") => {
-  snackbarMessage.value = err?.response?.data?.message || fallback;
+const showError = (errOrMsg, fallback = "오류가 발생했습니다.") => {
+  const msg = typeof errOrMsg === "string"
+    ? errOrMsg
+    : errOrMsg?.response?.data?.message || fallback;
+
+  snackbarMessage.value = msg;
   snackbarColor.value = "red";
   snackbar.value = true;
 };
@@ -836,13 +840,83 @@ const saveContract = async () => {
   };
 
   try {
+    // --- 1. 필수값 체크 ---
+    if (!form.contractTitle) return showError("계약 제목을 입력해주세요!");
+    if (!form.projectId) return showError("프로젝트를 선택해주세요!");
+    if (!form.clientCompanyId) return showError("고객사를 선택해주세요!");
+    if (!form.clientId) return showError("담당 고객을 선택해주세요!");
+    if (!form.contractStartDate) return showError("계약 시작일을 선택해주세요!");
+    if (!form.contractEndDate) return showError("계약 마감일을 선택해주세요!");
+    if (!form.contractType) return showError("계약 유형을 선택해주세요!");
+    if (!form.contractDate) return showError("계약일을 선택해주세요!");
+    if (!form.paymentCondition) return showError("결제 조건을 선택해주세요!");
+    if (!form.currency) return showError("화폐를 선택해주세요!");
+    if (!form.spaces.length) return showError("최소 1개의 공간이 필요합니다!");
+
+    // --- 2. 날짜 체크 ---
+    const start = new Date(form.contractStartDate);
+    const end = new Date(form.contractEndDate);
+    if (start >= end) return showError("계약 마감일이 계약 시작일 이전일 수는 없습니다.");
+
+    // --- 3. 숫자값 체크 ---
+    if (form.contractAmount != null && form.contractAmount < 0) return showError("보증금은 음수가 될 수 없습니다.");
+    if (form.commissionRate != null) {
+      if (form.commissionRate < 0) return showError("수수료율은 음수가 될 수 없습니다.");
+      if (form.commissionRate > 100) return showError("수수료율은 100%를 넘을 수 없습니다.");
+    }
+
+    // --- 4. 공간 검증 ---
+    const storeIds = new Set();
+    for (let i = 0; i < form.spaces.length; i++) {
+      const sp = form.spaces[i];
+      if (!sp.floorId) return showError(`공간 ${i + 1}의 층을 선택해주세요.`);
+      if (!sp.storeId) return showError(`공간 ${i + 1}의 매장을 선택해주세요.`);
+      if (sp.additionalFee < 0) return showError(`공간 ${i + 1}의 추가 비용은 음수가 될 수 없습니다.`);
+      if (sp.discountAmount < 0) return showError(`공간 ${i + 1}의 할인 금액은 음수가 될 수 없습니다.`);
+      if (storeIds.has(sp.storeId)) return showError(`같은 매장은 중복 선택할 수 없습니다.`);
+      storeIds.add(sp.storeId);
+    }
+
+    // --- 5. 계약 유형 관련 검증 ---
+    if (form.contractType === "LEASE" && form.commissionRate !== 0) {
+      form.commissionRate = 0; // 안전하게 강제 0
+    }
+
+    // --- 6. payload 구성 ---
+    const payload = {
+      contractTitle: form.contractTitle,
+      projectId: form.projectId,
+      estimateId: form.estimateId || null,
+      clientCompanyId: Number(form.clientCompanyId),
+      clientId: Number(form.clientId),
+      contractAmount: Number(form.contractAmount || 0),
+      commissionRate: form.contractType === "LEASE" ? 0 : (form.commissionRate != null ? Number(form.commissionRate) : 0),
+      contractType: form.contractType,
+      rentType: form.rentType || null,
+      paymentCondition: form.paymentCondition,
+      currency: form.currency,
+      contractStartDate: formatDate(form.contractStartDate),
+      contractEndDate: formatDate(form.contractEndDate),
+      contractDate: formatDate(form.contractDate),
+      remark: form.remark || null,
+      spaces: form.spaces.map(sp => ({
+        storeId: sp.storeId ? Number(sp.storeId) : null,
+        additionalFee: sp.additionalFee ? Number(sp.additionalFee) : 0,
+        discountAmount: sp.discountAmount ? Number(sp.discountAmount) : 0,
+        description: sp.description || "",
+      })),
+    };
+
+    // --- 7. API 호출 ---
     await createContract(payload);
+    router.push("/contract");
     showSuccess();
     router.push("/contract");
   } catch (err) {
     showError(err?.response?.data?.message || "계약 생성 실패");
   }
 };
+
 
 /* ---- 초기화 ---- */
 loadFloors();
@@ -946,12 +1020,6 @@ const formatDate = (d) => {
   padding-bottom: 6px !important;
 }
 
-.v-btn {
-  min-width: 80px;
-  height: 28px;
-  font-size: 0.75rem;
-}
-
 .actions-row {
   display: flex;
   justify-content: flex-end;
@@ -963,8 +1031,8 @@ const formatDate = (d) => {
 }
 
 .ios-clear-btn {
-  background-color: transparent; /* 배경 없음 */
-  color: #888; /* 기본 아이콘 색 */
+  background-color: transparent;
+  color: #888;
   min-width: 0;
   padding: 0;
   transition: color 0.2s;

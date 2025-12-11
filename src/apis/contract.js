@@ -7,6 +7,7 @@ export const getContracts = ({
     keyword,
     status,
     contractDate,
+    userId,
     page = 1,
     size = 12,
     } = {}) => {
@@ -17,6 +18,7 @@ export const getContracts = ({
         keyword,
         status, // 'SUBMITTED' | 'COMPLETED' | 'CANCELED'
         contractDate,
+        userId,
         page,
         size,
         },
