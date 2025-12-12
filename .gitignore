@@ -1,24 +1,44 @@
-# Compiled class file
-*.class
+# -----------------------
+# 📦 Node / Vue
+# -----------------------
+node_modules/
+dist/
+build/
+.cache/
+.temp/
+.npm/
+pnpm-lock.yaml
+yarn-error.log
 
-# Log file
-*.log
+# -----------------------
+# ⚙️ 환경 변수
+# -----------------------
+.env
+.env.local
+.env.*.local
+# -----------------------
+# 🧪 테스트 / 커버리지
+# -----------------------
+coverage/
+*.lcov
 
-# BlueJ files
-*.ctxt
+# -----------------------
+# 🧩 IDE / 편집기
+# -----------------------
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+Thumbs.db
+.history/
 
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
-
-# Package Files #
-*.jar
-*.war
-*.nar
-*.ear
-*.zip
-*.tar.gz
-*.rar
-
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
-hs_err_pid*
-replay_pid*
+# -----------------------
+# ⚠️ 기타 불필요 파일
+# -----------------------
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

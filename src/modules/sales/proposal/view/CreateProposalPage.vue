@@ -1,0 +1,552 @@
+<template>
+  <v-container fluid class="page-wrapper">
+    <v-snackbar v-model="snackbar" :color="snackbarColor" timeout="2500">
+      {{ snackbarMessage }}
+    </v-snackbar>
+
+    <!-- 페이지 타이틀 -->
+    <div class="page-title">새 제안 추가</div>
+
+    <!-- 카드 -->
+    <v-card elevation="1" class="project-card">
+      <div class="section-title">제안 정보</div>
+
+      <v-row dense class="container">
+        <!-- 제안명 -->
+        <v-col cols="12" md="6">
+          <div class="input-label">제안명<span class="required">*</span></div>
+          <v-text-field v-model="form.projectName" placeholder="제안명을 입력하세요" variant="outlined" class="input-field"
+            hide-details />
+        </v-col>
+
+        <!-- 프로젝트 -->
+        <v-col cols="12" md="6">
+          <div class="input-label">프로젝트</div>
+          <v-text-field v-model="form.projectType" placeholder="프로젝트를 선택하세요" variant="outlined" class="input-field"
+            hide-details readonly @click="opportunityDialog = true" />
+        </v-col>
+
+        <!-- 고객사 -->
+        <v-col cols="12" md="6">
+          <div class="input-label">고객사<span class="required">*</span></div>
+          <v-text-field v-model="form.clientCompany" placeholder="고객사를 선택하세요" variant="outlined" class="input-field"
+            hide-details readonly @click="clientDialog = true" />
+        </v-col>
+
+        <!-- 고객(담당자) -->
+        <v-col cols="12" md="6">
+          <div class="input-label">고객 담당자<span class="required">*</span></div>
+          <v-text-field v-model="form.client" placeholder="고객 담당자를 선택하세요" variant="outlined" class="input-field"
+            hide-details readonly @click="clientPersonDialog = true" />
+        </v-col>
+
+        <!-- 내용 -->
+        <v-col cols="12">
+          <div class="input-label">내용</div>
+          <v-textarea v-model="form.content" placeholder="내용을 입력하세요" variant="outlined"
+            class="input-field textarea-field" hide-details rows="4" />
+        </v-col>
+
+        <!-- 요청일 -->
+        <v-col cols="12" md="3">
+          <div class="input-label">요청일</div>
+          <v-menu v-model="startMenu" :close-on-content-click="false" offset-y>
+            <template #activator="{ props }">
+              <v-text-field :model-value="formatDate(form.startDate)" placeholder="요청일을 선택하세요" variant="outlined"
+                class="input-field" hide-details readonly v-bind="props" />
+            </template>
+            <v-date-picker v-model="form.startDate" @update:model-value="startMenu = false" />
+          </v-menu>
+        </v-col>
+
+        <!-- 제출일 -->
+        <v-col cols="12" md="3">
+          <div class="input-label">제출일<span class="required">*</span></div>
+          <v-menu v-model="endMenu" :close-on-content-click="false" offset-y>
+            <template #activator="{ props }">
+              <v-text-field :model-value="formatDate(form.endDate)" placeholder="제안 최종 제출일을 선택하세요" variant="outlined"
+                class="input-field" hide-details readonly v-bind="props" />
+            </template>
+            <v-date-picker v-model="form.endDate" @update:model-value="endMenu = false" />
+          </v-menu>
+        </v-col>
+
+        <!-- 비고 -->
+        <v-col cols="12">
+          <div class="input-label">비고</div>
+          <v-textarea v-model="form.notes" placeholder="비고를 입력하세요" variant="outlined" class="input-field textarea-field"
+            hide-details rows="3" />
+        </v-col>
+      </v-row>
+
+      <!-- 저장 버튼 -->
+      <div class="actions-row">
+        <v-btn color="orange darken-2" class="white--text px-6" rounded="lg" elevation="2" @click="saveProposal">
+          저장
+        </v-btn>
+      </div>
+    </v-card>
+
+    <!-- 고객사 선택 모달 -->
+    <v-dialog v-model="clientDialog" width="500">
+      <v-card class="pa-4">
+        <div class="dialog-title mb-4">고객사 선택</div>
+
+        <div class="mb-3 d-flex">
+          <v-chip class="mr-2" :color="clientTypeFilter === 'ALL' ? 'orange darken-2' : undefined"
+            :text-color="clientTypeFilter === 'ALL' ? 'white' : undefined" @click="clientTypeFilter = 'ALL'">
+            전체
+          </v-chip>
+          <v-chip class="mr-2" :color="clientTypeFilter === 'CLIENT' ? 'orange darken-2' : undefined
+            " :text-color="clientTypeFilter === 'CLIENT' ? 'white' : undefined" @click="clientTypeFilter = 'CLIENT'">
+            고객사
+          </v-chip>
+          <v-chip :color="clientTypeFilter === 'LEAD' ? 'orange darken-2' : undefined"
+            :text-color="clientTypeFilter === 'LEAD' ? 'white' : undefined" @click="clientTypeFilter = 'LEAD'">
+            잠재고객사
+          </v-chip>
+        </div>
+
+        <v-text-field v-model="clientSearch" placeholder="고객사명을 입력하세요" prepend-inner-icon="mdi-magnify"
+          variant="outlined" hide-details class="mb-4" />
+
+        <v-list>
+          <v-list-item v-for="item in filteredClients" :key="item.id" @click="selectClient(item)" class="dialog-item">
+            {{ item.name }}
+          </v-list-item>
+        </v-list>
+      </v-card>
+    </v-dialog>
+
+    <!-- 고객 담당자 선택 모달 -->
+    <v-dialog v-model="clientPersonDialog" width="500">
+      <v-card class="pa-4">
+        <div class="dialog-title mb-4">고객 담당자 선택</div>
+
+        <v-text-field v-model="clientPersonSearch" placeholder="검색" prepend-inner-icon="mdi-magnify" variant="outlined"
+          hide-details class="mb-4" />
+
+        <v-list>
+          <v-list-item v-for="p in filteredClientPersons" :key="p.id" @click="selectClientPerson(p)"
+            class="dialog-item">
+            {{ p.name }}
+          </v-list-item>
+        </v-list>
+      </v-card>
+    </v-dialog>
+
+    <!-- 영업 기회 모달 -->
+    <v-dialog v-model="opportunityDialog" width="500">
+      <v-card class="pa-4">
+        <div class="dialog-title mb-4">프로젝트 선택</div>
+
+        <v-text-field v-model="opportunitySearch" placeholder="검색" prepend-inner-icon="mdi-magnify" variant="outlined"
+          hide-details class="mb-4" />
+
+        <v-list>
+          <v-list-item v-for="o in filteredOpportunities" :key="o.id" @click="selectOpportunity(o)" class="dialog-item">
+            {{ o.name }}
+          </v-list-item>
+        </v-list>
+      </v-card>
+    </v-dialog>
+  </v-container>
+</template>
+
+<script setup>
+import { reactive, ref, computed, watch } from "vue";
+import { useRouter } from "vue-router";
+import { createProposal } from "@/apis/proposal";
+import {
+  getProjectTitles,
+  getProjectTitleMeta,
+  getProjectsWithPipelines,
+} from "@/apis/project";
+import {
+  getSimpleClientCompanies,
+  getSimpleClientsByCompany,
+} from "@/apis/client";
+
+const router = useRouter();
+
+const snackbar = ref(false);
+const snackbarMessage = ref("");
+const snackbarColor = ref("red");
+
+const showError = (
+  err,
+  fallbackMessage = "요청 처리 중 오류가 발생했습니다."
+) => {
+  const msg =
+    err?.response?.data?.message ||
+    err?.response?.data?.errorMessage ||
+    fallbackMessage;
+
+  snackbarMessage.value = msg;
+  snackbarColor.value = "red";
+  snackbar.value = true;
+};
+
+const showSuccess = (msg = "제안이 생성되었습니다.") => {
+  snackbarMessage.value = msg;
+  snackbarColor.value = "green";
+  snackbar.value = true;
+};
+
+const startMenu = ref(false);
+const endMenu = ref(false);
+
+const clientDialog = ref(false);
+const clientPersonDialog = ref(false);
+const opportunityDialog = ref(false);
+
+const clientSearch = ref("");
+const clientPersonSearch = ref("");
+const opportunitySearch = ref("");
+
+// 고객사 타입 필터
+const clientTypeFilter = ref("ALL");
+
+// 페이지네이션
+const clientPage = ref(1);
+const clientPageSize = ref(10);
+
+// 고객사 목록
+const clientList = ref([]);
+
+// 고객 담당자 목록
+const clientPersonList = ref([]);
+
+// 영업 기회 목록
+const opportunityList = ref([]);
+
+// 폼
+const form = reactive({
+  projectName: "",
+  projectId: null,
+  projectType: "",
+  clientCompany: "",
+  clientCompanyId: null,
+  client: "",
+  clientId: null,
+  startDate: null,
+  endDate: null,
+  content: "",
+  notes: "",
+});
+
+/** 고객사 로딩 */
+const loadClients = async () => {
+  const params = {
+    page: clientPage.value,
+    size: clientPageSize.value,
+  };
+
+  if (clientTypeFilter.value && clientTypeFilter.value !== "ALL") {
+    params.type = clientTypeFilter.value;
+  }
+
+  if (clientSearch.value.trim()) {
+    params.keyword = clientSearch.value.trim();
+  }
+
+  const res = await getSimpleClientCompanies(params);
+  clientList.value = res.data.content || [];
+};
+
+const filteredClients = computed(() =>
+  clientList.value.filter((c) => c.name.includes(clientSearch.value))
+);
+
+watch(clientDialog, (open) => {
+  if (open) {
+    clientPage.value = 1;
+    loadClients();
+  }
+});
+
+watch([clientTypeFilter, clientSearch], () => {
+  if (clientDialog.value) {
+    clientPage.value = 1;
+    loadClients();
+  }
+});
+
+/** 고객 담당자 로딩 */
+const loadClientPersons = async (companyId) => {
+  if (!companyId) return;
+
+  const params = {
+    page: 1,
+    size: 50,
+  };
+
+  if (clientPersonSearch.value.trim()) {
+    params.keyword = clientPersonSearch.value.trim();
+  }
+
+  const res = await getSimpleClientsByCompany(companyId, params);
+  clientPersonList.value = res.data.content || [];
+};
+
+watch(clientPersonDialog, (open) => {
+  if (open && form.clientCompanyId) {
+    clientPersonSearch.value = "";
+    loadClientPersons(form.clientCompanyId);
+  }
+});
+
+watch(clientPersonSearch, () => {
+  if (!form.clientCompanyId) return;
+  if (!clientPersonDialog.value) return;
+  loadClientPersons(form.clientCompanyId);
+});
+
+const filteredClientPersons = computed(() => clientPersonList.value);
+
+/** 영업 기회 로딩 */
+const loadOpportunities = async () => {
+  const res = await getProjectsWithPipelines({
+    myProject: true,
+    page: 1,
+    size: 100,
+  });
+
+  opportunityList.value = res.data.content.map((p) => ({
+    id: p.projectId,
+    name: p.title,
+  }));
+};
+
+watch(opportunityDialog, (open) => {
+  if (!open) return;
+  loadOpportunities();
+});
+
+const filteredOpportunities = computed(() =>
+  opportunityList.value.filter((o) => o.name.includes(opportunitySearch.value))
+);
+
+/** 선택 핸들러 */
+const selectClient = (item) => {
+  form.clientCompany = item.name;
+  form.clientCompanyId = item.id;
+
+  form.client = "";
+  form.clientId = null;
+  clientPersonSearch.value = "";
+  clientPersonList.value = [];
+
+  clientDialog.value = false;
+
+  loadClientPersons(item.id);
+};
+
+const selectClientPerson = (p) => {
+  form.client = p.name;
+  form.clientId = p.id;
+  clientPersonDialog.value = false;
+};
+
+const selectOpportunity = async (o) => {
+  // 1) 영업 기회 기본 세팅
+  form.projectId = o.id;
+  form.projectType = o.name;
+
+  // 2) 메타 데이터 조회
+  const { data } = await getProjectTitleMeta(o.id);
+
+  if (data.projectId) form.projectId = data.projectId;
+  if (data.projectName) form.projectType = data.projectName;
+
+  // 3) 프로젝트에 연결된 고객사/고객을 별도로 조회 (이게 핵심)
+  const clientRes = await getSimpleClientCompanies({
+    projectId: data.projectId,
+  });
+
+
+  if (data.projectId) form.projectId = data.projectId;
+  if (data.projectName) form.projectType = data.projectName;
+
+  if (data.clientCompanyId) {
+    form.clientCompanyId = data.clientCompanyId;
+    form.clientCompany = data.clientCompanyName || "";
+  }
+
+  if (data.clientId) {
+    form.clientId = data.clientId;
+    form.client = data.clientName || "";
+  }
+
+  // 필요하면 담당자 목록 로딩
+  if (form.clientCompanyId) {
+    const personRes = await getSimpleClientsByCompany(form.clientCompanyId, {
+      page: 1,
+      size: 50,
+    });
+    clientPersonList.value = personRes.data.content || [];
+  }
+
+  opportunityDialog.value = false;
+};
+
+/** 유틸 */
+const formatDate = (date) => {
+  if (!date) return "";
+  const d = new Date(date);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
+
+const toLocalDateString = (date) => {
+  if (!date) return null;
+  const d = new Date(date);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
+
+/** 저장 */
+const saveProposal = async () => {
+  const payload = {
+    title: form.projectName,
+    clientCompanyId: form.clientCompanyId,
+    clientId: form.clientId,
+    projectId: form.projectId,
+    data: form.content,
+    requestDate: toLocalDateString(form.startDate),
+    submitDate: toLocalDateString(form.endDate),
+    remark: form.notes || null,
+  };
+
+  try {
+    await createProposal(payload);
+    showSuccess();
+    router.push({ name: "Proposal" });
+  } catch (err) {
+    showError(err, "제안을 생성할 수 없습니다.");
+  }
+};
+</script>
+
+<style scoped>
+.page-wrapper {
+  background: #fafafa;
+  min-height: 100vh;
+  padding: 8px 16px 10px;
+}
+
+.page-title {
+  max-width: 1100px;
+  margin: 4px auto 10px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #111;
+}
+
+.project-card {
+  max-width: 1100px;
+  margin: 0 auto 10px;
+  border-radius: 14px;
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  padding: 8px 14px 10px;
+}
+
+.section-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 12px;
+}
+
+/* 라벨 폰트 +10px 느낌으로 크게 */
+.input-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #222;
+  margin-bottom: 4px;
+}
+
+.project-card :deep(.v-col) {
+  padding-top: 1px !important;
+  padding-bottom: 1px !important;
+}
+
+/* ===== 인풋 박스/텍스트 높이 +10px ===== */
+.input-field {
+  border-radius: 6px !important;
+  font-size: 0.8rem;
+}
+
+.input-field :deep(.v-field) {
+  min-height: 32px !important;
+  height: 32px !important;
+}
+
+/* 실제 인풋 영역 */
+.input-field :deep(.v-field__input) {
+  font-size: 0.8rem !important;
+  line-height: 1.2 !important;
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+  min-height: 32px !important;
+}
+
+/* suffix / 아이콘 */
+.input-field :deep(.v-field__append-inner),
+.input-field :deep(.v-field__suffix),
+.input-field :deep(.v-field__prepend-inner) {
+  font-size: 0.8rem !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  align-items: center !important;
+}
+
+/* textarea 높이도 +10px */
+.textarea-field :deep(.v-field) {
+  min-height: 65px !important;
+}
+
+.textarea-field :deep(.v-field__input) {
+  font-size: 0.8rem !important;
+  padding-top: 16px !important;
+  padding-bottom: 6px !important;
+  align-items: flex-start !important;
+}
+
+/* ▼ 여기 resize: none 추가 */
+.textarea-field :deep(textarea) {
+  min-height: 50px !important;
+  line-height: 1.25 !important;
+  resize: none !important;
+}
+
+.actions-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+.dialog-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.dialog-item {
+  padding: 5px 6px !important;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.dialog-item:hover {
+  background: #fff3e0 !important;
+}
+
+.required {
+  color: red;
+}
+</style>
