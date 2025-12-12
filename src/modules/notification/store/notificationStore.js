@@ -6,12 +6,14 @@ export const useNotificationStore = defineStore('notification', {
   state: () => ({
     notifications: [],
     filterType: null,
-    connectionState: 'disconnected', 
+    connectionState: 'disconnected',
     retryCount: 0,
     allowRetry: true,
     lastEventId: localStorage.getItem('lastEventId') || null,
     eventSource: null,
-    reconnectTimer: null
+    reconnectTimer: null,
+    toastList: [],
+    toastQueue: []
   }),
 
   getters: {
@@ -22,25 +24,27 @@ export const useNotificationStore = defineStore('notification', {
   },
 
   actions: {
+    /** ------------------------------------------------------
+     *  SSE 연결 (로그인 직후 1번만 연결)
+     * ------------------------------------------------------ */
     connectSSE() {
       const token = localStorage.getItem('accessToken')
-      if (!token) return
-
-      if (this.eventSource) {
-        this.eventSource.close()
-        this.eventSource = null
+      if (!token) {
+        console.log('[SSE] 토큰 없음 → 연결 안함')
+        return
       }
 
+      if (this.eventSource && this.eventSource.readyState !== 2) {
+        console.log('[SSE] 이미 연결됨 또는 연결 중 → 스킵')
+        return
+      }
+
+      console.log('[SSE] Connecting...')
       this.connectionState = 'connecting'
-      console.log('[SSE] Connecting with token:', token)
 
       const baseUrl = 'http://localhost:8080/api/sse/notifications'
-      const query = this.lastEventId 
-        ? `?lastEventId=${encodeURIComponent(this.lastEventId)}`
-        : ''
+      const query = this.lastEventId ? `?lastEventId=${encodeURIComponent(this.lastEventId)}` : ''
       const url = baseUrl + query
-
-      console.log('[SSE] subscribe URL:', url)
 
       this.eventSource = new EventSourcePolyfill(url, {
         headers: { Authorization: `Bearer ${token}` },
@@ -48,9 +52,20 @@ export const useNotificationStore = defineStore('notification', {
       })
 
       this.eventSource.onopen = () => {
-        console.log('[SSE] Connected!')
-        this.connectionState = 'connected'
-        this.retryCount = 0
+        console.log('[SSE] Connected')
+
+        if (this.connectionState !== 'connected') {
+          this.connectionState = 'connected'
+          this.retryCount = 0
+          this.allowRetry = true
+        }
+
+        if (this.lastEventId) {
+          console.log('[SSE] Syncing lastEventId → Reconnect')
+          // this.eventSource.close()
+          // this.eventSource = null
+          // setTimeout(() => this.connectSSE(), 50)
+        }
       }
 
       this.eventSource.addEventListener('notification', (event) => {
@@ -67,41 +82,52 @@ export const useNotificationStore = defineStore('notification', {
 
           const notifId = mappedNotif.notificationId ?? mappedNotif.id
 
-          // 중복 방지
-          if (!this.notifications.some(n => n.id === notifId)) {
-            this.notifications.unshift({
-              id: notifId,
-              senderId: mappedNotif.senderId,
-              receiverId: mappedNotif.receiverId,
-              targetType: mappedNotif.targetType,
-              targetAction: mappedNotif.targetAction,
-              targetId: mappedNotif.targetId,
-              message: mappedNotif.message,
-              read: mappedNotif.isRead ?? false,
-              createdAt: mappedNotif.createdAt
-            })
-
-            // 100개 초과 방지
-            if (this.notifications.length > 100) this.notifications.splice(-1, 1)
+          const newNotification = {
+            id: notifId,
+            senderId: mappedNotif.senderId,
+            receiverId: mappedNotif.receiverId,
+            targetType: mappedNotif.targetType,
+            targetAction: mappedNotif.targetAction,
+            targetId: mappedNotif.targetId,
+            message: mappedNotif.message,
+            read: mappedNotif.isRead ?? false,
+            createdAt: mappedNotif.createdAt
           }
-        } catch (e) {
-          console.error('[SSE] parse error', e)
-        }
-      })
 
-      this.eventSource.addEventListener('connect', (event) => {
-        console.log('[SSE] connect event:', event.data)
+          const index = this.notifications.findIndex(n => n.id === notifId)
+
+          if (index !== -1) {
+            this.notifications.splice(index, 1, newNotification)
+          } else {
+            this.notifications.unshift(newNotification)
+            this.pushToast(newNotification)
+            console.log('[SSE] pushToast called')
+          }
+
+          if (this.notifications.length > 100)
+            this.notifications.splice(-1, 1)
+
+        } catch (e) {
+          console.error('[SSE] JSON parse error:', e)
+        }
       })
 
       this.eventSource.onerror = (err) => {
         console.error('[SSE] Error:', err)
-        this.connectionState = 'error'
-        this.handleReconnect()
+
+        if (this.eventSource && this.eventSource.readyState === 2) {
+          this.connectionState = 'error'
+          this.handleReconnect()
+        }
       }
     },
 
+    /** ------------------------------------------------------
+     *  명시적 disconnect (로그아웃 / 탭 종료)
+     * ------------------------------------------------------ */
     disconnectSSE() {
-      console.log('[SSE] disconnect requested')
+      console.log('[SSE] Disconnect requested')
+
       this.allowRetry = false
       this.retryCount = 0
 
@@ -116,10 +142,20 @@ export const useNotificationStore = defineStore('notification', {
       }
 
       this.connectionState = 'disconnected'
+
+      this.notifications = []
+      this.lastEventId = null
+      localStorage.removeItem('lastEventId')
     },
 
+    /** ------------------------------------------------------
+     *  서버가 완전히 죽었을 때만 자동 재연결
+     * ------------------------------------------------------ */
     handleReconnect() {
-      if (!this.allowRetry) return
+      if (!this.allowRetry) {
+        console.log('[SSE] allowRetry=false → 재연결 안함')
+        return
+      }
 
       this.retryCount++
       const delay = Math.min(1000 * Math.pow(2, this.retryCount), 30000)
@@ -131,27 +167,26 @@ export const useNotificationStore = defineStore('notification', {
       }, delay)
     },
 
+    /** ------------------------------------------------------
+     *  초기 fetch (기존 알림 로드)
+     * ------------------------------------------------------ */
     async fetchNotifications() {
       try {
         const token = localStorage.getItem('accessToken')
-        if (!token) throw new Error('No accessToken found')
+        if (!token) return
 
         const res = await axios.get('/api/notifications', {
           headers: { Authorization: `Bearer ${token}` }
         })
-        console.log('fetchNotifications 응답:', res)
 
-        let notificationsArray = []
-        if (Array.isArray(res.data)) notificationsArray = res.data
-        else if (Array.isArray(res.data.data)) notificationsArray = res.data.data
-        else {
-          console.warn('fetchNotifications: unexpected structure', res.data)
-          return
-        }
+        let list = []
+        if (Array.isArray(res.data)) list = res.data
+        else if (Array.isArray(res.data.data)) list = res.data.data
 
-        notificationsArray.forEach(n => {
+        list.forEach(n => {
           const id = n.notificationId ?? n.id
-          if (!this.notifications.some(notif => notif.id === id)) {
+
+          if (!this.notifications.some(nn => nn.id === id)) {
             this.notifications.push({
               id,
               senderId: n.senderId,
@@ -160,7 +195,7 @@ export const useNotificationStore = defineStore('notification', {
               targetAction: n.targetAction,
               targetId: n.targetId,
               message: n.message,
-              read: n.isRead ?? false,
+              read: n.read ?? false,
               createdAt: n.createdAt
             })
           }
@@ -169,10 +204,91 @@ export const useNotificationStore = defineStore('notification', {
         if (this.notifications.length)
           this.lastEventId = this.notifications[0].id
 
-        console.log('fetchNotifications 완료:', this.notifications)
       } catch (err) {
         console.error('fetchNotifications error', err)
       }
+    },
+
+    /** ------------------------------------------------------
+     *  알림 수신 시
+     * ------------------------------------------------------ */
+    pushToast(notification) {
+      console.log('pushToast called:', notification)
+      const toast = { id: Date.now(), notification }
+
+      const MAX_TOAST = 3
+
+      if (this.toastList.length >= MAX_TOAST) {
+        this.toastQueue.push(toast)
+      } else {
+        this.toastList.push(toast)
+        this.autoRemoveToast(toast)
+      }
+    },
+    autoRemoveToast(toast) {
+      setTimeout(() => {
+
+        this.toastList = this.toastList.filter(t => t.id !== toast.id)
+        
+        if (this.toastQueue.length > 0) {
+          const next = this.toastQueue.shift()
+          this.toastList.push(next)
+          this.autoRemoveToast(next)
+        }
+      }, 8000)
+    },
+
+    /** ------------------------------------------------------
+     *  알림 클릭 시 이동
+     * ------------------------------------------------------ */
+    async handleNotificationClick(notification, router) {
+      // 1. 읽음 처리
+      if (!notification.read) {
+        notification.read = true
+        try {
+          await axios.patch(`/api/notifications/${notification.id}`, {}, {
+            headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` }
+          })
+          this.markAsRead(notification.id)
+        } catch (err) {
+          console.error(err)
+        }
+      }
+
+      // 2. 라우팅
+      switch (notification.targetType) {
+        case 'PROPOSAL':
+          router.push(`/proposal/${notification.targetId}`)
+          break
+        case 'PROJECT':
+          router.push(`/project/${notification.targetId}`)
+          break
+        case 'ESTIMATE':
+          router.push(`/estimate/${notification.targetId}`)
+          break
+        case 'CONTRACT':
+          router.push(`/contract/${notification.targetId}`)
+          break
+        case 'REVENUE':
+          router.push(`/revenue/${notification.targetId}`)
+          break
+        default:
+          console.warn('Unknown notification targetType:', notification.targetType)
+      }
+    },
+
+    /** ------------------------------------------------------
+     *  알림 읽음 처리
+     * ------------------------------------------------------ */
+    markAsRead(notificationId) {
+      const index = this.notifications.findIndex(n => n.id === notificationId)
+      if (index !== -1) {
+        this.notifications[index] = {
+          ...this.notifications[index],
+          read: true
+        }
+      }
     }
+
   }
 })

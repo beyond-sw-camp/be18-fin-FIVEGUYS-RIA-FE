@@ -142,6 +142,8 @@ const logoutHandler = async () => {
   } catch (e) {
     console.error(e);
   } finally {
+    notificationStore.disconnectSSE();
+
     authStore.forceLogout();
     router.push("/login");
   }

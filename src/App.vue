@@ -18,6 +18,15 @@
     >
       {{ snackbar.message }}
     </v-snackbar>
+
+    <!-- 전역 토스트 알림 -->
+    <div class="toast-container">
+      <ToastNotification
+        v-for="t in notificationStore.toastList"
+        :key="t.id"
+        :notification="t.notification"
+      />
+    </div>
   </v-app>
 </template>
 
@@ -28,28 +37,45 @@ import HeaderComponent from "@/components/common/HeaderComponent.vue";
 import FooterComponent from "@/components/common/FooterComponent.vue";
 import { useSnackbarStore } from "@/stores/useSnackbarStore";
 import { useNotificationStore } from "@/modules/notification/store/notificationStore";
+import ToastNotification from "@/modules/notification/components/ToastNotification.vue"
+import { useAuthStore } from "./stores/auth";
 import { onMounted } from 'vue';
 
 const route = useRoute();
 const snackbar = useSnackbarStore();
 
+const notificationStore = useNotificationStore();
+const authStore = useAuthStore();
+
 const hideHeader = computed(() => !!route.meta?.hideHeader);
 const hideFooter = computed(() => !!route.meta?.hideFooter);
 
-const notificationStore = useNotificationStore()
-
 onMounted(async () => {
   console.log('App.vue onMounted 실행됨')
-  console.log('notificationStore:', notificationStore)
 
-  // 초기 알림 가져오기
-  console.log('fetchNotifications 호출 전')
-  await notificationStore.fetchNotifications()
-  console.log('fetchNotifications 완료')
+  if (!localStorage.getItem('accessToken')) {
+    authStore.isAuthenticated = false
+  }
 
-  // SSE 연결
-  console.log('connectSSE 호출 전')
-  notificationStore.connectSSE()
+  if (!authStore.isAuthenticated) {
+    console.log('인증되지 않은 상태. 초기 알림/ SSE 연결 스킵')
+    return
+  }
+
+  try {
+    // 1) 초기 알림 가져오기
+    console.log('fetchNotifications 호출 전')
+    await notificationStore.fetchNotifications()
+    console.log('fetchNotifications 완료')
+
+    // 2) SSE 연결
+    console.log('connectSSE 호출 전')
+    notificationStore.connectSSE()
+    console.log('connectSSE 호출 완료')
+
+  } catch (error) {
+    console.error('App.vue 초기 로딩 중 오류:', error)
+  }
 })
 </script>
 
@@ -104,5 +130,15 @@ onMounted(async () => {
   max-width: 100% !important;
   margin: 0 !important;
   padding: 0 !important;
+}
+
+.toast-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 6px;
+  z-index: 9999;
 }
 </style>

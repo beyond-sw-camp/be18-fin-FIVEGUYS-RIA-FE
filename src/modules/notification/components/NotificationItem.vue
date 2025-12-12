@@ -1,5 +1,9 @@
 <template>
-    <div class="notif-card" @click="$emit('click', notification)">
+    <div
+        class="notif-card"
+        :class="{ 'notif-read': notification.read }"
+        @click="$emit('click', notification)"
+    >
         <v-list-item-content>
         <div class="notif-message">{{ notification.message }}</div>
         <div class="notif-time">{{ formattedTime }}</div>
@@ -15,10 +19,7 @@ import relativeTime from 'dayjs/plugin/relativeTime'
 dayjs.extend(relativeTime)
 
 const props = defineProps({
-    notification: {
-        type: Object,
-        required: true
-    }
+    notification: { type: Object, required: true }
 })
 
 const { notification } = props
@@ -41,6 +42,10 @@ const formattedTime = computed(() => dayjs(notification.createdAt).fromNow())
     transform: translateY(-2px);
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
     background-color: #f7f7f7;
+}
+
+.notif-read {
+    background-color: #f0f0f0;
 }
 
 .notif-message {

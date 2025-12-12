@@ -9,7 +9,7 @@
             v-for="notif in filteredNotifications"
             :key="notif.id"
             :notification="notif"
-            @click="$emit('click', notif)"
+            @click="handleClick(notif)"
         />
         </div>
 
@@ -25,15 +25,21 @@
 
 <script setup>
 import { computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { useNotificationStore } from '@/modules/notification/store/notificationStore'
 import NotificationItem from './NotificationItem.vue'
 
+const router = useRouter()
 const notificationStore = useNotificationStore()
 
 const filteredNotifications = computed(() => notificationStore.filteredNotifications)
 
 const goToAllNotifications = () => {
   // 나중에 클릭 핸들러 구현
+}
+
+const handleClick = async (notification) => {
+    await notificationStore.handleNotificationClick(notification, router)
 }
 </script>
 
