@@ -6,55 +6,28 @@
             <v-col cols="12" md="2" class="pa-4 sidebar">
                 <v-card class="sidebar-card pa-6" flat>
 
-                <!-- 즐겨찾기 버튼 -->
-                <div class="d-flex justify-end mb-4">
-                    <v-btn
-                    small
-                    class="favorite-toggle-btn"
-                    @click="showFavoritesOnly = !showFavoritesOnly"
-                    elevation="1"
-                    >
-                    <v-icon :color="showFavoritesOnly ? '#FFD60A' : '#8e8e93'">
-                        {{ showFavoritesOnly ? 'mdi-star' : 'mdi-star-outline' }}
-                    </v-icon>
-                    </v-btn>
-                </div>
+                    <!-- 즐겨찾기 버튼 -->
+                    <div class="d-flex justify-end mb-4">
+                        <v-btn small class="favorite-toggle-btn" @click="showFavoritesOnly = !showFavoritesOnly"
+                            elevation="1">
+                            <v-icon :color="showFavoritesOnly ? '#FFD60A' : '#8e8e93'">
+                                {{ showFavoritesOnly ? 'mdi-star' : 'mdi-star-outline' }}
+                            </v-icon>
+                        </v-btn>
+                    </div>
 
-                <!-- 검색 -->
-                <v-text-field
-                    v-model="search"
-                    append-inner-icon="mdi-magnify"
-                    label="검색"
-                    variant="outlined"
-                    hide-details
-                    density="comfortable"
-                    class="mb-4"
-                />
+                    <!-- 검색 -->
+                    <v-text-field v-model="search" append-inner-icon="mdi-magnify" label="검색" variant="outlined"
+                        hide-details density="comfortable" class="mb-4" />
 
-                <v-select
-                v-model="selectedUser"
-                :items="users"
-                item-title="name"
-                item-value="userId"
-                label="작성자"
-                variant="outlined"
-                hide-details
-                density="comfortable"
-                class="mb-4 sidebar-input"
-                />
+                    <v-select v-model="selectedUser" :items="users" item-title="name" item-value="userId" label="작성자"
+                        variant="outlined" hide-details density="comfortable" class="mb-4 sidebar-input" />
 
-                <!-- 상태 체크박스 그룹 -->
-                <div class="sidebar-checkbox-group mt-4">진행 상태
-                    <v-checkbox
-                    v-for="sidebar in sidebares"
-                    :key="sidebar.value"
-                    v-model="sidebar.checked"
-                    :label="sidebar.label"
-                    hide-details
-                    dense
-                    class="sidebar-checkbox"
-                    ></v-checkbox>
-                </div>
+                    <!-- 상태 체크박스 그룹 -->
+                    <div class="sidebar-checkbox-group mt-4">진행 상태
+                        <v-checkbox v-for="sidebar in sidebares" :key="sidebar.value" v-model="sidebar.checked"
+                            :label="sidebar.label" hide-details dense class="sidebar-checkbox"></v-checkbox>
+                    </div>
 
                 </v-card>
             </v-col>
@@ -156,7 +129,7 @@ const snackbarColor = ref("error");
 const router = useRouter();
 
 const sidebares = reactive([
-    { label: '제출됨', value: 'SUBMITTED', checked: true },
+    { label: '제출됨', value: 'SUBMITTED', checked: false },
     { label: '완료', value: 'COMPLETED', checked: false },
     { label: '취소됨', value: 'CANCELED', checked: false },
 ]);
@@ -237,7 +210,7 @@ function fuzzyMatch(source, keyword) {
     let i = 0;
     for (let j = 0; j < source.length && i < keyword.length; j++) {
         if (source[j] === keyword[i]) {
-        i++;
+            i++;
         }
     }
     return i === keyword.length;
@@ -249,10 +222,10 @@ const filteredContracts = computed(() => {
 
     return contracts.value.filter(c => {
         const matchesSearch =
-        !searchText ||
-        fuzzyMatch(c.contractTitle || '', searchText) ||
-        fuzzyMatch(c.clientCompanyName || '', searchText) ||
-        fuzzyMatch(c.clientName || '', searchText);
+            !searchText ||
+            fuzzyMatch(c.contractTitle || '', searchText) ||
+            fuzzyMatch(c.clientCompanyName || '', searchText) ||
+            fuzzyMatch(c.clientName || '', searchText);
 
         const matchesStatus =
             activeStatuses.length === 0 || activeStatuses.includes(String(c.status || '').toUpperCase());

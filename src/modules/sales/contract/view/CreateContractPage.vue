@@ -21,13 +21,8 @@
                 <div class="input-label">
                   계약 제목 <span class="required">*</span>
                 </div>
-                <v-text-field
-                  v-model="form.contractTitle"
-                  class="input-field"
-                  variant="outlined"
-                  hide-details
-                  placeholder="계약 제목 입력"
-                />
+                <v-text-field v-model="form.contractTitle" class="input-field" variant="outlined" hide-details
+                  placeholder="계약 제목 입력" />
               </v-col>
 
               <!-- 프로젝트 선택 -->
@@ -35,57 +30,31 @@
                 <div class="input-label">
                   프로젝트 <span class="required">*</span>
                 </div>
-                <v-text-field
-                  v-model="form.projectName"
-                  placeholder="프로젝트 선택"
-                  class="input-field"
-                  variant="outlined"
-                  hide-details
-                  readonly
-                  @click="projectDialog = true"
-                />
-                <v-btn
-                  v-if="form.projectId"
-                  icon
-                  @click.stop="clearProject"
-                  small
-                  class="ml-1 ios-clear-btn"
-                >
-                  <v-icon size="20">mdi-close-circle</v-icon>
-                </v-btn>
-                <ProjectSelectModal
-                  v-model="projectDialog"
-                  @select="onSelectProject"
-                />
+                <v-text-field v-model="form.projectName" placeholder="프로젝트 선택" class="input-field" variant="outlined"
+                  hide-details readonly @click="projectDialog = true">
+                  <template #append-inner>
+                    <v-icon v-if="form.projectName" size="20" class="cursor-pointer" @click.stop="clearProject">
+                      mdi-close
+                    </v-icon>
+                  </template>
+                </v-text-field>
+                <ProjectSelectModal v-model="projectDialog" @select="onSelectProject" />
               </v-col>
-
               <!-- 견적 선택 (옵션) -->
               <v-col cols="12">
                 <div class="input-label">견적 선택</div>
-                <v-text-field
-                  v-model="selectedEstimateTitle"
-                  placeholder="견적 선택 (선택 사항)"
-                  class="input-field"
-                  variant="outlined"
-                  hide-details
-                  readonly
-                  @click="estimateDialog = true"
-                />
-                <EstimateSelectModal
-                  v-model="estimateDialog"
-                  :project-id="form.projectId"
-                  :nullable="true"
-                  @select="onSelectEstimate"
-                />
-                <v-btn
-                  v-if="form.estimateId"
-                  icon
-                  @click.stop="clearEstimate"
-                  small
-                  class="ml-2 ios-clear-btn"
-                >
-                  <v-icon size="20">mdi-close-circle</v-icon>
-                </v-btn>
+
+                <v-text-field v-model="selectedEstimateTitle" placeholder="견적 선택 (선택 사항)" class="input-field"
+                  variant="outlined" hide-details readonly @click="estimateDialog = true">
+                  <template #append-inner>
+                    <v-icon v-if="selectedEstimateTitle" size="20" class="cursor-pointer" @click.stop="clearEstimate">
+                      mdi-close
+                    </v-icon>
+                  </template>
+                </v-text-field>
+
+                <EstimateSelectModal v-model="estimateDialog" :project-id="form.projectId" :nullable="true"
+                  @select="onSelectEstimate" />
               </v-col>
 
               <!-- 고객사 / 담당 고객 -->
@@ -93,27 +62,15 @@
                 <div class="input-label">
                   고객사 <span class="required">*</span>
                 </div>
-                <v-text-field
-                  v-model="form.clientCompanyName"
-                  class="input-field"
-                  variant="outlined"
-                  hide-details
-                  readonly
-                  @click="companyDialog = true"
-                />
+                <v-text-field v-model="form.clientCompanyName" class="input-field" variant="outlined" hide-details
+                  readonly @click="companyDialog = true" />
               </v-col>
               <v-col cols="12" md="6">
                 <div class="input-label">
                   담당 고객 <span class="required">*</span>
                 </div>
-                <v-text-field
-                  v-model="form.clientName"
-                  class="input-field"
-                  variant="outlined"
-                  hide-details
-                  readonly
-                  @click="clientDialog = true"
-                />
+                <v-text-field v-model="form.clientName" class="input-field" variant="outlined" hide-details readonly
+                  @click="clientDialog = true" />
               </v-col>
 
               <!-- 계약 시작일 / 마감일 -->
@@ -121,50 +78,24 @@
                 <div class="input-label">
                   계약 시작일 <span class="required">*</span>
                 </div>
-                <v-menu
-                  v-model="contractStartMenu"
-                  :close-on-content-click="false"
-                >
+                <v-menu v-model="contractStartMenu" :close-on-content-click="false">
                   <template #activator="{ props }">
-                    <v-text-field
-                      :value="formatDate(form.contractStartDate)"
-                      class="input-field"
-                      readonly
-                      placeholder="YYYY-MM-DD"
-                      variant="outlined"
-                      hide-details
-                      v-bind="props"
-                    />
+                    <v-text-field :value="formatDate(form.contractStartDate)" class="input-field" readonly
+                      placeholder="계약 시작일을 선택하세요" variant="outlined" hide-details v-bind="props" />
                   </template>
-                  <v-date-picker
-                    v-model="form.contractStartDate"
-                    @update:model-value="contractStartMenu = false"
-                  />
+                  <v-date-picker v-model="form.contractStartDate" @update:model-value="contractStartMenu = false" />
                 </v-menu>
               </v-col>
               <v-col cols="12" md="6">
                 <div class="input-label">
                   계약 마감일 <span class="required">*</span>
                 </div>
-                <v-menu
-                  v-model="contractEndMenu"
-                  :close-on-content-click="false"
-                >
+                <v-menu v-model="contractEndMenu" :close-on-content-click="false">
                   <template #activator="{ props }">
-                    <v-text-field
-                      :value="formatDate(form.contractEndDate)"
-                      class="input-field"
-                      readonly
-                      placeholder="YYYY-MM-DD"
-                      variant="outlined"
-                      hide-details
-                      v-bind="props"
-                    />
+                    <v-text-field :value="formatDate(form.contractEndDate)" class="input-field" readonly
+                      placeholder="계약 종료일을 선택하세요" variant="outlined" hide-details v-bind="props" />
                   </template>
-                  <v-date-picker
-                    v-model="form.contractEndDate"
-                    @update:model-value="contractEndMenu = false"
-                  />
+                  <v-date-picker v-model="form.contractEndDate" @update:model-value="contractEndMenu = false" />
                 </v-menu>
               </v-col>
 
@@ -173,65 +104,32 @@
                 <div class="input-label">
                   계약 유형 <span class="required">*</span>
                 </div>
-                <v-select
-                  v-model="form.contractType"
-                  :items="contractTypes"
-                  item-title="label"
-                  item-value="value"
-                  class="input-field"
-                  hide-details
-                  variant="outlined"
-                />
+                <v-select v-model="form.contractType" :items="contractTypes" item-title="label" item-value="value"
+                  class="input-field" hide-details variant="outlined" />
               </v-col>
               <v-col cols="12" md="6">
                 <div class="input-label">
                   계약일 <span class="required">*</span>
                 </div>
-                <v-menu
-                  v-model="contractDateMenu"
-                  :close-on-content-click="false"
-                >
+                <v-menu v-model="contractDateMenu" :close-on-content-click="false">
                   <template #activator="{ props }">
-                    <v-text-field
-                      :value="formatDate(form.contractDate)"
-                      class="input-field"
-                      readonly
-                      placeholder="YYYY-MM-DD"
-                      variant="outlined"
-                      hide-details
-                      v-bind="props"
-                    />
+                    <v-text-field :value="formatDate(form.contractDate)" class="input-field" readonly
+                      placeholder="YYYY-MM-DD" variant="outlined" hide-details v-bind="props" />
                   </template>
-                  <v-date-picker
-                    v-model="form.contractDate"
-                    @update:model-value="contractDateMenu = false"
-                  />
+                  <v-date-picker v-model="form.contractDate" @update:model-value="contractDateMenu = false" />
                 </v-menu>
               </v-col>
 
               <!-- 보증금 / 수수료율 -->
               <v-col cols="6" md="6">
                 <div class="input-label">보증금</div>
-                <v-text-field
-                  v-model.number="form.contractAmount"
-                  type="number"
-                  class="input-field"
-                  variant="outlined"
-                  hide-details
-                  placeholder="예: 1000000"
-                />
+                <v-text-field v-model.number="form.contractAmount" type="number" class="input-field" variant="outlined"
+                  hide-details placeholder="예: 1000000" />
               </v-col>
               <v-col cols="6" md="6">
                 <div class="input-label">수수료율(%)</div>
-                <v-text-field
-                  v-model.number="form.commissionRate"
-                  type="number"
-                  class="input-field"
-                  variant="outlined"
-                  hide-details
-                  placeholder="예: 10"
-                  :readonly="form.contractType === 'LEASE'"
-                />
+                <v-text-field v-model.number="form.commissionRate" type="number" class="input-field" variant="outlined"
+                  hide-details placeholder="예: 10" :readonly="form.contractType === 'LEASE'" />
               </v-col>
 
               <v-divider class="section-divider mb-3"></v-divider>
@@ -242,10 +140,8 @@
                   <div class="total-title">총 계약 금액</div>
                   <div class="total-price">
                     ₩{{ totalContractAmount.toLocaleString() }}
-                    <span
-                      v-if="form.commissionRate && form.commissionRate > 0"
-                      style="font-size: 0.8rem; color: #555; margin-left: 6px"
-                    >
+                    <span v-if="form.commissionRate && form.commissionRate > 0"
+                      style="font-size: 0.8rem; color: #555; margin-left: 6px">
                       + α × {{ form.commissionRate }}%
                     </span>
                   </div>
@@ -257,40 +153,22 @@
                 <div class="input-label">
                   결제 조건 <span class="required">*</span>
                 </div>
-                <v-select
-                  v-model="form.paymentCondition"
-                  :items="paymentOptions"
-                  item-title="label"
-                  item-value="value"
-                  class="input-field"
-                  hide-details
-                  variant="outlined"
-                />
+                <v-select v-model="form.paymentCondition" :items="paymentOptions" item-title="label" item-value="value"
+                  class="input-field" hide-details variant="outlined" />
               </v-col>
               <v-col cols="12" md="6">
                 <div class="input-label">
                   화폐 <span class="required">*</span>
                 </div>
-                <v-select
-                  v-model="form.currency"
-                  :items="currencyOptions"
-                  item-title="label"
-                  item-value="value"
-                  class="input-field"
-                  hide-details
-                  variant="outlined"
-                />
+                <v-select v-model="form.currency" :items="currencyOptions" item-title="label" item-value="value"
+                  class="input-field" hide-details variant="outlined" />
               </v-col>
 
               <!-- 비고 -->
               <v-col cols="12">
                 <div class="input-label">비고</div>
-                <v-textarea
-                  v-model="form.remark"
-                  class="textarea-field"
-                  rows="3"
-                  hide-details
-                />
+                <v-textarea v-model="form.remark" class="textarea-field no-gradient-textarea" rows="3" hide-details
+                  variant="outlined" />
               </v-col>
             </v-row>
           </v-card>
@@ -304,117 +182,68 @@
             </div>
             <v-divider class="section-divider mb-3"></v-divider>
 
-            <v-card
-              v-for="(sp, idx) in form.spaces"
-              :key="idx"
-              class="space-card pa-3 mb-3"
-            >
+            <v-card v-for="(sp, idx) in form.spaces" :key="idx" class="space-card pa-3 mb-3">
               <v-row dense>
                 <!-- 층 선택 -->
                 <v-col cols="12" md="6">
                   <div class="input-label">층 선택</div>
-                  <v-select
-                    v-model="sp.floorId"
-                    :items="floorOptions"
-                    item-title="label"
-                    item-value="id"
-                    class="input-field"
-                    hide-details
-                    variant="outlined"
-                    @update:modelValue="onFloorChange(idx)"
-                  />
+                  <v-select v-model="sp.floorId" :items="floorOptions" item-title="label" item-value="id"
+                    class="input-field" hide-details variant="outlined" @update:modelValue="onFloorChange(idx)" />
                 </v-col>
 
                 <!-- 매장 선택 -->
                 <v-col cols="12" md="6">
                   <div class="input-label">매장(호수)</div>
-                  <v-select
-                    v-model="sp.storeId"
-                    :items="spaceStoreOptions[idx]"
-                    item-title="storeNumber"
-                    item-value="storeId"
-                    class="input-field"
-                    hide-details
-                    variant="outlined"
-                    @update:modelValue="onStoreChange(idx)"
-                  />
+                  <v-select v-model="sp.storeId" :items="spaceStoreOptions[idx]" item-title="storeNumber"
+                    item-value="storeId" class="input-field" hide-details variant="outlined"
+                    @update:modelValue="onStoreChange(idx)" />
                 </v-col>
 
                 <!-- 면적 -->
                 <v-col cols="12" md="6">
                   <div class="input-label">면적</div>
-                  <v-text-field
-                    :value="sp.areaSize ? sp.areaSize + '㎡' : ''"
-                    class="input-field"
-                    readonly
-                  />
+                  <v-text-field :value="sp.areaSize ? sp.areaSize + '㎡' : ''" class="input-field" readonly />
                 </v-col>
 
                 <!-- 매장 타입 -->
                 <v-col cols="12" md="6">
                   <div class="input-label">매장 타입</div>
-                  <v-text-field
-                    :value="sp.storeType"
-                    class="input-field"
-                    readonly
-                  />
+                  <v-text-field :value="sp.storeType" class="input-field" readonly />
                 </v-col>
 
                 <!-- 임대료 -->
                 <v-col cols="12" md="6">
                   <div class="input-label">임대료</div>
-                  <v-text-field
-                    :value="
-                      form.contractType === 'CONSIGNMENT'
-                        ? '0원'
-                        : sp.rentPrice
-                        ? sp.rentPrice.toLocaleString() + '원'
-                        : ''
-                    "
-                    class="input-field"
-                    readonly
-                  />
+                  <v-text-field :value="form.contractType === 'CONSIGNMENT'
+                    ? '0원'
+                    : sp.rentPrice
+                      ? sp.rentPrice.toLocaleString() + '원'
+                      : ''
+                    " class="input-field" readonly />
                 </v-col>
 
                 <!-- 추가 비용 -->
                 <v-col cols="12" md="6">
                   <div class="input-label">추가 비용</div>
-                  <v-text-field
-                    v-model.number="sp.additionalFee"
-                    type="number"
-                    class="input-field"
-                  />
+                  <v-text-field v-model.number="sp.additionalFee" type="number" class="input-field" />
                 </v-col>
 
                 <!-- 할인 금액 -->
                 <v-col cols="12" md="6">
                   <div class="input-label">할인 금액</div>
-                  <v-text-field
-                    v-model.number="sp.discountAmount"
-                    type="number"
-                    class="input-field"
-                  />
+                  <v-text-field v-model.number="sp.discountAmount" type="number" class="input-field" />
                 </v-col>
 
                 <!-- 공간 설명 -->
                 <v-col cols="12">
                   <div class="input-label">공간 설명</div>
-                  <v-textarea
-                    v-model="sp.description"
-                    class="textarea-field"
-                    rows="2"
-                  />
+                  <v-textarea v-model="sp.description" class="textarea-field no-gradient-textarea" rows="2"
+                    variant="outlined" />
                 </v-col>
-
                 <!-- 삭제 버튼 -->
                 <v-col cols="12" class="d-flex justify-end">
-                  <v-btn
-                    color="red"
-                    variant="outlined"
-                    small
-                    :disabled="form.spaces.length === 1"
-                    @click="removeSpace(idx)"
-                  >
+                  <v-btn color="red" variant="outlined" small :disabled="form.spaces.length === 1"
+                    @click="removeSpace(idx)">
                     삭제
                   </v-btn>
                 </v-col>
@@ -432,13 +261,7 @@
       </v-row>
 
       <div class="actions-row">
-        <v-btn
-          color="orange darken-2"
-          class="white--text px-6"
-          rounded="lg"
-          elevation="2"
-          @click="saveContract"
-        >
+        <v-btn color="orange darken-2" class="white--text px-6" rounded="lg" elevation="2" @click="saveContract">
           저장
         </v-btn>
       </div>
@@ -821,8 +644,8 @@ const saveContract = async () => {
       form.contractType === "LEASE"
         ? 0
         : form.commissionRate != null
-        ? Number(form.commissionRate)
-        : null,
+          ? Number(form.commissionRate)
+          : null,
     contractType: form.contractType,
     rentType: form.rentType || null,
     paymentCondition: form.paymentCondition,
@@ -971,7 +794,7 @@ const formatDate = (d) => {
   border-color: #e0e0e0;
 }
 
-.v-row > .v-col {
+.v-row>.v-col {
   margin-bottom: 16px;
 }
 
@@ -1036,5 +859,24 @@ const formatDate = (d) => {
   min-width: 0;
   padding: 0;
   transition: color 0.2s;
+}
+
+/* textarea: 그라데이션 제거 + 흰 배경 + 패딩 + 리사이즈 막기 */
+.no-gradient-textarea :deep(.v-field),
+.no-gradient-textarea :deep(.v-field__overlay),
+.no-gradient-textarea :deep(.v-field__input),
+.no-gradient-textarea :deep(textarea) {
+  background: #fff !important;
+  background-image: none !important;
+}
+
+/* textarea 내부 패딩 */
+.no-gradient-textarea :deep(.v-field__input) {
+  padding: 12px 12px !important;
+}
+
+/* 리사이즈 핸들 제거 */
+.no-gradient-textarea :deep(textarea) {
+  resize: none !important;
 }
 </style>
