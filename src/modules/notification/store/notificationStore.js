@@ -42,7 +42,9 @@ export const useNotificationStore = defineStore('notification', {
       console.log('[SSE] Connecting...')
       this.connectionState = 'connecting'
 
-      const baseUrl = 'http://localhost:8080/api/sse/notifications'
+      // const baseUrl = 'http://localhost:8080/api/sse/notifications'
+      const baseUrl = '${import.meta.env.VITE_API_BASE_URL}/api/sse/notifications`'
+      console.log('VITE_API_BASE_URL =', import.meta.env.VITE_API_BASE_URL)
       const query = this.lastEventId ? `?lastEventId=${encodeURIComponent(this.lastEventId)}` : ''
       const url = baseUrl + query
 
