@@ -78,27 +78,57 @@
 
     <v-spacer></v-spacer>
 
-    <v-btn icon><v-icon>mdi-bell-outline</v-icon></v-btn>
+    <!-- notification -->
+    <!-- 알림 메뉴 -->
+    <v-menu v-model="dropdownOpen" offset-y transition="scale-transition" max-width="350" min-width="280"
+      :close-on-content-click="false">
+      <template #activator="{ props }">
+        <v-btn icon v-bind="props">
+          <v-badge :content="unreadCount" color="red" overlap>
+            <v-icon>mdi-bell-outline</v-icon>
+          </v-badge>
+        </v-btn>
+      </template>
+
+      <NotificationDropdown @close="dropdownOpen = false" />
+    </v-menu>
+
+    <v-btn icon><v-icon>mdi-cog-outline</v-icon></v-btn>
     <v-btn icon to="/mypage"><v-icon>mdi-account-circle</v-icon></v-btn>
     <v-btn icon @click="logoutHandler"><v-icon>mdi-logout</v-icon></v-btn>
   </v-app-bar>
 </template>
 
 <script setup>
+import { ref, computed } from 'vue'
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
+import { useNotificationStore } from '@/modules/notification/store/notificationStore'
 import { logout as logoutApi } from "@/apis/auth";
+import NotificationDropdown from '@/modules/notification/components/NotificationDropdown.vue'
 import logoSrc from "@/assets/로고.png";
 
-const router = useRouter();
-const authStore = useAuthStore();
+const router = useRouter()
+const authStore = useAuthStore()
+const notificationStore = useNotificationStore()
 
+// v-menu 상태
+const dropdownOpen = ref(false)
+
+// 알림 안읽은 개수
+const unreadCount = computed(() =>
+  notificationStore.notifications.filter(n => !n.read).length
+)
+
+// 로그아웃 핸들러
 const logoutHandler = async () => {
   try {
     await logoutApi();
   } catch (e) {
     console.error(e);
   } finally {
+    notificationStore.disconnectSSE();
+
     authStore.forceLogout();
     router.push("/login");
   }
