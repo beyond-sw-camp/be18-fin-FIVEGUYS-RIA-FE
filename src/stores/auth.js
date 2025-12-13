@@ -66,6 +66,8 @@ export const useAuthStore = defineStore("auth", {
       this.user = null;
       this.role = null;
       localStorage.removeItem("accessToken");
+      
+      localStorage.removeItem('lastEventId');
     },
   },
 });
