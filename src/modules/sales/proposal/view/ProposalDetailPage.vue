@@ -86,8 +86,8 @@
         </v-col>
       </v-row>
 
-      <!-- 버튼 그룹 -->
-      <div class="actions-row">
+      <!-- 버튼 그룹: COMPLETED면 아예 숨김 -->
+      <div class="actions-row" v-if="!isCompleted">
         <div v-if="!editMode" class="d-flex gap-3">
           <v-btn color="orange darken-2" class="white--text px-6" rounded="lg" elevation="2" @click="editMode = true">
             편집
@@ -96,6 +96,7 @@
             삭제
           </v-btn>
         </div>
+
         <div v-else class="d-flex gap-3">
           <v-btn color="orange darken-2" class="white--text px-6" rounded="lg" elevation="2" @click="saveProposal">
             저장
@@ -118,8 +119,8 @@
             전체
           </v-chip>
 
-          <v-chip class="mr-2" :color="clientTypeFilter === 'CLIENT' ? 'orange darken-2' : undefined
-            " :text-color="clientTypeFilter === 'CLIENT' ? 'white' : undefined" @click="clientTypeFilter = 'CLIENT'">
+          <v-chip class="mr-2" :color="clientTypeFilter === 'CLIENT' ? 'orange darken-2' : undefined"
+            :text-color="clientTypeFilter === 'CLIENT' ? 'white' : undefined" @click="clientTypeFilter = 'CLIENT'">
             고객사
           </v-chip>
 
@@ -194,15 +195,8 @@ import {
   deleteProposal as deleteProposalApi,
 } from "@/apis/proposal";
 
-import {
-  getProjectTitles,
-  getProjectMeta,
-  getProjectsWithPipelines,
-} from "@/apis/project";
-import {
-  getSimpleClientCompanies,
-  getSimpleClientsByCompany,
-} from "@/apis/client";
+import { getProjectMeta, getProjectsWithPipelines } from "@/apis/project";
+import { getSimpleClientCompanies, getSimpleClientsByCompany } from "@/apis/client";
 
 const router = useRouter();
 const route = useRoute();
@@ -234,7 +228,10 @@ const form = reactive({
   content: "",
   notes: "",
   salesManager: "",
+  status: "", // 추가
 });
+
+const isCompleted = computed(() => form.status === "COMPLETED");
 
 // 프로젝트
 const opportunityList = ref([]);
@@ -248,9 +245,10 @@ const fetchProjectTitles = async () => {
 
   opportunityList.value = res.data.content.map((p) => ({
     id: p.projectId,
-    name: p.title, // 백엔드 필드명: title
+    name: p.title,
   }));
 };
+
 watch(opportunityDialog, (open) => {
   if (open) fetchProjectTitles();
 });
@@ -262,7 +260,7 @@ const selectOpportunity = async (o) => {
   const { data } = await getProjectMeta(o.id);
 
   form.projectId = data.projectId;
-  form.projectType = data.projectName || o.name; // ← 핵심
+  form.projectType = data.projectName || o.name;
   form.clientCompanyId = data.clientCompanyId;
   form.clientCompany = data.clientCompanyName;
   form.clientId = data.clientId;
@@ -271,14 +269,13 @@ const selectOpportunity = async (o) => {
   opportunityDialog.value = false;
 };
 
-// 제안 수정 시 날짜 포맷 바뀌지 않게 수정
+// 날짜 포맷
 const formatDate = (date) => {
   if (!date) return "";
   const d = new Date(date);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
-    2,
-    "0"
-  )}-${String(d.getDate()).padStart(2, "0")}`;
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
+    d.getDate()
+  ).padStart(2, "0")}`;
 };
 
 const toLocalDate = (d) => {
@@ -361,9 +358,7 @@ const loadClientsByCompany = async (companyId) => {
 };
 
 const filteredClientPersons = computed(() =>
-  (clientList.value || []).filter((p) =>
-    p.name?.includes(clientPersonSearch.value)
-  )
+  (clientList.value || []).filter((p) => p.name?.includes(clientPersonSearch.value))
 );
 
 watch(clientDialog, (open) => {
@@ -405,9 +400,7 @@ const showSuccess = (msg = "저장이 완료되었습니다.") => {
 };
 
 const showError = (err) => {
-  const message =
-    err?.response?.data?.message || "요청 처리 중 오류가 발생했습니다.";
-
+  const message = err?.response?.data?.message || "요청 처리 중 오류가 발생했습니다.";
   snackbarMessage.value = message;
   snackbarColor.value = "red";
   snackbar.value = true;
@@ -459,27 +452,27 @@ const loadDetail = async () => {
   const id = route.params.id;
   const { data } = await getProposalDetail(id);
 
+  form.status = data.status || ""; // 추가
   form.projectName = data.title;
 
-  // ❗ 프로젝트가 있을 때만 값 넣고, 없으면 기존 값 유지
   if (data.projectId) {
     form.projectId = data.projectId;
     form.projectType = data.projectTitle;
   }
 
-  // 고객사 / 고객
   form.clientCompanyId = data.clientCompanyId;
   form.clientCompany = data.clientCompanyName;
   form.clientId = data.clientId;
   form.clientOwner = data.clientName;
 
-  // 날짜
   form.startDate = data.requestDate ? new Date(data.requestDate) : null;
   form.endDate = data.submitDate ? new Date(data.submitDate) : null;
 
   form.content = data.data;
   form.notes = data.remark;
   form.salesManager = data.createdUserName;
+
+  if (form.status === "COMPLETED") editMode.value = false;
 };
 
 const cancelEdit = async () => {
@@ -514,7 +507,6 @@ onMounted(loadDetail);
   padding: 8px 14px 10px;
 }
 
-/* 위쪽 컴포넌트와 동일한 헤더 간격 */
 .section-title {
   font-size: 0.95rem;
   font-weight: 600;
@@ -522,7 +514,6 @@ onMounted(loadDetail);
   margin-bottom: 12px;
 }
 
-/* 라벨 크게 */
 .input-label {
   font-size: 0.9rem;
   font-weight: 600;
@@ -535,7 +526,6 @@ onMounted(loadDetail);
   padding-bottom: 1px !important;
 }
 
-/* 인풋 박스/텍스트 높이 + 폰트 설정 (신규 제안 생성 페이지와 동일) */
 .input-field {
   border-radius: 6px !important;
   font-size: 0.8rem;
@@ -554,7 +544,6 @@ onMounted(loadDetail);
   min-height: 32px !important;
 }
 
-/* 아이콘 / suffix 정렬 */
 .input-field :deep(.v-field__append-inner),
 .input-field :deep(.v-field__suffix),
 .input-field :deep(.v-field__prepend-inner) {
@@ -564,7 +553,6 @@ onMounted(loadDetail);
   align-items: center !important;
 }
 
-/* textarea 높이 + 폰트 + resize 제거 */
 .textarea-field :deep(.v-field) {
   min-height: 65px !important;
 }
