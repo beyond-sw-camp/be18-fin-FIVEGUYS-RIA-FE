@@ -20,8 +20,10 @@
       <v-col cols="12">
         <div class="pipeline-full">
           <template v-for="(step, i) in project.pipeline" :key="i">
-            <div class="pipeline-step" :class="step.completed ? 'completed' : 'pending'"
-              @click="openPipelineConfirm(i + 1)">
+            <div class="pipeline-step" :class="[
+              step.completed ? 'completed' : 'pending',
+              hasCompletedContract ? 'locked' : ''
+            ]" @click="!hasCompletedContract && openPipelineConfirm(i + 1)">
               {{ step.name }}
             </div>
             <div v-if="i < project.pipeline.length - 1" class="pipeline-line" :class="project.pipeline[i + 1].completed ? 'completed' : 'pending'

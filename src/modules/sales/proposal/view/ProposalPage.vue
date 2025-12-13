@@ -8,12 +8,12 @@
 
                     <!-- ⭐ 즐겨찾기 버튼 (최상단으로 이동 완료) -->
                     <div class="d-flex justify-end mb-4">
-                        <v-btn small class="favorite-toggle-btn" @click="showFavoritesOnly = !showFavoritesOnly"
+                        <!-- <v-btn small class="favorite-toggle-btn" @click="showFavoritesOnly = !showFavoritesOnly"
                             elevation="1">
                             <v-icon :color="showFavoritesOnly ? '#FFD60A' : '#8e8e93'">
                                 {{ showFavoritesOnly ? "mdi-star" : "mdi-star-outline" }}
                             </v-icon>
-                        </v-btn>
+                        </v-btn> -->
                     </div>
 
                     <!-- 🔍 검색 -->
@@ -48,9 +48,9 @@
                             elevation="2" rounded="xl">
                             <!-- 즐겨찾기 버튼 -->
                             <v-btn small class="favorite-btn" @click.stop="toggleFavorite(proposal)" elevation="0">
-                                <v-icon :color="proposal.isFavorite ? '#FFD60A' : '#8e8e93'">
+                                <!-- <v-icon :color="proposal.isFavorite ? '#FFD60A' : '#8e8e93'">
                                     {{ proposal.isFavorite ? "mdi-star" : "mdi-star-outline" }}
-                                </v-icon>
+                                </v-icon> -->
                             </v-btn>
 
                             <!-- 제목 -->

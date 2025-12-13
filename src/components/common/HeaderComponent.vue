@@ -79,27 +79,20 @@
     <v-spacer></v-spacer>
 
     <!-- notification -->
-        <!-- 알림 메뉴 -->
-        <v-menu
-            v-model="dropdownOpen"
-            offset-y
-            transition="scale-transition"
-            max-width="350"
-            min-width="280"
-            :close-on-content-click="false"
-            >
-            <template #activator="{ props }">
-                <v-btn icon v-bind="props">
-                <v-badge :content="unreadCount" color="red" overlap>
-                    <v-icon>mdi-bell-outline</v-icon>
-                </v-badge>
-                </v-btn>
-            </template>
+    <!-- 알림 메뉴 -->
+    <v-menu v-model="dropdownOpen" offset-y transition="scale-transition" max-width="350" min-width="280"
+      :close-on-content-click="false">
+      <template #activator="{ props }">
+        <v-btn icon v-bind="props">
+          <v-badge :content="unreadCount" color="red" overlap>
+            <v-icon>mdi-bell-outline</v-icon>
+          </v-badge>
+        </v-btn>
+      </template>
 
-            <NotificationDropdown @close="dropdownOpen = false" />
-        </v-menu>
+      <NotificationDropdown @close="dropdownOpen = false" />
+    </v-menu>
 
-    <v-btn icon><v-icon>mdi-cog-outline</v-icon></v-btn>
     <v-btn icon to="/mypage"><v-icon>mdi-account-circle</v-icon></v-btn>
     <v-btn icon @click="logoutHandler"><v-icon>mdi-logout</v-icon></v-btn>
   </v-app-bar>

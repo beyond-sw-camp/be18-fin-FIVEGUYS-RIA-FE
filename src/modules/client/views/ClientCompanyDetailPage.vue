@@ -7,12 +7,7 @@
         <v-card outlined class="pa-3 full-height-card">
           <v-card-title class="d-flex justify-space-between align-center mb-3">
             <span class="text-h6">{{ clientCompany.name }}</span>
-            <v-icon
-              small
-              class="cursor-pointer pencil"
-              @click="editCompany"
-              title="고객사 정보 수정"
-            >
+            <v-icon small class="cursor-pointer pencil" @click="editCompany" title="고객사 정보 수정">
               mdi-pencil-outline
             </v-icon>
           </v-card-title>
@@ -39,32 +34,17 @@
 
       <!-- 중앙 컬럼: 고객 담당자 목록 / 상세 -->
       <v-col cols="12" md="4" class="pa-4 d-flex flex-column">
-        <v-card
-          outlined
-          class="pa-3 full-height-card"
-          style="
+        <v-card outlined class="pa-3 full-height-card" style="
             display: flex;
             flex-direction: column;
             width: 100%;
             box-sizing: border-box;
-          "
-        >
+          ">
           <!-- 상단: 고객 검색 + 즐겨찾기 버튼 -->
           <div class="d-flex mb-2">
-            <v-text-field
-              v-model="customerSearch"
-              append-inner-icon="mdi-magnify"
-              placeholder="고객 검색"
-              dense
-              outlined
-              hide-details
-              class="flex-grow-1 mr-2"
-            />
-            <v-btn
-              small
-              outlined
-              @click="showFavoritesOnly = !showFavoritesOnly"
-            >
+            <v-text-field v-model="customerSearch" append-inner-icon="mdi-magnify" placeholder="고객 검색" dense outlined
+              hide-details class="flex-grow-1 mr-2" />
+            <v-btn small outlined @click="showFavoritesOnly = !showFavoritesOnly">
               <v-icon :color="showFavoritesOnly ? '#FFD60A' : '#8e8e93'">
                 {{ showFavoritesOnly ? "mdi-star" : "mdi-star-outline" }}
               </v-icon>
@@ -74,32 +54,19 @@
           <!-- 고객 목록 -->
           <div class="scroll-area list-area mb-2">
             <v-row dense no-gutters>
-              <v-col
-                v-for="customer in filteredCustomers"
-                :key="customer.id"
-                cols="12"
-                class="mb-2"
-              >
-                <v-card
-                  outlined
-                  class="pa-2 customer-item-card"
-                  :class="{
-                    'selected-card':
-                      selectedCustomer && selectedCustomer.id === customer.id,
-                  }"
-                  @click="toggleSelectCustomer(customer)"
-                >
+              <v-col v-for="customer in filteredCustomers" :key="customer.id" cols="12" class="mb-2">
+                <v-card outlined class="pa-2 customer-item-card" :class="{
+                  'selected-card':
+                    selectedCustomer && selectedCustomer.id === customer.id,
+                }" @click="toggleSelectCustomer(customer)">
                   <v-row align="center" justify="space-between" no-gutters>
                     <v-col class="pa-0">
                       <div class="label text-caption mb-1">이름</div>
                       <div class="font-weight-medium">{{ customer.name }}</div>
                     </v-col>
                     <v-col cols="auto" class="pa-0">
-                      <v-icon
-                        :color="customer.favorite ? 'yellow darken-3' : 'grey'"
-                        @click.stop="toggleFavorite(customer)"
-                        class="cursor-pointer"
-                      >
+                      <v-icon :color="customer.favorite ? 'yellow darken-3' : 'grey'"
+                        @click.stop="toggleFavorite(customer)" class="cursor-pointer">
                         {{
                           customer.favorite ? "mdi-star" : "mdi-star-outline"
                         }}
@@ -118,18 +85,13 @@
 
           <!-- 하단: 선택된 고객 상세 정보 -->
           <v-card v-if="selectedCustomer" outlined class="pa-3 detail-card">
-            <v-card-title
-              class="d-flex align-center justify-space-between mb-3"
-            >
+            <v-card-title class="d-flex align-center justify-space-between mb-3">
               <div>
                 <div class="label text-caption">이름</div>
                 <div class="text-h6">{{ selectedCustomer.name }}</div>
               </div>
-              <v-icon
-                :color="selectedCustomer.favorite ? 'yellow darken-3' : 'grey'"
-                @click.stop="toggleFavorite(selectedCustomer)"
-                class="cursor-pointer"
-              >
+              <v-icon :color="selectedCustomer.favorite ? 'yellow darken-3' : 'grey'"
+                @click.stop="toggleFavorite(selectedCustomer)" class="cursor-pointer">
                 {{
                   selectedCustomer.favorite ? "mdi-star" : "mdi-star-outline"
                 }}
@@ -172,13 +134,8 @@
           <v-divider class="mb-3" />
 
           <div class="scroll-area">
-            <v-card
-              v-for="(item, index) in filteredHistory"
-              :key="index"
-              outlined
-              class="pa-4 mb-5 history-card"
-              @click="goToHistoryDetail(item)"
-            >
+            <v-card v-for="(item, index) in filteredHistory" :key="index" outlined class="pa-4 mb-5 history-card"
+              @click="goToHistoryDetail(item)">
               <v-row no-gutters>
                 <v-col>
                   <div class="text-subtitle-2 font-weight-bold">
@@ -203,10 +160,7 @@
               </v-row>
             </v-card>
 
-            <div
-              v-if="selectedCustomer && !filteredHistory.length"
-              class="text-caption grey--text"
-            >
+            <div v-if="selectedCustomer && !filteredHistory.length" class="text-caption grey--text">
               이 담당자의 히스토리가 없습니다.
             </div>
           </div>
@@ -223,31 +177,16 @@
         </v-card-title>
 
         <v-card-text>
-          <v-text-field
-            v-for="field in editableFields"
-            :key="field.key"
-            v-model="editForm[field.key]"
-            :label="field.label"
-            variant="outlined"
-            class="modal-input"
-            @compositionend="onCompositionEnd(field.key, $event)"
-          />
+          <v-text-field v-for="field in editableFields" :key="field.key" v-model="editForm[field.key]"
+            :label="field.label" variant="outlined" class="modal-input"
+            @compositionend="onCompositionEnd(field.key, $event)" />
         </v-card-text>
 
         <v-card-actions class="modal-actions justify-end">
-          <v-btn
-            text
-            color="grey darken-1"
-            class="cancel-btn"
-            @click="showEditModal = false"
-          >
+          <v-btn text color="grey darken-1" class="cancel-btn" @click="showEditModal = false">
             취소
           </v-btn>
-          <v-btn
-            color="#ff9500"
-            class="white--text add-btn"
-            @click="saveCompany"
-          >
+          <v-btn color="#ff9500" class="white--text add-btn" @click="saveCompany">
             저장
           </v-btn>
         </v-card-actions>
@@ -263,65 +202,20 @@
         </v-card-title>
 
         <v-card-text>
-          <v-text-field
-            v-model="form.name"
-            label="고객명"
-            variant="outlined"
-            class="modal-input"
-          />
-          <v-text-field
-            v-model="form.clientCompany"
-            label="고객사"
-            variant="outlined"
-            class="modal-input"
-            readonly
-          />
-          <v-text-field
-            v-model="form.department"
-            label="부서"
-            variant="outlined"
-            class="modal-input"
-          />
-          <v-text-field
-            v-model="form.position"
-            label="직책"
-            variant="outlined"
-            class="modal-input"
-          />
-          <v-text-field
-            v-model="form.phone"
-            label="휴대폰"
-            variant="outlined"
-            class="modal-input"
-          />
-          <v-text-field
-            v-model="form.email"
-            label="이메일"
-            variant="outlined"
-            class="modal-input"
-          />
-          <v-text-field
-            v-model="form.note"
-            label="메모"
-            variant="outlined"
-            class="modal-input"
-          />
+          <v-text-field v-model="form.name" label="고객명" variant="outlined" class="modal-input" />
+          <v-text-field v-model="form.clientCompany" label="고객사" variant="outlined" class="modal-input" readonly />
+          <v-text-field v-model="form.department" label="부서" variant="outlined" class="modal-input" />
+          <v-text-field v-model="form.position" label="직책" variant="outlined" class="modal-input" />
+          <v-text-field v-model="form.phone" label="휴대폰" variant="outlined" class="modal-input" />
+          <v-text-field v-model="form.email" label="이메일" variant="outlined" class="modal-input" />
+          <v-text-field v-model="form.note" label="메모" variant="outlined" class="modal-input" />
         </v-card-text>
 
         <v-card-actions class="modal-actions justify-end">
-          <v-btn
-            text
-            color="grey darken-1"
-            class="cancel-btn"
-            @click="showModal = false"
-          >
+          <v-btn text color="grey darken-1" class="cancel-btn" @click="showModal = false">
             취소
           </v-btn>
-          <v-btn
-            color="orange darken-2"
-            class="white--text add-btn"
-            @click="submitClient"
-          >
+          <v-btn color="orange darken-2" class="white--text add-btn" @click="submitClient">
             추가
           </v-btn>
         </v-card-actions>
@@ -616,7 +510,7 @@ const formatCompanyLabel = (key) => {
     area: "면적",
     openingDate: "입점일",
     contractPeriod: "계약 기간",
-    totalRent: "누적 임대료",
+    totalRent: "보증금",
     commissionRate: "매출 수수료율",
     category: "카테고리",
     type: "유형",
