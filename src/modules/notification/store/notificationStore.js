@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import axios from 'axios'
-import { EventSourcePolyfill } from 'event-source-polyfill'
+import { EventSource } from 'event-source-polyfill'
 
 export const useNotificationStore = defineStore('notification', {
   state: () => ({
@@ -34,7 +34,7 @@ export const useNotificationStore = defineStore('notification', {
         return
       }
 
-      if (this.eventSource && this.eventSource.readyState !== 2) {
+      if (this.eventSource && this.eventSource.readyState !== EventSource.CLOSED) {
         console.log('[SSE] 이미 연결됨 또는 연결 중 → 스킵')
         return
       }
@@ -42,17 +42,24 @@ export const useNotificationStore = defineStore('notification', {
       console.log('[SSE] Connecting...')
       this.connectionState = 'connecting'
 
-      // const baseUrl = 'http://localhost:8080/api/sse/notifications'
-      const baseUrl = '${import.meta.env.VITE_API_BASE_URL}/api/sse/notifications`'
-      console.log('VITE_API_BASE_URL =', import.meta.env.VITE_API_BASE_URL)
-      const query = this.lastEventId ? `?lastEventId=${encodeURIComponent(this.lastEventId)}` : ''
-      const url = baseUrl + query
+      const baseUrl = `${import.meta.env.VITE_API_BASE_URL}/api/sse/notifications`
+      console.log('[SSE] baseUrl =', baseUrl)
 
-      this.eventSource = new EventSourcePolyfill(url, {
-        headers: { Authorization: `Bearer ${token}` },
-        heartbeatTimeout: 45000
-      })
+      const params = new URLSearchParams()
+      params.append('token', token)
 
+      if (this.lastEventId) {
+        params.append('lastEventId', this.lastEventId)
+      }
+
+      const url = `${baseUrl}?${params.toString()}`
+      console.log('[SSE] full url =', url)
+
+      this.eventSource = new EventSource(url)
+
+      // =========================
+      // 연결 성공
+      // =========================
       this.eventSource.onopen = () => {
         console.log('[SSE] Connected')
 
@@ -61,15 +68,11 @@ export const useNotificationStore = defineStore('notification', {
           this.retryCount = 0
           this.allowRetry = true
         }
-
-        if (this.lastEventId) {
-          console.log('[SSE] Syncing lastEventId → Reconnect')
-          // this.eventSource.close()
-          // this.eventSource = null
-          // setTimeout(() => this.connectSSE(), 50)
-        }
       }
 
+      // =========================
+      // 알림 수신
+      // =========================
       this.eventSource.addEventListener('notification', (event) => {
         if (!event.data) return
 
@@ -106,18 +109,23 @@ export const useNotificationStore = defineStore('notification', {
             console.log('[SSE] pushToast called')
           }
 
-          if (this.notifications.length > 100)
+          if (this.notifications.length > 100) {
             this.notifications.splice(-1, 1)
+          }
 
         } catch (e) {
           console.error('[SSE] JSON parse error:', e)
         }
       })
 
+      // =========================
+      // 에러 / 끊김
+      // =========================
       this.eventSource.onerror = (err) => {
         console.error('[SSE] Error:', err)
 
-        if (this.eventSource && this.eventSource.readyState === 2) {
+        if (this.eventSource.readyState === EventSource.CLOSED) {
+          console.log('[SSE] Connection closed')
           this.connectionState = 'error'
           this.handleReconnect()
         }
