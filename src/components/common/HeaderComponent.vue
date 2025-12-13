@@ -93,7 +93,6 @@
       <NotificationDropdown @close="dropdownOpen = false" />
     </v-menu>
 
-    <v-btn icon><v-icon>mdi-cog-outline</v-icon></v-btn>
     <v-btn icon to="/mypage"><v-icon>mdi-account-circle</v-icon></v-btn>
     <v-btn icon @click="logoutHandler"><v-icon>mdi-logout</v-icon></v-btn>
   </v-app-bar>

@@ -21,6 +21,7 @@
     "dayjs": "^1.11.19",
     "event-source-polyfill": "^1.0.31",
     "image-map-resizer": "^1.0.10",
+    "notification.js": "^0.1.0",
     "pinia": "^3.0.3",
     "vite-plugin-vuetify": "^2.1.2",
     "vue": "^3.5.22",
