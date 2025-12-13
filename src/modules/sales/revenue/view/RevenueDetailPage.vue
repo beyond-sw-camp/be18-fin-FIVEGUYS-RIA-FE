@@ -161,7 +161,6 @@
           <span>매장 내역</span>
           <v-spacer />
           <v-btn icon variant="text" density="comfortable" @click="showHistoryDialog = false">
-            <v-icon>mdi-close</v-icon>
           </v-btn>
         </v-card-title>
         <v-divider />

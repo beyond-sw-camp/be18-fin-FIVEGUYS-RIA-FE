@@ -10,123 +10,63 @@
         <!-- 견적 제목 -->
         <v-col cols="12" md="6">
           <div class="input-label">견적 제목</div>
-          <v-text-field
-            v-model="form.estimateTitle"
-            class="input-field"
-            variant="outlined"
-            hide-details
-            :readonly="!editMode"
-          />
+          <v-text-field v-model="form.estimateTitle" class="input-field" variant="outlined" hide-details
+            :readonly="!editMode" />
         </v-col>
 
         <!-- 프로젝트 -->
         <v-col cols="12" md="6">
           <div class="input-label">프로젝트</div>
-          <v-text-field
-            class="input-field"
-            v-model="form.projectTitle"
-            variant="outlined"
-            hide-details
-            readonly
-          />
+          <v-text-field class="input-field" v-model="form.projectTitle" variant="outlined" hide-details readonly />
         </v-col>
 
         <!-- 제안 -->
         <v-col cols="12" md="6">
           <div class="input-label">제안</div>
-          <v-text-field
-            class="input-field"
-            v-model="form.proposalTitle"
-            variant="outlined"
-            hide-details
-            readonly
-          />
+          <v-text-field class="input-field" v-model="form.proposalTitle" variant="outlined" hide-details readonly />
         </v-col>
 
         <!-- 고객사 -->
         <v-col cols="12" md="6">
           <div class="input-label">고객사</div>
-          <v-text-field
-            class="input-field"
-            v-model="form.clientCompanyName"
-            variant="outlined"
-            hide-details
-            readonly
-          />
+          <v-text-field class="input-field" v-model="form.clientCompanyName" variant="outlined" hide-details readonly />
         </v-col>
 
         <!-- 고객 -->
         <v-col cols="12" md="6">
           <div class="input-label">고객</div>
-          <v-text-field
-            class="input-field"
-            v-model="form.clientName"
-            variant="outlined"
-            hide-details
-            readonly
-          />
+          <v-text-field class="input-field" v-model="form.clientName" variant="outlined" hide-details readonly />
         </v-col>
 
         <!-- 담당자 -->
         <v-col cols="12" md="6">
           <div class="input-label">담당자</div>
-          <v-text-field
-            class="input-field"
-            v-model="form.createdUserName"
-            variant="outlined"
-            hide-details
-            readonly
-          />
+          <v-text-field class="input-field" v-model="form.createdUserName" variant="outlined" hide-details readonly />
         </v-col>
 
         <!-- 견적일 -->
         <v-col cols="12" md="6">
           <div class="input-label">견적일</div>
-          <v-text-field
-            class="input-field"
-            v-model="form.estimateDate"
-            variant="outlined"
-            hide-details
-            readonly
-          />
+          <v-text-field class="input-field" v-model="form.estimateDate" variant="outlined" hide-details readonly />
         </v-col>
 
         <!-- 납기일 -->
         <v-col cols="12" md="6">
           <div class="input-label">납기일</div>
-          <v-text-field
-            class="input-field"
-            :model-value="form.deliveryDate"
-            readonly
-            variant="outlined"
-            hide-details
-          />
+          <v-text-field class="input-field" :model-value="form.deliveryDate" readonly variant="outlined" hide-details />
         </v-col>
 
         <!-- 결제 조건 -->
         <v-col cols="12" md="6">
           <div class="input-label">결제 조건</div>
-          <v-text-field
-            class="input-field"
-            v-model="form.paymentCondition"
-            variant="outlined"
-            hide-details
-            readonly
-          />
+          <v-text-field class="input-field" v-model="form.paymentCondition" variant="outlined" hide-details readonly />
         </v-col>
 
         <!-- 비고 -->
         <v-col cols="12">
           <div class="input-label">비고</div>
-          <v-textarea
-            v-model="form.remark"
-            placeholder="비고를 입력하세요"
-            variant="outlined"
-            class="textarea-field"
-            hide-details
-            :readonly="!editMode"
-            rows="4"
-          />
+          <v-textarea v-model="form.remark" placeholder="비고를 입력하세요" variant="outlined" class="textarea-field"
+            hide-details :readonly="!editMode" rows="4" />
         </v-col>
       </v-row>
 
@@ -171,40 +111,20 @@
       <div class="actions-row">
         <!-- 조회 모드 -->
         <div v-if="!editMode" class="d-flex gap-3">
-          <v-btn
-            color="orange-darken-2"
-            class="white--text"
-            rounded="lg"
-            @click="goEdit"
-          >
+          <v-btn color="orange-darken-2" class="white--text" rounded="lg" @click="goEdit">
             편집
           </v-btn>
-          <v-btn
-            color="red-darken-2"
-            class="white--text"
-            rounded="lg"
-            @click="removeEstimate"
-          >
+          <v-btn color="red-darken-2" class="white--text" rounded="lg" @click="removeEstimate">
             삭제
           </v-btn>
         </div>
 
         <!-- 수정 모드 -->
         <div v-else class="d-flex gap-3">
-          <v-btn
-            color="orange-darken-2"
-            class="white--text"
-            rounded="lg"
-            @click="saveEstimate"
-          >
+          <v-btn color="orange-darken-2" class="white--text" rounded="lg" @click="saveEstimate">
             저장
           </v-btn>
-          <v-btn
-            color="grey-darken-1"
-            class="white--text"
-            rounded="lg"
-            @click="cancelEdit"
-          >
+          <v-btn color="grey-darken-1" class="white--text" rounded="lg" @click="cancelEdit">
             취소
           </v-btn>
         </div>
@@ -379,16 +299,19 @@ onMounted(fetchDetail);
 
 /* 바깥 wrapper */
 .textarea-field :deep(.v-field) {
-  min-height: 90px !important; /* 비고 박스 높이 증가 */
+  min-height: 90px !important;
+  /* 비고 박스 높이 증가 */
   border-radius: 6px !important;
-  height: 30px !important; /* Vuetify 자동 높이 조절 허용 */
+  height: 30px !important;
+  /* Vuetify 자동 높이 조절 허용 */
 }
 
 /* wrapper 내부 */
 .textarea-field :deep(.v-field__input) {
   min-height: 90px !important;
   height: 30px !important;
-  padding-top: 12px !important; /* 텍스트 위에서 보이게 */
+  padding-top: 12px !important;
+  /* 텍스트 위에서 보이게 */
   align-items: flex-start !important;
   font-size: 0.85rem !important;
 }

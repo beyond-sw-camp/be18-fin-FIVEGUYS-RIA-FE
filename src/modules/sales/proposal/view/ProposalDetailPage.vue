@@ -15,193 +15,92 @@
         <!-- 제안명 -->
         <v-col cols="12" md="6">
           <div class="input-label">제안명</div>
-          <v-text-field
-            v-model="form.projectName"
-            placeholder="제안명을 입력하세요"
-            variant="outlined"
-            class="input-field"
-            hide-details
-            :readonly="!editMode"
-          />
+          <v-text-field v-model="form.projectName" placeholder="제안명을 입력하세요" variant="outlined" class="input-field"
+            hide-details :readonly="!editMode" />
         </v-col>
 
         <!-- 고객사 -->
         <v-col cols="12" md="6">
           <div class="input-label">고객사</div>
-          <v-text-field
-            v-model="form.clientCompany"
-            placeholder="고객사를 선택하세요"
-            variant="outlined"
-            class="input-field"
-            hide-details
-            readonly
-            @click="editMode && (companyDialog = true)"
-          />
+          <v-text-field v-model="form.clientCompany" placeholder="고객사를 선택하세요" variant="outlined" class="input-field"
+            hide-details readonly @click="editMode && (companyDialog = true)" />
         </v-col>
 
         <!-- 프로젝트 -->
         <v-col cols="12" md="6">
           <div class="input-label">프로젝트</div>
-          <v-text-field
-            v-model="form.projectType"
-            placeholder="프로젝트가 연결되어 있지 않습니다."
-            variant="outlined"
-            class="input-field"
-            hide-details
-            :readonly="!editMode"
-            @click="editMode && (opportunityDialog = true)"
-          />
+          <v-text-field v-model="form.projectType" placeholder="프로젝트가 연결되어 있지 않습니다." variant="outlined"
+            class="input-field" hide-details :readonly="!editMode" @click="editMode && (opportunityDialog = true)" />
         </v-col>
 
         <!-- 고객 -->
         <v-col cols="12" md="6">
           <div class="input-label">고객</div>
-          <v-text-field
-            v-model="form.clientOwner"
-            placeholder="고객을 선택하세요"
-            variant="outlined"
-            class="input-field"
-            hide-details
-            :readonly="!editMode"
-            @click="editMode && (clientDialog = true)"
-          />
+          <v-text-field v-model="form.clientOwner" placeholder="고객을 선택하세요" variant="outlined" class="input-field"
+            hide-details :readonly="!editMode" @click="editMode && (clientDialog = true)" />
         </v-col>
 
         <!-- 내용 -->
         <v-col cols="12">
           <div class="input-label">내용</div>
-          <v-textarea
-            v-model="form.content"
-            placeholder="내용을 입력하세요"
-            variant="outlined"
-            class="input-field textarea-field"
-            hide-details
-            :readonly="!editMode"
-            rows="4"
-          />
+          <v-textarea v-model="form.content" placeholder="내용을 입력하세요" variant="outlined"
+            class="input-field textarea-field" hide-details :readonly="!editMode" rows="4" />
         </v-col>
 
         <!-- 요청일 -->
         <v-col cols="12" md="3">
           <div class="input-label">요청일</div>
-          <v-menu
-            v-model="startMenu"
-            :close-on-content-click="false"
-            offset-y
-            :disabled="!editMode"
-          >
+          <v-menu v-model="startMenu" :close-on-content-click="false" offset-y :disabled="!editMode">
             <template #activator="{ props }">
-              <v-text-field
-                :model-value="formatDate(form.startDate)"
-                placeholder="요청일"
-                variant="outlined"
-                readonly
-                v-bind="props"
-                class="input-field"
-              />
+              <v-text-field :model-value="formatDate(form.startDate)" placeholder="요청일" variant="outlined" readonly
+                v-bind="props" class="input-field" />
             </template>
-            <v-date-picker
-              v-model="form.startDate"
-              @update:model-value="startMenu = false"
-            />
+            <v-date-picker v-model="form.startDate" @update:model-value="startMenu = false" />
           </v-menu>
         </v-col>
 
         <!-- 제출일 -->
         <v-col cols="12" md="3">
           <div class="input-label">제출일</div>
-          <v-menu
-            v-model="endMenu"
-            :close-on-content-click="false"
-            offset-y
-            :disabled="!editMode"
-          >
+          <v-menu v-model="endMenu" :close-on-content-click="false" offset-y :disabled="!editMode">
             <template #activator="{ props }">
-              <v-text-field
-                :model-value="formatDate(form.endDate)"
-                placeholder="제출일"
-                variant="outlined"
-                hide-details
-                readonly
-                v-bind="props"
-                class="input-field"
-              />
+              <v-text-field :model-value="formatDate(form.endDate)" placeholder="제출일" variant="outlined" hide-details
+                readonly v-bind="props" class="input-field" />
             </template>
-            <v-date-picker
-              v-model="form.endDate"
-              @update:model-value="endMenu = false"
-            />
+            <v-date-picker v-model="form.endDate" @update:model-value="endMenu = false" />
           </v-menu>
         </v-col>
 
         <!-- 담당자 -->
         <v-col cols="12" md="6">
           <div class="input-label">담당자</div>
-          <v-text-field
-            v-model="form.salesManager"
-            placeholder="담당자를 선택하세요"
-            variant="outlined"
-            class="input-field"
-            hide-details
-            :readonly="!editMode"
-            @click="editMode && (managerDialog = true)"
-          />
+          <v-text-field v-model="form.salesManager" placeholder="담당자를 선택하세요" variant="outlined" class="input-field"
+            hide-details :readonly="!editMode" @click="editMode && (managerDialog = true)" />
         </v-col>
 
         <!-- 비고 -->
         <v-col cols="12">
           <div class="input-label">비고</div>
-          <v-textarea
-            v-model="form.notes"
-            placeholder="비고를 입력하세요"
-            variant="outlined"
-            class="input-field textarea-field"
-            hide-details
-            :readonly="!editMode"
-            rows="4"
-          />
+          <v-textarea v-model="form.notes" placeholder="비고를 입력하세요" variant="outlined" class="input-field textarea-field"
+            hide-details :readonly="!editMode" rows="4" />
         </v-col>
       </v-row>
 
       <!-- 버튼 그룹 -->
       <div class="actions-row">
         <div v-if="!editMode" class="d-flex gap-3">
-          <v-btn
-            color="orange darken-2"
-            class="white--text px-6"
-            rounded="lg"
-            elevation="2"
-            @click="editMode = true"
-          >
+          <v-btn color="orange darken-2" class="white--text px-6" rounded="lg" elevation="2" @click="editMode = true">
             편집
           </v-btn>
-          <v-btn
-            color="red darken-2"
-            class="white--text px-6"
-            rounded="lg"
-            elevation="2"
-            @click="onDeleteProposal"
-          >
+          <v-btn color="red darken-2" class="white--text px-6" rounded="lg" elevation="2" @click="onDeleteProposal">
             삭제
           </v-btn>
         </div>
         <div v-else class="d-flex gap-3">
-          <v-btn
-            color="orange darken-2"
-            class="white--text px-6"
-            rounded="lg"
-            elevation="2"
-            @click="saveProposal"
-          >
+          <v-btn color="orange darken-2" class="white--text px-6" rounded="lg" elevation="2" @click="saveProposal">
             저장
           </v-btn>
-          <v-btn
-            color="grey darken-1"
-            class="white--text px-6"
-            rounded="lg"
-            elevation="2"
-            @click="cancelEdit"
-          >
+          <v-btn color="grey darken-1" class="white--text px-6" rounded="lg" elevation="2" @click="cancelEdit">
             취소
           </v-btn>
         </div>
@@ -214,51 +113,28 @@
         <div class="dialog-title mb-4">고객사 선택</div>
 
         <div class="mb-3 d-flex">
-          <v-chip
-            class="mr-2"
-            :color="clientTypeFilter === 'ALL' ? 'orange darken-2' : undefined"
-            :text-color="clientTypeFilter === 'ALL' ? 'white' : undefined"
-            @click="clientTypeFilter = 'ALL'"
-          >
+          <v-chip class="mr-2" :color="clientTypeFilter === 'ALL' ? 'orange darken-2' : undefined"
+            :text-color="clientTypeFilter === 'ALL' ? 'white' : undefined" @click="clientTypeFilter = 'ALL'">
             전체
           </v-chip>
 
-          <v-chip
-            class="mr-2"
-            :color="
-              clientTypeFilter === 'CLIENT' ? 'orange darken-2' : undefined
-            "
-            :text-color="clientTypeFilter === 'CLIENT' ? 'white' : undefined"
-            @click="clientTypeFilter = 'CLIENT'"
-          >
+          <v-chip class="mr-2" :color="clientTypeFilter === 'CLIENT' ? 'orange darken-2' : undefined
+            " :text-color="clientTypeFilter === 'CLIENT' ? 'white' : undefined" @click="clientTypeFilter = 'CLIENT'">
             고객사
           </v-chip>
 
-          <v-chip
-            :color="clientTypeFilter === 'LEAD' ? 'orange darken-2' : undefined"
-            :text-color="clientTypeFilter === 'LEAD' ? 'white' : undefined"
-            @click="clientTypeFilter = 'LEAD'"
-          >
+          <v-chip :color="clientTypeFilter === 'LEAD' ? 'orange darken-2' : undefined"
+            :text-color="clientTypeFilter === 'LEAD' ? 'white' : undefined" @click="clientTypeFilter = 'LEAD'">
             잠재고객사
           </v-chip>
         </div>
 
-        <v-text-field
-          v-model="clientSearch"
-          placeholder="고객사명을 입력하세요"
-          prepend-inner-icon="mdi-magnify"
-          variant="outlined"
-          hide-details
-          class="mb-4"
-        />
+        <v-text-field v-model="clientSearch" placeholder="고객사명을 입력하세요" prepend-inner-icon="mdi-magnify"
+          variant="outlined" hide-details class="mb-4" />
 
         <v-list>
-          <v-list-item
-            v-for="item in filteredCompanies"
-            :key="item.id"
-            @click="selectCompany(item)"
-            class="dialog-item"
-          >
+          <v-list-item v-for="item in filteredCompanies" :key="item.id" @click="selectCompany(item)"
+            class="dialog-item">
             {{ item.name }}
           </v-list-item>
         </v-list>
@@ -270,22 +146,11 @@
       <v-card class="pa-4">
         <div class="dialog-title mb-4">고객 선택</div>
 
-        <v-text-field
-          v-model="clientPersonSearch"
-          placeholder="고객명을 입력하세요"
-          prepend-inner-icon="mdi-magnify"
-          variant="outlined"
-          hide-details
-          class="mb-4"
-        />
+        <v-text-field v-model="clientPersonSearch" placeholder="고객명을 입력하세요" prepend-inner-icon="mdi-magnify"
+          variant="outlined" hide-details class="mb-4" />
 
         <v-list>
-          <v-list-item
-            v-for="p in filteredClientPersons"
-            :key="p.id"
-            @click="selectClient(p)"
-            class="dialog-item"
-          >
+          <v-list-item v-for="p in filteredClientPersons" :key="p.id" @click="selectClient(p)" class="dialog-item">
             {{ p.name }}
           </v-list-item>
         </v-list>
@@ -297,12 +162,7 @@
       <v-card class="pa-4">
         <div class="dialog-title mb-4">프로젝트 선택</div>
         <v-list>
-          <v-list-item
-            v-for="o in opportunityList"
-            :key="o.id"
-            @click="selectOpportunity(o)"
-            class="dialog-item"
-          >
+          <v-list-item v-for="o in opportunityList" :key="o.id" @click="selectOpportunity(o)" class="dialog-item">
             {{ o.name }}
           </v-list-item>
         </v-list>
@@ -314,12 +174,7 @@
       <v-card class="pa-4">
         <div class="dialog-title mb-4">담당자 선택</div>
         <v-list>
-          <v-list-item
-            v-for="m in managerList"
-            :key="m"
-            @click="selectManager(m)"
-            class="dialog-item"
-          >
+          <v-list-item v-for="m in managerList" :key="m" @click="selectManager(m)" class="dialog-item">
             {{ m }}
           </v-list-item>
         </v-list>
@@ -415,6 +270,7 @@ const selectOpportunity = async (o) => {
 
   opportunityDialog.value = false;
 };
+
 // 제안 수정 시 날짜 포맷 바뀌지 않게 수정
 const formatDate = (date) => {
   if (!date) return "";
