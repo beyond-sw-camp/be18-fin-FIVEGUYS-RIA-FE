@@ -105,7 +105,9 @@ export const useNotificationStore = defineStore('notification', {
             this.notifications.splice(index, 1, newNotification)
           } else {
             this.notifications.unshift(newNotification)
-            this.pushToast(newNotification)
+            if (!newNotification.read) {
+                this.pushToast(newNotification)
+            }
             console.log('[SSE] pushToast called')
           }
 
@@ -185,7 +187,8 @@ export const useNotificationStore = defineStore('notification', {
         const token = localStorage.getItem('accessToken')
         if (!token) return
 
-        const res = await axios.get('/api/notifications', {
+        const baseUrl = import.meta.env.VITE_API_BASE_URL
+        const res = await axios.get(`${baseUrl}/api/notifications`, {
           headers: { Authorization: `Bearer ${token}` }
         })
 
@@ -256,7 +259,8 @@ export const useNotificationStore = defineStore('notification', {
       if (!notification.read) {
         notification.read = true
         try {
-          await axios.patch(`/api/notifications/${notification.id}`, {}, {
+          const baseUrl = import.meta.env.VITE_API_BASE_URL
+          await axios.patch(`${baseUrl}/api/notifications/${notification.id}`, {}, {
             headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` }
           })
           this.markAsRead(notification.id)

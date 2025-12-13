@@ -20,10 +20,7 @@ const notificationStore = useNotificationStore()
 const router = useRouter()
 
 const handleClick = async (notification) => {
-    if (!notification.read) {
-        notification.read = true
-        await notificationStore.handleNotificationClick(notification, router)
-    }
+    await notificationStore.handleNotificationClick(notification, router)
 }
 </script>
 

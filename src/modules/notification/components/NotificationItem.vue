@@ -8,7 +8,7 @@
         <div class="notif-message">{{ notification.message }}</div>
         <div class="notif-time">{{ formattedTime }}</div>
         </v-list-item-content>
-    </div>
+    </div>  
 </template>
 
 <script setup>
