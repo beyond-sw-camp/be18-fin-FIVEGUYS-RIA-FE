@@ -11,29 +11,35 @@
                 class="ios-search"
             />
 
+            <!-- top-filter-row 내부 -->
             <div class="read-toggle-group">
+                <!-- 안읽음만 보기 -->
                 <div
                     class="read-icon"
-                    :class="{ active: readFilter === 'UNREAD' }"
-                    @click="setReadFilter('UNREAD')"
-                    title="안 읽음만 보기"
+                    title="안읽음만 보기"
                 >
                     ●
                 </div>
 
+                <!-- 전체 읽기 -->
                 <div
-                    class="read-icon"
-                    :class="{ active: readFilter === 'READ' }"
-                    @click="setReadFilter('READ')"
-                    title="읽음만 보기"
+                    class="read-icon read-all"
+                    title="전체 읽기"
                 >
                     ✔
+                </div>
+
+                <!-- 전체 삭제 -->
+                <div
+                    class="read-icon delete-all"
+                    title="전체 삭제"
+                >
+                    ✖
                 </div>
             </div>
         </div>
 
         <div class="type-filter-wrapper">
-
             <button
                 class="nav-btn left"
                 v-show="canScrollLeft"
@@ -42,7 +48,6 @@
             >
                 <span class="arrow-icon">‹</span>
             </button>
-
             <div
                 class="type-filter-scroll"
                 ref="pillScrollRef"
@@ -60,7 +65,6 @@
                     </div>
                 </div>
             </div>
-
             <button
                 class="nav-btn right"
                 v-show="canScrollRight"
@@ -161,10 +165,6 @@ const scrollRight = () => {
     const step = Math.round(el.clientWidth * SCROLL_RATIO)
     el.scrollBy({ left: step, behavior: 'smooth' })
     setTimeout(updateScrollButtons, 220)
-}
-
-const setReadFilter = (status) => {
-    readFilter.value = readFilter.value === status ? null : status
 }
 
 const selectPill = async (key) => {
@@ -275,22 +275,20 @@ onBeforeUnmount(() => {
     gap: 6px;
 }
 
+/* 기존 read-icon 공통 스타일 유지 */
 .read-icon {
     width: 32px;
     height: 32px;
     border-radius: 50%;
     background: #f2f2f7;
     border: 1px solid #e5e5ea;
-
     display: flex;
     justify-content: center;
     align-items: center;
-
     cursor: pointer;
     font-size: 14px;
     color: #3a3a3c;
     user-select: none;
-
     transition: all 0.18s ease;
 }
 
@@ -298,12 +296,41 @@ onBeforeUnmount(() => {
     background: #ebebef;
 }
 
+/* 활성화 스타일 */
 .read-icon.active {
     background: #007aff;
     border-color: #007aff;
     color: #fff;
     box-shadow: 0 3px 10px rgba(0, 122, 255, 0.28);
 }
+
+.read-icon.read-all {
+    background-color: #d6f5e0;
+    border: 1px solid #34c759;
+    color: #34c759;
+    transition: all 0.2s ease;
+}
+
+.read-icon.read-all:hover {
+    background-color: #34c759;
+    border-color: #34c759;
+    color: #fff;
+}
+
+/* 전체 삭제 버튼 */
+.read-icon.delete-all {
+    background-color: #fef0f0;
+    border: 1px solid #ff3b30;
+    color: #ff3b30;
+    transition: all 0.2s ease;
+}
+
+.read-icon.delete-all:hover {
+    background-color: #ff3b30;
+    border-color: #ff3b30;
+    color: #fff;
+}
+
 
 /* ────────────────────────────── */
 /* 타입 pill + 좌우 버튼 레이아웃 */
