@@ -98,9 +98,17 @@
 
           <v-col cols="12" md="3">
             <div class="input-label">매장(호수)<span class="required">*</span></div>
-            <v-select :items="spaceStoreOptions[idx]" v-model="sp.storeId" class="input-field" item-title="storeNumber"
-              item-value="storeId" hide-details no-data-text="선택 가능한 공간이 없습니다"
-              @update:modelValue="onStoreChange(idx)" />
+            <v-select
+              :items="spaceStoreOptions[idx]"
+              v-model="sp.storeId"
+              class="input-field"
+              item-title="storeNumber"
+              item-value="storeId"
+              hide-details
+              :disabled="!spaceStoreOptions[idx]?.length"
+              no-data-text="선택 가능한 공간이 없습니다"
+              @update:modelValue="onStoreChange(idx)"
+            />
           </v-col>
 
           <v-col cols="12" md="3">
@@ -575,7 +583,7 @@ const onFloorChange = async (idx) => {
   const floorId = form.spaces[idx].floorId;
   if (!floorId) return;
 
-  // 이전 상태 완전 초기화
+  // 초기화
   form.spaces[idx].storeId = null;
   spaceStoreOptions.value[idx] = [];
 
@@ -583,19 +591,21 @@ const onFloorChange = async (idx) => {
     const { data } = await getSpaces(floorId);
     spaceStoreOptions.value[idx] = data?.stores ?? [];
   } catch (err) {
-    // 핵심: "사용 가능 매장 없음"을 정상 케이스로 처리
-    if (
-      err?.response?.status === 404 &&
-      err?.response?.data?.code === "AVAILABLE STORE NOT FOUND"
-    ) {
+    if (err?.response?.status === 404) {
       spaceStoreOptions.value[idx] = [];
+
+      snackbarColor.value = "orange";
+      snackbarMessage.value = "사용 가능한 매장이 없습니다.";
+      snackbar.value = true;
       return;
     }
 
-    // 그 외는 진짜 에러
-    throw err;
+    snackbarColor.value = "red";
+    snackbarMessage.value = "매장 정보를 불러오는 중 오류가 발생했습니다.";
+    snackbar.value = true;
   }
 };
+
 
 const onStoreChange = (idx) => {
   const sp = form.spaces[idx];
