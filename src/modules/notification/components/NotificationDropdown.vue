@@ -13,18 +13,20 @@
 
             <!-- top-filter-row 내부 -->
             <div class="read-toggle-group">
-                <!-- 안읽음만 보기 -->
                 <div
-                    class="read-icon"
-                    title="안읽음만 보기"
+                class="read-icon"
+                :class="{ active: readFilter === 'UNREAD' }"
+                title="읽지 않은 메시지만 보기"
+                @click="toggleUnreadFilter"
                 >
-                    ●
+                ●
                 </div>
 
                 <!-- 전체 읽기 -->
                 <div
                     class="read-icon read-all"
                     title="전체 읽기"
+                    @click="handleReadAll"
                 >
                     ✔
                 </div>
@@ -33,6 +35,7 @@
                 <div
                     class="read-icon delete-all"
                     title="전체 삭제"
+                    @click="handleDeleteAll"
                 >
                     ✖
                 </div>
@@ -103,6 +106,7 @@
 import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useNotificationStore } from '@/modules/notification/store/notificationStore'
+import { readAllNotifications, deleteAllNotifications } from '@/apis/notification'
 import NotificationItem from './NotificationItem.vue'
 
 const router = useRouter()
@@ -122,6 +126,36 @@ const targetTypes = [
     { key: 'FILE', label: '파일' },
     { key: 'POTENTIAL_CLIENT', label: '잠재고객' },
 ]
+
+// 안읽음
+const toggleUnreadFilter = () => {
+    readFilter.value = readFilter.value === 'UNREAD' ? null : 'UNREAD'
+}
+
+// 전체 읽기
+const handleReadAll = async () => {
+    try {
+        await readAllNotifications()
+        notificationStore.notifications = notificationStore.notifications.map(n => ({
+        ...n,
+        read: true
+        }))
+        readFilter.value = null
+    } catch (err) {
+        console.error('전체 읽기 실패', err)
+    }
+}
+
+// 전체 삭제
+const handleDeleteAll = async () => {
+    try {
+        await deleteAllNotifications()
+        // 프론트에서 알림 배열 비우기
+        notificationStore.notifications = []
+    } catch (err) {
+        console.error('전체 삭제 실패', err)
+    }
+}
 
 // refs for scrolling pills
 const pillScrollRef = ref(null)       // scroll container
