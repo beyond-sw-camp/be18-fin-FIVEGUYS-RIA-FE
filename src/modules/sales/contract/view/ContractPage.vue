@@ -129,7 +129,7 @@
                                     </span>
 
                                     <span class="meta-row">
-                                        계약금액:
+                                        총 계약 금액:
                                         <span class="meta-amount">
                                             {{ formatCurrencyAmount(contract.totalAmount, contract.currency) }}
                                         </span>
