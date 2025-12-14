@@ -6,6 +6,7 @@
 
     <div class="page-title">견적 수정</div>
 
+    <!-- ===================== 견적 정보 ===================== -->
     <v-card elevation="1" class="estimate-card">
       <div class="section-title">견적 정보</div>
 
@@ -13,7 +14,12 @@
         <!-- 견적 제목 -->
         <v-col cols="12" md="6">
           <div class="input-label">견적 제목</div>
-          <v-text-field v-model="form.title" class="input-field" variant="outlined" hide-details />
+          <v-text-field
+            v-model="form.title"
+            class="input-field"
+            variant="outlined"
+            hide-details
+          />
         </v-col>
 
         <!-- 프로젝트 -->
@@ -82,7 +88,10 @@
                 hide-details
               />
             </template>
-            <v-date-picker v-model="form.estimateDate" @update:model-value="estimateMenu = false" />
+            <v-date-picker
+              v-model="form.estimateDate"
+              @update:model-value="estimateMenu = false"
+            />
           </v-menu>
         </v-col>
 
@@ -100,7 +109,10 @@
                 hide-details
               />
             </template>
-            <v-date-picker v-model="form.deliveryDate" @update:model-value="deliveryMenu = false" />
+            <v-date-picker
+              v-model="form.deliveryDate"
+              @update:model-value="deliveryMenu = false"
+            />
           </v-menu>
         </v-col>
 
@@ -121,16 +133,26 @@
         <!-- 비고 -->
         <v-col cols="12">
           <div class="input-label">비고</div>
-          <v-textarea v-model="form.remark" rows="3" class="textarea-field" variant="outlined" hide-details />
+          <v-textarea
+            v-model="form.remark"
+            rows="3"
+            class="textarea-field"
+            variant="outlined"
+            hide-details
+          />
         </v-col>
       </v-row>
 
       <!-- ===================== 공간 정보 ===================== -->
       <div class="section-title mt-6">공간 정보</div>
 
-      <v-card v-for="(sp, idx) in form.spaces" :key="idx" class="space-card pa-3 mb-3">
+      <v-card
+        v-for="(sp, idx) in form.spaces"
+        :key="idx"
+        class="space-card pa-3 mb-3"
+      >
         <v-row dense>
-          <!-- 층 -->
+          <!-- 층 선택 -->
           <v-col cols="12" md="3">
             <div class="input-label">층 선택</div>
             <v-select
@@ -144,90 +166,272 @@
             />
           </v-col>
 
-          <!-- 매장 -->
+          <!-- 호수 선택 -->
           <v-col cols="12" md="3">
             <div class="input-label">매장(호수)</div>
-            <v-select
-              :items="spaceStoreOptions[idx]"
-              v-model="sp.storeId"
-              item-title="storeName"
-              item-value="storeId"
-              class="input-field"
-              hide-details
-              :disabled="!spaceStoreOptions[idx]?.length"
-              no-data-text="사용 가능한 매장이 없습니다"
-              @update:modelValue="onStoreChange(idx)"
-            />
+<v-select
+  :items="spaceStoreOptions[idx]"
+  v-model="sp.storeId"
+  item-title="storeName"
+  item-value="storeId"
+  class="input-field"
+  hide-details
+  :disabled="spaceDisabled[idx]"
+  no-data-text="이용 가능한 매장이 없습니다"
+  @update:modelValue="onStoreChange(idx)"
+/>
           </v-col>
 
           <!-- 임대료 -->
           <v-col cols="12" md="3">
             <div class="input-label">임대료</div>
-            <v-text-field :model-value="toComma(sp.rentPrice)" readonly class="input-field" hide-details />
+            <v-text-field
+              :model-value="toComma(sp.rentPrice)"
+              readonly
+              class="input-field"
+              hide-details
+            />
           </v-col>
 
           <!-- 면적 -->
           <v-col cols="12" md="3">
             <div class="input-label">면적</div>
-            <v-text-field :model-value="sp.areaSize + '㎡'" readonly class="input-field" hide-details />
+            <v-text-field
+              :model-value="sp.areaSize + '㎡'"
+              readonly
+              class="input-field"
+              hide-details
+            />
           </v-col>
 
           <!-- 추가 비용 -->
           <v-col cols="12" md="3">
             <div class="input-label">추가 비용</div>
-            <v-text-field v-model.number="sp.additionalFee" type="number" class="input-field" hide-details />
+            <v-text-field
+              v-model.number="sp.additionalFee"
+              type="number"
+              class="input-field"
+              hide-details
+            />
           </v-col>
 
           <!-- 할인 -->
           <v-col cols="12" md="3">
             <div class="input-label">할인 금액</div>
-            <v-text-field v-model.number="sp.discountAmount" type="number" class="input-field" hide-details />
+            <v-text-field
+              v-model.number="sp.discountAmount"
+              type="number"
+              class="input-field"
+              hide-details
+            />
           </v-col>
         </v-row>
 
+        <!-- 설명 -->
         <v-col cols="12">
           <div class="input-label">공간 설명</div>
-          <v-textarea v-model="sp.description" rows="2" class="textarea-field" hide-details />
+          <v-textarea
+            v-model="sp.description"
+            rows="2"
+            class="textarea-field"
+            hide-details
+          />
         </v-col>
 
-        <v-btn color="red" class="mt-2" @click="removeSpace(idx)">공간 삭제</v-btn>
+        <v-btn color="red" class="mt-2" @click="removeSpace(idx)">
+          공간 삭제
+        </v-btn>
       </v-card>
 
+      <!-- 공간 추가 버튼 -->
       <div class="actions-row">
-        <v-btn class="space-add-btn" variant="outlined" @click="addSpace">+ 공간 추가</v-btn>
+        <v-btn class="space-add-btn" variant="outlined" @click="addSpace">
+          + 공간 추가
+        </v-btn>
       </div>
 
+      <!-- 총 금액 -->
       <v-card class="total-card pa-4">
         <div class="total-title">총 견적 금액</div>
         <div class="total-price">₩{{ totalPrice.toLocaleString() }}</div>
       </v-card>
 
+      <!-- 저장 버튼 -->
       <div class="actions-row">
-        <v-btn color="orange-darken-2" class="white--text px-6" rounded="lg" elevation="2" @click="saveEstimate">
+        <v-btn
+          color="orange-darken-2"
+          class="white--text px-6"
+          rounded="lg"
+          elevation="2"
+          @click="saveEstimate"
+        >
           저장
         </v-btn>
       </div>
     </v-card>
+
+    <!-- ===================== 모달들 ===================== -->
+
+    <!-- 프로젝트 선택 -->
+    <v-dialog v-model="projectDialog" width="500">
+      <v-card class="pa-4">
+        <div class="dialog-title mb-4">프로젝트 선택</div>
+        <v-text-field
+          v-model="projectSearch"
+          placeholder="검색"
+          prepend-inner-icon="mdi-magnify"
+          variant="outlined"
+          class="mb-4"
+        />
+        <v-list>
+          <v-list-item
+            v-for="p in filteredProjects"
+            :key="p.projectId"
+            @click="selectProject(p)"
+            class="dialog-item"
+          >
+            {{ p.projectTitle }}
+          </v-list-item>
+        </v-list>
+      </v-card>
+    </v-dialog>
+
+    <!-- 제안 선택 -->
+    <v-dialog v-model="proposalDialog" width="500">
+      <v-card class="pa-4">
+        <div class="dialog-title mb-4">제안 선택</div>
+        <v-text-field
+          v-model="proposalSearch"
+          placeholder="검색"
+          prepend-inner-icon="mdi-magnify"
+          variant="outlined"
+          class="mb-4"
+        />
+        <v-list>
+          <v-list-item
+            v-for="p in filteredProposals"
+            :key="p.id"
+            @click="selectProposal(p)"
+            class="dialog-item"
+          >
+            {{ p.title }}
+          </v-list-item>
+        </v-list>
+      </v-card>
+    </v-dialog>
+
+    <!-- 고객사 선택 -->
+    <v-dialog v-model="companyDialog" width="500">
+      <v-card class="pa-4">
+        <v-card-text>
+          <div class="dialog-title mb-3">고객사 선택</div>
+
+          <div class="mb-3 d-flex">
+            <v-chip
+              class="mr-2"
+              :color="
+                companyTypeFilter === 'ALL' ? 'orange darken-2' : undefined
+              "
+              :text-color="companyTypeFilter === 'ALL' ? 'white' : undefined"
+              @click="companyTypeFilter = 'ALL'"
+            >
+              전체
+            </v-chip>
+
+            <v-chip
+              class="mr-2"
+              :color="
+                companyTypeFilter === 'CLIENT' ? 'orange darken-2' : undefined
+              "
+              :text-color="companyTypeFilter === 'CLIENT' ? 'white' : undefined"
+              @click="companyTypeFilter = 'CLIENT'"
+            >
+              고객사
+            </v-chip>
+
+            <v-chip
+              :color="
+                companyTypeFilter === 'LEAD' ? 'orange darken-2' : undefined
+              "
+              :text-color="companyTypeFilter === 'LEAD' ? 'white' : undefined"
+              @click="companyTypeFilter = 'LEAD'"
+            >
+              잠재고객사
+            </v-chip>
+          </div>
+
+          <v-text-field
+            v-model="companySearch"
+            placeholder="검색"
+            prepend-inner-icon="mdi-magnify"
+            variant="outlined"
+            class="mb-4"
+          />
+
+          <v-list>
+            <v-list-item
+              v-for="c in filteredCompanies"
+              :key="c.companyId"
+              @click="selectCompany(c)"
+              class="dialog-item"
+            >
+              {{ c.companyName }}
+            </v-list-item>
+          </v-list>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+
+    <!-- 담당자 선택 -->
+    <v-dialog v-model="clientDialog" width="500">
+      <v-card class="pa-4">
+        <div class="dialog-title mb-4">고객 담당자 선택</div>
+        <v-text-field
+          v-model="clientSearch"
+          placeholder="검색"
+          variant="outlined"
+          class="mb-4"
+        />
+        <v-list>
+          <v-list-item
+            v-for="cl in filteredClientList"
+            :key="cl.id"
+            @click="selectClient(cl)"
+            class="dialog-item"
+          >
+            {{ cl.name }}
+          </v-list-item>
+        </v-list>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from "vue";
+import { ref, reactive, computed, onMounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
+
 import { updateEstimate, getEstimateDetail } from "@/apis/estimate";
 import { getFloors, getSpaces } from "@/apis/storemap";
+import { getProjectsWithPipelines, getProjectMeta } from "@/apis/project";
+import { getProposalsByProject, getProposalDetail } from "@/apis/proposal";
+import {
+  getSimpleClientCompanies,
+  getSimpleClientsByCompany,
+} from "@/apis/client";
 
 const route = useRoute();
 const router = useRouter();
-
+const spaceDisabled = ref([]);
+/* ===================== 옵션 ===================== */
 const paymentOptions = [
   { label: "선불", value: "PREPAY" },
   { label: "후불", value: "POSTPAY" },
 ];
-const estimateMenu = ref(false);
-const deliveryMenu = ref(false);
+
 const toComma = (v) => Number(v || 0).toLocaleString();
 
+/* ===================== FORM ===================== */
 const form = reactive({
   title: "",
   projectId: null,
@@ -241,18 +445,66 @@ const form = reactive({
   spaces: [],
 });
 
+/* ===================== UI 표시 이름 ===================== */
 const selectedProjectName = ref("");
 const selectedProposalName = ref("");
 const selectedCompanyName = ref("");
 const selectedClientName = ref("");
 
+/* ===================== 옵션 리스트 ===================== */
+const projectOptions = ref([]);
+const proposalOptions = ref([]);
 const floorOptions = ref([]);
 const spaceStoreOptions = ref([]);
 
+const companyList = ref([]);
+const clientList = ref([]);
+
+const companyTypeFilter = ref("ALL");
+
+/* ===================== 검색 ===================== */
+const projectSearch = ref("");
+const proposalSearch = ref("");
+const companySearch = ref("");
+const clientSearch = ref("");
+
+/* ===================== 모달 ===================== */
+const projectDialog = ref(false);
+const proposalDialog = ref(false);
+const companyDialog = ref(false);
+const clientDialog = ref(false);
+
+/* ===================== 날짜 메뉴 ===================== */
+const estimateMenu = ref(false);
+const deliveryMenu = ref(false);
+
+/* ===================== 스낵바 ===================== */
 const snackbar = ref(false);
 const snackbarColor = ref("");
 const snackbarMessage = ref("");
 
+const showError = (err) => {
+  snackbarColor.value = "red";
+
+  if (typeof err === "string") {
+    snackbarMessage.value = err;
+  } else {
+    snackbarMessage.value =
+      err?.response?.data?.message ||
+      err?.response?.data?.errorMessage ||
+      "오류 발생";
+  }
+
+  snackbar.value = true;
+};
+
+const showSuccess = (msg) => {
+  snackbarColor.value = "green";
+  snackbarMessage.value = msg;
+  snackbar.value = true;
+};
+
+/* ===================== Utils ===================== */
 const formatDate = (date) => {
   if (!date) return null;
   const d = new Date(date);
@@ -260,14 +512,229 @@ const formatDate = (date) => {
   return d.toISOString().substring(0, 10);
 };
 
+/* ===================== FILTER LIST ===================== */
+const filteredProjects = computed(() =>
+  projectOptions.value.filter((p) =>
+    p.projectTitle.toLowerCase().includes(projectSearch.value.toLowerCase())
+  )
+);
 
+const filteredProposals = computed(() =>
+  proposalOptions.value.filter((p) =>
+    p.title.toLowerCase().includes(proposalSearch.value.toLowerCase())
+  )
+);
+
+const filteredCompanies = computed(() => {
+  const search = companySearch.value.trim().toLowerCase();
+  return companyList.value.filter((c) =>
+    c.companyName.toLowerCase().includes(search)
+  );
+});
+
+const filteredClientList = computed(() =>
+  clientList.value.filter((cl) =>
+    cl.name.toLowerCase().includes(clientSearch.value.toLowerCase())
+  )
+);
+
+/* ===================== 회사 / 담당자 선택 ===================== */
+const selectCompany = async (c) => {
+  selectedCompanyName.value = c.companyName;
+  form.clientCompanyId = c.companyId;
+
+  selectedClientName.value = "";
+  form.clientId = null;
+
+  await loadClients(c.companyId);
+  companyDialog.value = false;
+};
+
+const selectClient = (cl) => {
+  selectedClientName.value = cl.name;
+  form.clientId = cl.id;
+  clientDialog.value = false;
+};
+
+/* ===================== API - LOAD ===================== */
+
+const loadProjects = async () => {
+  const res = await getProjectsWithPipelines({
+    myProject: true,
+    page: 1,
+    size: 100,
+  });
+  projectOptions.value = res.data.content.map((p) => ({
+    projectId: p.projectId,
+    projectTitle: p.title,
+  }));
+};
+
+const loadProposals = async (projectId) => {
+  if (!projectId) return;
+
+  const res = await getProposalsByProject(projectId);
+  proposalOptions.value = res.data.map((p) => ({
+    id: p.id,
+    title: p.title,
+  }));
+};
+
+const loadCompanies = async () => {
+  const params = {
+    page: 1,
+    size: 100,
+  };
+
+  // 칩으로 선택되는 타입 필터 (CLIENT, LEAD)
+  if (companyTypeFilter.value !== "ALL") {
+    params.type = companyTypeFilter.value;
+  }
+
+  // 검색어도 서버에 전달
+  if (companySearch.value.trim()) {
+    params.keyword = companySearch.value.trim();
+  }
+
+  const res = await getSimpleClientCompanies(params);
+
+  let rows = [];
+
+  if (Array.isArray(res.data)) rows = res.data;
+  else if (Array.isArray(res.data?.content)) rows = res.data.content;
+  else if (Array.isArray(res.data?.data)) rows = res.data.data;
+
+  companyList.value = rows.map((c) => ({
+    companyId: c.id,
+    companyName: c.name,
+    type: c.type ?? "UNKNOWN",
+  }));
+};
+
+watch(
+  () => companyDialog.value,
+  (open) => {
+    if (open) {
+      companySearch.value = "";
+      companyTypeFilter.value = "ALL";
+      loadCompanies();
+    }
+  }
+);
+
+watch([companyTypeFilter, companySearch], () => {
+  if (companyDialog.value) loadCompanies();
+});
+
+const loadClients = async (companyId) => {
+  if (!companyId) return;
+  const res = await getSimpleClientsByCompany(companyId, {
+    page: 1,
+    size: 100,
+  });
+
+  const rows = res.data?.content || res.data?.data || res.data || [];
+
+  clientList.value = rows.map((cl) => ({
+    id: cl.id,
+    name: cl.name,
+  }));
+};
+
+const loadFloors = async () => {
+  const res = await getFloors(1);
+  floorOptions.value = res.data.floors.map((f) => ({
+    id: f.floorId,
+    label: f.floorName,
+  }));
+};
+
+/* 다이얼로그 열릴 때 회사 필터 초기화 + 새로 로딩 */
+watch(
+  () => companyDialog.value,
+  (open) => {
+    if (open) {
+      companySearch.value = "";
+      companyTypeFilter.value = "ALL";
+      loadCompanies();
+    }
+  }
+);
+
+/* ===================== 프로젝트 선택 ===================== */
+const selectProject = async (p) => {
+  selectedProjectName.value = p.projectTitle;
+  form.projectId = p.projectId;
+
+  // 제안 초기화
+  form.proposalId = null;
+  selectedProposalName.value = "";
+
+  // 제안 가져오기
+  await loadProposals(p.projectId);
+
+  // 프로젝트 기본 고객사/담당자
+  const { data } = await getProjectMeta(p.projectId);
+  form.clientCompanyId = data.clientCompanyId;
+  form.clientId = data.clientId;
+
+  selectedCompanyName.value = data.clientCompanyName;
+  selectedClientName.value = data.clientName;
+
+  await loadClients(form.clientCompanyId);
+
+  projectDialog.value = false;
+};
+
+/* ===================== 제안 선택 ===================== */
+const selectProposal = async (p) => {
+  form.proposalId = p.id;
+  selectedProposalName.value = p.title;
+
+  const { data } = await getProposalDetail(p.id);
+
+  form.clientCompanyId = data.clientCompanyId;
+  form.clientId = data.clientId;
+
+  selectedCompanyName.value = data.clientCompanyName;
+  selectedClientName.value = data.clientName;
+
+  await loadClients(form.clientCompanyId);
+
+  proposalDialog.value = false;
+};
+
+/* ===================== 공간 선택 ===================== */
 const onFloorChange = async (idx, isInit = false) => {
   const floorId = form.spaces[idx].floorId;
   if (!floorId) return;
 
+  // 🔥 사용자 변경일 때만 초기화
+  if (!isInit) {
+    form.spaces[idx].storeId = null;
+    form.spaces[idx].rentPrice = 0;
+    form.spaces[idx].areaSize = 0;
+    form.spaces[idx].additionalFee = 0;
+    form.spaces[idx].discountAmount = 0;
+    form.spaces[idx].description = "";
+  }
+
   try {
     const { data } = await getSpaces(floorId);
 
+    // ❌ 매장 없음
+    if (!data?.stores || data.stores.length === 0) {
+      spaceStoreOptions.value[idx] = [];
+      spaceDisabled.value[idx] = true;
+
+      if (!isInit) {
+        showError("이용 가능한 매장이 없습니다.");
+      }
+
+      return;
+    }
+
+    // ✅ 매장 있음
     spaceStoreOptions.value[idx] = data.stores.map((s) => ({
       storeId: s.storeId,
       storeName: s.storeNumber,
@@ -276,25 +743,118 @@ const onFloorChange = async (idx, isInit = false) => {
       description: s.description,
     }));
 
+    spaceDisabled.value[idx] = false;
 
-    if (!isInit) {
-      form.spaces[idx].storeId = null;
-      form.spaces[idx].rentPrice = 0;
-      form.spaces[idx].areaSize = 0;
-      form.spaces[idx].description = "";
+    // 🔥 초기 로딩이면 기존 storeId 유지
+    if (isInit && form.spaces[idx].storeId) {
+      const store = spaceStoreOptions.value[idx].find(
+        (s) => s.storeId === form.spaces[idx].storeId
+      );
+      if (store) {
+        form.spaces[idx].rentPrice = store.rentPrice;
+        form.spaces[idx].areaSize = store.areaSize;
+        form.spaces[idx].description = store.description;
+      }
     }
-  } catch {
-    spaceStoreOptions.value[idx] = [];
-    form.spaces[idx].storeId = null;
-    snackbarColor.value = "orange";
-    snackbarMessage.value = "사용 가능한 매장이 없습니다.";
-    snackbar.value = true;
+  } catch (e) {
+    spaceDisabled.value[idx] = true;
+    if (!isInit) showError("매장 정보를 불러오지 못했습니다.");
   }
 };
+const onStoreChange = (idx) => {
+  const storeId = form.spaces[idx].storeId;
+  if (!storeId) return;
 
+  const stores = spaceStoreOptions.value[idx];
+  const store = stores.find((s) => s.storeId === storeId);
+  if (!store) return;
+
+  form.spaces[idx].rentPrice = store.rentPrice;
+  form.spaces[idx].areaSize = store.areaSize;
+  form.spaces[idx].description = store.description;
+};
+
+/* ===================== 공간 추가/삭제 ===================== */
+const addSpace = () => {
+  form.spaces.push({
+    floorId: null,
+    storeId: null,
+    rentPrice: 0,
+    areaSize: 0,
+    additionalFee: 0,
+    discountAmount: 0,
+    description: "",
+  });
+
+  spaceStoreOptions.value.push([]);
+  spaceDisabled.value.push(true); // 신규 공간은 막기
+};
+const removeSpace = (idx) => {
+  form.spaces.splice(idx, 1);
+  spaceStoreOptions.value.splice(idx, 1);
+};
+
+/* ===================== 총 금액 ===================== */
+const totalPrice = computed(() =>
+  form.spaces.reduce((sum, s) => {
+    return (
+      sum +
+      (s.rentPrice || 0) +
+      (s.additionalFee || 0) -
+      (s.discountAmount || 0)
+    );
+  }, 0)
+);
+
+/* ===================== 상세 로딩 ===================== */
+const loadDetail = async () => {
+  const { data } = await getEstimateDetail(route.params.id);
+
+  form.title = data.estimateTitle;
+  form.projectId = data.projectId;
+  selectedProjectName.value = data.projectTitle;
+
+  form.proposalId = data.proposalId;
+  selectedProposalName.value = data.proposalTitle;
+
+  form.clientCompanyId = data.clientCompanyId;
+  form.clientId = data.clientId;
+
+  selectedCompanyName.value = data.clientCompanyName;
+  selectedClientName.value = data.clientName;
+
+  form.estimateDate = data.estimateDate;
+  form.deliveryDate = data.deliveryDate;
+  form.paymentCondition = data.paymentCondition;
+  form.remark = data.remark;
+
+  form.spaces = data.spaces.map((s) => ({
+    storeEstimateMapId: s.storeEstimateMapId,
+    floorId: s.floorId,
+    storeId: s.storeId,
+    rentPrice: s.rentFee,
+    areaSize: s.area,
+    additionalFee: s.additionalFee,
+    discountAmount: s.discountAmount,
+    description: s.remark,
+  }));
+};
+const hasInvalidSpace = computed(() =>
+  form.spaces.some((sp, idx) => {
+    return spaceDisabled.value[idx] || !sp.storeId;
+  })
+);
+/* ===================== 저장 ===================== */
 const saveEstimate = async () => {
+
+  if (hasInvalidSpace.value) {
+  showError("선택되지 않은 매장이 있어 수정이 불가능합니다.");
+  return;
+  }
   try {
     const payload = {
+
+      
       estimateTitle: form.title,
       projectId: form.projectId,
       proposalId: form.proposalId,
@@ -315,87 +875,34 @@ const saveEstimate = async () => {
 
     await updateEstimate(route.params.id, payload);
 
-    snackbarColor.value = "green";
-    snackbarMessage.value = "견적이 수정되었습니다.";
-    snackbar.value = true;
-
-    router.push({
-      name: "EstimateDetail",
-      params: { id: route.params.id },
-    });
+    showSuccess("견적이 수정되었습니다.");
+    router.push({ name: "EstimateDetail", params: { id: route.params.id } });
   } catch (err) {
-    snackbarColor.value = "red";
-    snackbarMessage.value =
-      err?.response?.data?.message ||
-      err?.response?.data?.errorMessage ||
-      "견적 수정 중 오류가 발생했습니다.";
-    snackbar.value = true;
+    showError(err);
   }
 };
 
-const onStoreChange = (idx) => {
-  const store = spaceStoreOptions.value[idx]?.find(
-    (s) => s.storeId === form.spaces[idx].storeId
-  );
-  if (!store) return;
-  form.spaces[idx].rentPrice = store.rentPrice;
-  form.spaces[idx].areaSize = store.areaSize;
-  form.spaces[idx].description = store.description;
-};
-
-const addSpace = () => {
-  form.spaces.push({
-    floorId: null,
-    storeId: null,
-    rentPrice: 0,
-    areaSize: 0,
-    additionalFee: 0,
-    discountAmount: 0,
-    description: "",
-  });
-  spaceStoreOptions.value.push([]);
-};
-
-const removeSpace = (idx) => {
-  form.spaces.splice(idx, 1);
-  spaceStoreOptions.value.splice(idx, 1);
-};
-
-const totalPrice = computed(() =>
-  form.spaces.reduce(
-    (sum, s) => sum + (s.rentPrice || 0) + (s.additionalFee || 0) - (s.discountAmount || 0),
-    0
-  )
-);
-
+/* ===================== 초기 로딩 ===================== */
 onMounted(async () => {
-  const { data } = await getEstimateDetail(route.params.id);
-  form.title = data.estimateTitle;
-  form.spaces = data.spaces.map((s) => ({
-    floorId: s.floorId,
-    storeId: s.storeId,
-    rentPrice: s.rentFee,
-    areaSize: s.area,
-    additionalFee: s.additionalFee,
-    discountAmount: s.discountAmount,
-    description: s.remark,
-  }));
+  await loadDetail();
+  await loadProjects();
+  await loadCompanies();
+  await loadFloors();
 
-  const floors = await getFloors(1);
-  floorOptions.value = floors.data.floors.map((f) => ({
-    id: f.floorId,
-    label: f.floorName,
-  }));
+  spaceStoreOptions.value = Array.from(
+    { length: form.spaces.length },
+    () => []
+  );
 
-  spaceStoreOptions.value = Array.from({ length: form.spaces.length }, () => []);
+  spaceDisabled.value = Array.from(
+    { length: form.spaces.length },
+    () => false
+  );
 
-for (let i = 0; i < form.spaces.length; i++) {
-  await onFloorChange(i, true); // ← 초기 로딩임을 명시
-  if (spaceStoreOptions.value[i]?.length) {
+  for (let i = 0; i < form.spaces.length; i++) {
+    await onFloorChange(i, true);
     onStoreChange(i);
   }
-}
-
 });
 </script>
 
