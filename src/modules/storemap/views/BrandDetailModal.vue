@@ -23,12 +23,7 @@
       <v-card-text v-else class="no-window-transition">
 
         <!-- Tabs -->
-        <v-tabs
-          v-model="tab"
-          color=#f2a23a
-          align-tabs="center"
-          class="fixed-tabs"
-        >
+        <v-tabs v-model="tab" color=#f2a23a align-tabs="center" class="fixed-tabs">
           <v-tab value="info">기본 정보</v-tab>
           <v-tab value="sales">매출/거래 정보</v-tab>
         </v-tabs>
@@ -42,71 +37,35 @@
             <v-row class="py-4" dense>
 
               <v-col cols="12">
-                <v-text-field
-                  label="입주명"
-                  :model-value="brand.storeDisplayName || '공실'"
-                  variant="outlined"
-                  readonly
-                />
+                <v-text-field label="입주명" :model-value="brand.storeDisplayName || '공실'" variant="outlined" readonly />
               </v-col>
 
               <v-col cols="12">
-                <v-text-field
-                  label="면적"
-                  :model-value="brand.areaSize"
-                  suffix="㎡"
-                  variant="outlined"
-                  readonly
-                />
+                <v-text-field label="면적" :model-value="brand.areaSize" suffix="㎡" variant="outlined" readonly />
               </v-col>
 
               <v-col cols="12">
-                <v-text-field
-                  label="입점일"
-                  :model-value="brand.startDate"
-                  variant="outlined"
-                  readonly
-                />
+                <v-text-field label="입점일" :model-value="brand.startDate" variant="outlined" readonly />
               </v-col>
 
               <v-col cols="12">
                 <div class="d-flex align-center ga-2">
-                  <v-text-field
-                    class="flex-1-1"
-                    label="계약 시작일"
-                    :model-value="brand.contractStartDate"
-                    variant="outlined"
-                    readonly
-                  />
+                  <v-text-field class="flex-1-1" label="계약 시작일" :model-value="brand.contractStartDate"
+                    variant="outlined" readonly />
                   <span>~</span>
-                  <v-text-field
-                    class="flex-1-1"
-                    label="계약 종료일"
-                    :model-value="brand.contractEndDate"
-                    variant="outlined"
-                    readonly
-                  />
+                  <v-text-field class="flex-1-1" label="계약 종료일" :model-value="brand.contractEndDate" variant="outlined"
+                    readonly />
                 </div>
               </v-col>
 
               <v-col cols="12">
-                <v-text-field
-                  label="총 임대료"
-                  :model-value="brand.finalContractAmount"
-                  suffix="원"
-                  variant="outlined"
-                  readonly
-                />
+                <v-text-field label="보증금" :model-value="brand.finalContractAmount" suffix="원" variant="outlined"
+                  readonly />
               </v-col>
 
               <v-col cols="12">
-                <v-text-field
-                  label="매출 수수료율"
-                  :model-value="brand.commissionRate"
-                  suffix="%"
-                  variant="outlined"
-                  readonly
-                />
+                <v-text-field label="매출 수수료율" :model-value="brand.commissionRate" suffix="%" variant="outlined"
+                  readonly />
               </v-col>
 
             </v-row>
@@ -117,53 +76,27 @@
             <v-row class="py-4" dense>
 
               <v-col cols="6">
-                <v-text-field
-                  label="전체 거래 횟수"
-                  :model-value="brand.totalPurchaseCount"
-                  suffix="건"
-                  variant="outlined"
-                  readonly
-                />
+                <v-text-field label="전체 거래 횟수" :model-value="brand.totalPurchaseCount" suffix="건" variant="outlined"
+                  readonly />
               </v-col>
 
               <v-col cols="6">
-                <v-text-field
-                  label="총 매출 금액"
-                  :model-value="brand.totalSalesAmount"
-                  suffix="원"
-                  variant="outlined"
-                  readonly
-                />
+                <v-text-field label="총 매출 금액" :model-value="brand.totalSalesAmount" suffix="원" variant="outlined"
+                  readonly />
               </v-col>
 
               <v-col cols="6">
-                <v-text-field
-                  label="VIP 거래 횟수"
-                  :model-value="brand.vipPurchaseCount"
-                  suffix="건"
-                  variant="outlined"
-                  readonly
-                />
+                <v-text-field label="VIP 거래 횟수" :model-value="brand.vipPurchaseCount" suffix="건" variant="outlined"
+                  readonly />
               </v-col>
 
               <v-col cols="6">
-                <v-text-field
-                  label="VIP 매출 금액"
-                  :model-value="brand.vipSalesAmount"
-                  suffix="원"
-                  variant="outlined"
-                  readonly
-                />
+                <v-text-field label="VIP 매출 금액" :model-value="brand.vipSalesAmount" suffix="원" variant="outlined"
+                  readonly />
               </v-col>
 
               <v-col cols="12">
-                <v-text-field
-                  label="VIP 매출 비중"
-                  :model-value="brand.vipRatio"
-                  suffix="%"
-                  variant="outlined"
-                  readonly
-                />
+                <v-text-field label="VIP 매출 비중" :model-value="brand.vipRatio" suffix="%" variant="outlined" readonly />
               </v-col>
 
             </v-row>
@@ -183,13 +116,13 @@
 
 <script setup>
 import { ref, watch, computed } from "vue";
-import { fetchStoreDetailStats } from "@/apis/storemap";   
+import { fetchStoreDetailStats } from "@/apis/storemap";
 /* -----------------------------
       Props & Emits
 ----------------------------- */
 const props = defineProps({
   modelValue: { type: Boolean, required: true },
-  storeId: { type: Number, required: false, default: null },     
+  storeId: { type: Number, required: false, default: null },
 });
 
 const emit = defineEmits(["update:modelValue"]);
@@ -216,7 +149,7 @@ const tab = ref("info");
 
 const displayName = computed(() =>
   brand.value.storeDisplayName &&
-  brand.value.storeDisplayName.trim() !== ""
+    brand.value.storeDisplayName.trim() !== ""
     ? brand.value.storeDisplayName
     : "공실"
 );
@@ -227,7 +160,7 @@ const displayName = computed(() =>
 watch(
   () => props.storeId,
   async (id) => {
-    
+
     brand.value = {};
     error.value = null;
     loading.value = false;

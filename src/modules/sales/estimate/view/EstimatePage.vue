@@ -7,42 +7,23 @@
       <v-col cols="12" md="2" class="pa-4 sidebar">
         <v-card class="sidebar-card pa-6" flat>
           <!-- 검색 -->
-          <v-text-field
-            v-model="search"
-            append-inner-icon="mdi-magnify"
-            label="검색"
-            variant="outlined"
-            hide-details
-            density="comfortable"
-            class="mb-4"
-          />
+          <v-text-field v-model="search" append-inner-icon="mdi-magnify" label="검색" variant="outlined" hide-details
+            density="comfortable" class="mb-4" />
 
           <!-- 즐겨찾기 버튼 -->
           <div class="d-flex justify-end mt-2">
-            <v-btn
-              small
-              class="favorite-toggle-btn"
-              @click="showFavoritesOnly = !showFavoritesOnly"
-              elevation="1"
-            >
+            <!-- <v-btn small class="favorite-toggle-btn" @click="showFavoritesOnly = !showFavoritesOnly" elevation="1">
               <v-icon :color="showFavoritesOnly ? '#FFD60A' : '#8e8e93'">
                 {{ showFavoritesOnly ? "mdi-star" : "mdi-star-outline" }}
               </v-icon>
-            </v-btn>
+            </v-btn> -->
           </div>
 
           <!-- 상태 체크박스 그룹 -->
           <div class="sidebar-checkbox-group mt-4">
             진행 상태
-            <v-checkbox
-              v-for="sidebar in sidebares"
-              :key="sidebar.value"
-              v-model="sidebar.checked"
-              :label="sidebar.label"
-              hide-details
-              dense
-              class="sidebar-checkbox"
-            />
+            <v-checkbox v-for="sidebar in sidebares" :key="sidebar.value" v-model="sidebar.checked"
+              :label="sidebar.label" hide-details dense class="sidebar-checkbox" />
           </div>
         </v-card>
       </v-col>
@@ -52,45 +33,23 @@
       ======================== -->
       <v-col cols="12" md="10" class="pa-6 main-content">
         <div class="d-flex justify-end mb-4">
-          <v-btn
-            color="#ff9500"
-            class="white--text"
-            rounded
-            elevation="4"
-            @click="goToCreateEstimate()"
-          >
+          <v-btn color="#ff9500" class="white--text" rounded elevation="4" @click="goToCreateEstimate()">
             새 견적 추가
           </v-btn>
         </div>
 
         <!-- 카드 목록 -->
         <v-row dense>
-          <v-col
-            v-for="estimate in filteredEstimates"
-            :key="estimate.estimateId"
-            cols="12"
-            sm="6"
-            md="3"
-            class="proposal-col"
-          >
-            <v-card
-              outlined
-              class="proposal-card"
-              elevation="2"
-              rounded="xl"
-              @click="goToEstimateDetail(estimate.estimateId)"
-            >
+          <v-col v-for="estimate in filteredEstimates" :key="estimate.estimateId" cols="12" sm="6" md="3"
+            class="proposal-col">
+            <v-card outlined class="proposal-card" elevation="2" rounded="xl"
+              @click="goToEstimateDetail(estimate.estimateId)">
               <!-- 즐겨찾기 버튼 -->
-              <v-btn
-                small
-                class="favorite-btn"
-                @click.stop="toggleFavorite(estimate)"
-                elevation="0"
-              >
+              <!-- <v-btn small class="favorite-btn" @click.stop="toggleFavorite(estimate)" elevation="0">
                 <v-icon :color="estimate.isFavorite ? '#FFD60A' : '#8e8e93'">
                   {{ estimate.isFavorite ? "mdi-star" : "mdi-star-outline" }}
                 </v-icon>
-              </v-btn>
+              </v-btn> -->
 
               <!-- 제목 -->
               <v-card-title class="proposal-title">
@@ -119,9 +78,7 @@
 
               <v-divider class="my-2" />
 
-              <v-card-text
-                class="pa-0 d-flex justify-space-between align-center"
-              >
+              <v-card-text class="pa-0 d-flex justify-space-between align-center">
                 <!-- 상태 -->
                 <span :class="['sidebar-text', statusClass(estimate.status)]">
                   {{ statusLabel(estimate.status) }}
@@ -138,11 +95,7 @@
 
         <!-- 페이지네이션 -->
         <v-row justify="center" class="mt-6">
-          <v-pagination
-            v-model="page"
-            :length="totalPages"
-            @update:modelValue="onPageChange"
-          />
+          <v-pagination v-model="page" :length="totalPages" @update:modelValue="onPageChange" />
         </v-row>
       </v-col>
     </v-row>

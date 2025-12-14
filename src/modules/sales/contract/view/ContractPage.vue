@@ -8,16 +8,12 @@
 
                     <!-- 즐겨찾기 버튼 -->
                     <div class="d-flex justify-end mb-4">
-                        <v-btn
-                            small
-                            class="favorite-toggle-btn"
-                            @click="showFavoritesOnly = !showFavoritesOnly"
-                            elevation="1"
-                        >
+                        <!-- <v-btn small class="favorite-toggle-btn" @click="showFavoritesOnly = !showFavoritesOnly"
+                            elevation="1">
                             <v-icon :color="showFavoritesOnly ? '#FFD60A' : '#8e8e93'">
                                 {{ showFavoritesOnly ? 'mdi-star' : 'mdi-star-outline' }}
                             </v-icon>
-                        </v-btn>
+                        </v-btn> -->
                     </div>
 
                     <!-- 검색 -->
@@ -90,16 +86,11 @@
                             @click="goToContractDetail(contract.contractId)"
                         >
                             <!-- 즐겨찾기 -->
-                            <v-btn
-                                small
-                                class="favorite-btn"
-                                @click.stop="toggleFavorite(contract)"
-                                elevation="0"
-                            >
+                            <!-- <v-btn small class="favorite-btn" @click.stop="toggleFavorite(contract)" elevation="0">
                                 <v-icon :color="contract.isFavorite ? '#FFD60A' : '#8e8e93'">
                                     {{ contract.isFavorite ? 'mdi-star' : 'mdi-star-outline' }}
                                 </v-icon>
-                            </v-btn>
+                            </v-btn> -->
 
                             <!-- 제목 -->
                             <v-card-title class="contract-title">
