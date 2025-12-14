@@ -9,12 +9,12 @@
           </p>
         </div>
 
-        <v-btn-toggle v-model="selectedRole" mandatory class="role-toggle" rounded="xl">
-          <v-btn value="ROLE_SALES_MEMBER" class="role-toggle-btn">
+        <v-btn-toggle v-model="selectedRole" mandatory class="role-toggle role-toggle--segmented" rounded="xl">
+          <v-btn value="ROLE_SALES_MEMBER" class="role-toggle-btn role-toggle-btn--member">
             개인
           </v-btn>
-          <!-- 팀장 권한 있을 때만 팀장 버튼 노출 -->
-          <v-btn v-if="canViewLead" value="ROLE_SALES_LEAD" class="role-toggle-btn">
+
+          <v-btn v-if="canViewLead" value="ROLE_SALES_LEAD" class="role-toggle-btn role-toggle-btn--lead">
             운영
           </v-btn>
         </v-btn-toggle>
@@ -1024,5 +1024,17 @@ const formatAmount = (v) => {
   .rank-card-body {
     flex-direction: column;
   }
+}
+
+.role-toggle :deep(.v-btn--active) {
+  background-color: #f97316 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3) !important;
+}
+
+/* 비활성 버튼은 기존 톤 유지 */
+.role-toggle :deep(.v-btn:not(.v-btn--active)) {
+  background: transparent !important;
+  color: #374151;
 }
 </style>

@@ -6,6 +6,9 @@
         {{ snackbarMessage }}
       </v-snackbar>
       <div class="page-title">계약 상세</div>
+      <div class="contract-status" :class="statusClass">
+        {{ statusText  }}
+      </div>
 
       <v-row dense>
         <!-- 좌측 계약 정보 카드 -->
@@ -85,11 +88,30 @@
               <v-col cols="12">
                 <v-card class="total-card pa-3">
                   <div class="total-title">총 계약 금액</div>
-                  <div class="total-price">
-                    ₩{{ totalContractAmount.toLocaleString() }}
-                    <span v-if="form.commissionRate && form.commissionRate > 0"
-                      style="font-size: 0.8rem; color: #555; margin-left: 6px;">
-                      + α × {{ form.commissionRate }}%
+
+                  <div class="total-formula">
+                    <!-- 화폐 (항상 강조) -->
+                    <span class="currency strong">
+                      {{ currencySymbol }}
+                    </span>
+
+                    <!-- 금액 -->
+                    <span
+                      class="formula amount"
+                      :class="amountClass"
+                    >
+                      {{ baseAmount.toLocaleString() }}
+                    </span>
+
+                    <!-- + -->
+                    <span class="formula plus weak"> + </span>
+
+                    <!-- 수수료 -->
+                    <span
+                      class="formula commission"
+                      :class="commissionClass"
+                    >
+                      α × {{ commissionRateDisplay }}%
                     </span>
                   </div>
                 </v-card>
@@ -162,7 +184,7 @@
             <v-row justify="center" class="mt-4">
               <v-col cols="12" md="8">
                 <v-btn color="success" block
-                  :disabled="completing || form.status === 'COMPLETED' || form.status === 'CANCELLED'"
+                  :disabled="completing || form.status === 'COMPLETED' || form.status === 'CANCELED'"
                   @click="onComplete">
                   계약 완료
                 </v-btn>
@@ -173,7 +195,7 @@
       </v-row>
 
       <!-- 편집 / 삭제 버튼 -->
-      <div class="d-flex justify-end gap-3 mt-4" v-if="form.status !== 'COMPLETED' && form.status !== 'CANCELLED'">
+      <div class="d-flex justify-end gap-3 mt-4" v-if="form.status !== 'COMPLETED' && form.status !== 'CANCELED'">
         <v-btn color="orange darken-2" class="white--text px-6" rounded="lg" elevation="2" @click="goToEdit">
           편집
         </v-btn>
@@ -250,6 +272,7 @@ const deleting = ref(false);
 const contractTypesMap = { LEASE: "임대형", CONSIGNMENT: "수수료형", MIX: "혼합" };
 const paymentOptionsMap = { PREPAY: "선불", POSTPAY: "후불" };
 const currencyOptionsMap = { KRW: "KRW", USD: "USD", EUR: "EUR" };
+const currencySymbolMap = { KRW: '₩', USD: '$', EUR: '€' };
 
 const formatDate = (d) => {
   if (!d) return "";
@@ -270,6 +293,53 @@ const totalContractAmount = computed(() => {
 
   const contractAmount = form.contractAmount || 0;
   return spaceTotal + contractAmount;
+});
+
+const formatMoney = (amount, currency) => {
+  const value = Number(amount) || 0;
+
+  switch (currency) {
+    case 'USD':
+      return `$${value.toLocaleString('en-US')}`;
+    case 'EUR':
+      return `€${value.toLocaleString('de-DE')}`;
+    case 'KRW':
+    default:
+      return `₩${value.toLocaleString('ko-KR')}`;
+  }
+};
+
+const currencySymbol = computed(() => {
+  return currencySymbolMap[form.currency] || '';
+});
+
+
+const baseAmount = computed(() => {
+  const spaceTotal = form.spaces.reduce((sum, sp) => {
+    return sum
+      + (sp.rentPrice || 0)
+      + (sp.additionalFee || 0)
+      - (sp.discountAmount || 0);
+  }, 0);
+
+  return spaceTotal + (form.contractAmount || 0);
+});
+
+const commissionRateDisplay = computed(() => {
+  const rate = Number(form.commissionRate);
+  return Number.isFinite(rate) ? rate : 0;
+});
+
+const amountClass = computed(() => {
+  if (form.contractType === 'LEASE') return 'strong';
+  if (form.contractType === 'MIX') return 'medium';
+  return 'weak';
+});
+
+const commissionClass = computed(() => {
+  if (form.contractType === 'CONSIGNMENT') return 'strong';
+  if (form.contractType === 'MIX') return 'medium';
+  return 'weak';
 });
 
 onMounted(async () => {
@@ -305,7 +375,7 @@ const onDelete = async () => {
   deleting.value = true;
   try {
     await cancelContract(contractId);
-    form.status = "CANCELLED"; // 상태 업데이트
+    form.status = "CANCELED"; // 상태 업데이트
     showSuccess("계약이 취소되었습니다.");
     await router.push({ name: "Contract" });
   } catch (err) {
@@ -324,7 +394,7 @@ const onComplete = async () => {
     showError("이미 완료된 계약입니다.");
     return;
   }
-  if (form.status === "CANCELLED") {
+  if (form.status === "CANCELED") {
     showError("취소된 계약은 완료할 수 없습니다.");
     return;
   }
@@ -344,6 +414,32 @@ const onComplete = async () => {
     completing.value = false;
   }
 };
+
+const statusText = computed(() => {
+  switch (form.status) {
+    case "SUBMITTED":
+      return "진행중";
+    case "COMPLETED":
+      return "완료";
+    case "CANCELED":
+      return "취소";
+    default:
+      return "";
+  }
+});
+
+const statusClass = computed(() => {
+  switch (form.status) {
+    case "SUBMITTED":
+      return "sidebar-submitted";
+    case "COMPLETED":
+      return "sidebar-completed";
+    case "CANCELED":
+      return "sidebar-canceled";
+    default:
+      return "";
+  }
+});
 </script>
 
 <style scoped>
@@ -450,5 +546,85 @@ const onComplete = async () => {
 .no-gradient-textarea :deep(textarea) {
   padding: 10px 12px !important;
   /* 원하는 값으로 조정 */
+}
+
+.contract-status {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+.sidebar-submitted {
+    color: #1976d2;
+    background-color: #e3f2fd;
+}
+
+.sidebar-completed {
+    color: #4caf50;
+    background-color: #e8f5e9;
+}
+
+.sidebar-canceled {
+    color: #f44336;
+    background-color: #ffebee;
+}
+
+.total-formula {
+  display: flex;
+  justify-content: flex-end;
+  align-items: baseline;
+  gap: 4px;
+  margin-top: 4px;
+  text-align: right;
+}
+
+.total-formula {
+  display: flex;
+  justify-content: flex-end;
+  align-items: baseline;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+/* 수식 공통 */
+.formula {
+  display: inline-block; /* ← 이게 없어서 안 먹던 거 */
+  line-height: 1;
+}
+
+/* 기본 */
+.amount,
+.commission {
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: #777;
+}
+
+/* 연산자 */
+.plus {
+  font-size: 0.85rem;
+  color: #999;
+}
+
+/* 강조 */
+.strong {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #111;
+}
+
+.medium {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #444;
+}
+
+.weak {
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: #999;
 }
 </style>

@@ -4,6 +4,7 @@ import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import bg from "@/assets/galleria.jpg";
+import { useNotificationStore } from "@/modules/notification/store/notificationStore";
 
 const employeeNo = ref("");
 const password = ref("");
@@ -12,6 +13,7 @@ const errorMessage = ref("");
 
 const router = useRouter();
 const authStore = useAuthStore();
+const notificationStore = useNotificationStore();
 
 const handleLogin = async () => {
   errorMessage.value = "";
@@ -19,6 +21,8 @@ const handleLogin = async () => {
 
   try {
     const role = await authStore.login(employeeNo.value, password.value);
+    
+    notificationStore.connectSSE();
 
     console.log("role from store =", role);
 
@@ -34,6 +38,7 @@ const handleLogin = async () => {
     errorMessage.value = "사번 또는 비밀번호를 확인해주세요.";
   } finally {
     loading.value = false;
+    
   }
 };
 </script>

@@ -138,11 +138,26 @@
               <v-col cols="12">
                 <v-card class="total-card pa-3">
                   <div class="total-title">총 계약 금액</div>
-                  <div class="total-price">
-                    ₩{{ totalContractAmount.toLocaleString() }}
-                    <span v-if="form.commissionRate && form.commissionRate > 0"
-                      style="font-size: 0.8rem; color: #555; margin-left: 6px">
-                      + α × {{ form.commissionRate }}%
+                  <div class="total-price formula-row">
+                    <span class="formula currency strong">
+                      {{ currencySymbol }}
+                    </span>
+
+                    <!-- 금액 -->
+                    <span
+                      class="formula amount"
+                      :class="amountClass"
+                    >
+                      {{ totalContractAmount.toLocaleString() }}
+                    </span>
+
+                    <span class="formula plus"> + </span>
+
+                    <span
+                      class="formula"
+                      :class="commissionClass"
+                    >
+                      α × {{ form.commissionRate ?? 0 }}%
                     </span>
                   </div>
                 </v-card>
@@ -619,6 +634,37 @@ const totalContractAmount = computed(() => {
   return spaceTotal + contractAmount;
 });
 
+const currencySymbol = computed(() => {
+  switch (form.currency) {
+    case "USD": return "$";
+    case "EUR": return "€";
+    default: return "₩";
+  }
+});
+
+const amountClass = computed(() => {
+  switch (form.contractType) {
+    case "LEASE":
+      return "strong";
+    case "CONSIGNMENT":
+      return "weak";
+    default:
+      return "medium";
+  }
+});
+
+const commissionClass = computed(() => {
+  switch (form.contractType) {
+    case "CONSIGNMENT":
+      return "strong";
+    case "LEASE":
+      return "weak";
+    default:
+      return "medium";
+  }
+});
+
+
 /* ---- 저장 ---- */
 const saveContract = async () => {
   if (!form.contractTitle) return showError("계약 제목을 입력해주세요!");
@@ -878,5 +924,40 @@ const formatDate = (d) => {
 /* 리사이즈 핸들 제거 */
 .no-gradient-textarea :deep(textarea) {
   resize: none !important;
+}
+
+.formula-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.formula {
+  transition: all 0.15s ease;
+}
+
+.formula.strong {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #111;
+}
+
+.formula.medium {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.formula.weak {
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: #777;
+}
+
+.formula.plus {
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: #888;
 }
 </style>

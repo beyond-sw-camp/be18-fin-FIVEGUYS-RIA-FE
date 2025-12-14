@@ -170,7 +170,6 @@
                         class="detail-link"
                         @click.stop="goProjectDetail(p.projectId)"
                       >
-                        상세보기
                       </v-btn>
                     </div>
 

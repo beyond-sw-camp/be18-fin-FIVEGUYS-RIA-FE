@@ -42,7 +42,8 @@
 
 <script setup>
 import { ref, watch } from "vue";
-import { getProjectTitles, getProjectMeta } from "@/apis/project";
+import { getProjectMeta } from "@/apis/project";
+import { getProjectList } from "@/apis/contract";
 
 /* props */
 const props = defineProps({
@@ -76,7 +77,7 @@ watch(internalDialog, (val) => {
 const loadProjects = async () => {
   loading.value = true;
   try {
-    const res = await getProjectTitles(search.value);
+    const res = await getProjectList(search.value);
     projects.value = res.data; // 그대로 배열로 사용 (projectTitle, projectId 포함)
   } catch (err) {
     console.error("프로젝트 제목 목록 조회 실패:", err);

@@ -12,15 +12,15 @@ export const getContracts = ({
     size = 12,
     } = {}) => {
     return api.get("/api/contracts", {
-        params: {
-        projectId,
-        clientCompanyId,
-        keyword,
-        status, // 'SUBMITTED' | 'COMPLETED' | 'CANCELED'
-        contractDate,
-        userId,
-        page,
-        size,
+            params: {
+            projectId,
+            clientCompanyId,
+            keyword,
+            status, // 'SUBMITTED' | 'COMPLETED' | 'CANCELED'
+            contractDate,
+            userId,
+            page,
+            size,
         },
     });
 };
@@ -50,6 +50,13 @@ export const cancelContract = (contractId) => {
     return api.patch(`/api/contracts/${contractId}/cancel`);
 };
 
+// 프로젝트 리스트 조회 (계약 생성용)
+export const getProjectList = ({ keyword } = {}) => {
+    return api.get("/api/contracts/projects", {
+        params: { keyword },
+    });
+};
+
 // 견적 리스트 조회 (계약 생성용)
 export const getContractEstimates = ({
     projectId,
@@ -59,12 +66,12 @@ export const getContractEstimates = ({
     limit = 50,
     } = {}) => {
     return api.get("/api/contracts/estimates", {
-        params: {
-        projectId,
-        clientCompanyId,
-        keyword,
-        status,
-        limit,
+            params: {
+            projectId,
+            clientCompanyId,
+            keyword,
+            status,
+            limit,
         },
     });
 };

@@ -20,8 +20,10 @@
       <v-col cols="12">
         <div class="pipeline-full">
           <template v-for="(step, i) in project.pipeline" :key="i">
-            <div class="pipeline-step" :class="step.completed ? 'completed' : 'pending'"
-              @click="openPipelineConfirm(i + 1)">
+            <div class="pipeline-step" :class="[
+              step.completed ? 'completed' : 'pending',
+              hasCompletedContract ? 'locked' : ''
+            ]" @click="!hasCompletedContract && openPipelineConfirm(i + 1)">
               {{ step.name }}
             </div>
             <div v-if="i < project.pipeline.length - 1" class="pipeline-line" :class="project.pipeline[i + 1].completed ? 'completed' : 'pending'
@@ -200,8 +202,9 @@
                 <!-- 계약 -->
                 <div class="history-amount-row" v-if="item.type === 'contract'">
                   <span class="history-amount">
-                    KRW {{ Number(item.amount).toLocaleString() }}
-                    + α × {{ item.commissionRate }}%
+                    {{
+                      `${formatCurrencyLabel(item.currency)} ${Number(item.amount).toLocaleString()} + α × ${item.commissionRate}%`
+                    }}
                   </span>
                   <span class="history-writer" v-if="item.writer">{{ item.writer }}</span>
                 </div>
@@ -392,6 +395,11 @@ const formatAmount = (val) => {
     minimumFractionDigits: 0,
   });
 };
+
+const formatCurrencyLabel = (currency) => {
+  if (!currency) return ''
+  return currency
+}
 
 /* 파이프라인 변경 확인용 상태 */
 const pipelineConfirmDialog = ref(false);
@@ -591,6 +599,7 @@ const applyDetailDto = (dto) => {
       description: `[${c.clientCompanyName}] / [${c.clientName}]`,
       meta: `계약 기간: ${c.contractStartDate ?? '-'} ~ ${c.contractEndDate ?? '-'}`,
       amount: c.totalAmount,
+      currency: c.currency,
       commissionRate: c.commissionRate,
       writer: c.createdUserName,
       date: c.createdAt ? new Date(c.createdAt).toISOString().slice(0, 10) : '-'
