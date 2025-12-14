@@ -242,16 +242,33 @@
                 <!-- 총 계약 금액 -->
                 <v-col cols="12">
                     <v-card class="total-card pa-3">
-                    <div class="total-title">총 계약 금액</div>
-                    <div class="total-price">
-                        ₩{{ totalContractAmount.toLocaleString() }}
-                        <span
-                        v-if="form.commissionRate && form.commissionRate > 0"
-                        style="font-size: 0.8rem; color: #555; margin-left: 6px;"
-                        >
-                        + α × {{ form.commissionRate }}%
-                        </span>
-                    </div>
+                        <div class="total-title">총 계약 금액</div>
+                        <div class="total-price total-formula">
+                            <span class="formula currency strong">
+                                {{ currencySymbol }}
+                            </span>
+                            <span
+                                class="formula amount"
+                                :class="{
+                                strong: form.contractType === 'LEASE',
+                                medium: form.contractType === 'MIX',
+                                weak: form.contractType === 'CONSIGNMENT'
+                                }"
+                            >
+                                {{ totalContractAmount.toLocaleString() }}
+                            </span>
+                            <span class="formula plus weak"> + </span>
+                            <span
+                                class="formula commission"
+                                :class="{
+                                strong: form.contractType === 'CONSIGNMENT',
+                                medium: form.contractType === 'MIX',
+                                weak: form.contractType === 'LEASE'
+                                }"
+                            >
+                                α × {{ Number(form.commissionRate ?? 0) }}%
+                            </span>
+                        </div>
                     </v-card>
                 </v-col>
 
@@ -833,6 +850,14 @@ const totalContractAmount = computed(() => {
     return spaceTotal + contractAmount;
 });
 
+const currencySymbol = computed(() => {
+    switch (form.currency) {
+        case "USD": return "$";
+        case "EUR": return "€";
+        default: return "₩";
+    }
+});
+
 /* ---- 저장 (수정) ---- */
 const saveContract = async () => {
     try {
@@ -1094,5 +1119,44 @@ const formatDate = (d) => {
     min-width: 0;
     padding: 0;
     transition: color 0.2s;
+}
+
+.total-formula {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 6px;
+}
+
+.formula {
+    display: inline-flex;
+    align-items: center;
+    line-height: 1.2;
+}
+
+.formula.strong {
+    font-size: 1.25rem;
+    font-weight: 800;
+}
+
+.formula.medium {
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.formula.weak {
+    font-size: 0.9rem;
+    font-weight: 400;
+    color: #777;
+}
+
+.formula.plus {
+    font-size: 0.9rem;
+    font-weight: 400;
+    color: #777;
+}
+
+.currency {
+    margin-right: 2px;
 }
 </style>
