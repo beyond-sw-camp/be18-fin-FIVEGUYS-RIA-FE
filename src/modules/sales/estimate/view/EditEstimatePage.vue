@@ -706,36 +706,24 @@ const selectProposal = async (p) => {
 
 /* ===================== 공간 선택 ===================== */
 const onFloorChange = async (idx, isInit = false) => {
-  const floorId = form.spaces[idx].floorId;
+  const sp = form.spaces[idx];
+  const floorId = sp.floorId;
   if (!floorId) return;
 
-  // 🔥 사용자 변경일 때만 초기화
+  // 🔹 사용자가 층을 바꾼 경우만 초기화
   if (!isInit) {
-    form.spaces[idx].storeId = null;
-    form.spaces[idx].rentPrice = 0;
-    form.spaces[idx].areaSize = 0;
-    form.spaces[idx].additionalFee = 0;
-    form.spaces[idx].discountAmount = 0;
-    form.spaces[idx].description = "";
+    sp.storeId = null;
+    sp.rentPrice = 0;
+    sp.areaSize = 0;
+    sp.additionalFee = 0;
+    sp.discountAmount = 0;
+    sp.description = "";
   }
 
   try {
     const { data } = await getSpaces(floorId);
 
-    // ❌ 매장 없음
-    if (!data?.stores || data.stores.length === 0) {
-      spaceStoreOptions.value[idx] = [];
-      spaceDisabled.value[idx] = true;
-
-      if (!isInit) {
-        showError("이용 가능한 매장이 없습니다.");
-      }
-
-      return;
-    }
-
-    // ✅ 매장 있음
-    spaceStoreOptions.value[idx] = data.stores.map((s) => ({
+    let stores = (data?.stores ?? []).map((s) => ({
       storeId: s.storeId,
       storeName: s.storeNumber,
       rentPrice: s.rentPrice,
@@ -743,22 +731,37 @@ const onFloorChange = async (idx, isInit = false) => {
       description: s.description,
     }));
 
+    if (
+      isInit &&
+      sp.storeId &&
+      !stores.some((s) => s.storeId === sp.storeId)
+    ) {
+      stores.unshift({
+        storeId: sp.storeId,
+        storeName: sp.storeName,    
+        rentPrice: sp.rentPrice,
+        areaSize: sp.areaSize,
+        description: sp.description,
+      });
+    }
+
+    spaceStoreOptions.value[idx] = stores;
     spaceDisabled.value[idx] = false;
 
-    // 🔥 초기 로딩이면 기존 storeId 유지
-    if (isInit && form.spaces[idx].storeId) {
-      const store = spaceStoreOptions.value[idx].find(
-        (s) => s.storeId === form.spaces[idx].storeId
-      );
-      if (store) {
-        form.spaces[idx].rentPrice = store.rentPrice;
-        form.spaces[idx].areaSize = store.areaSize;
-        form.spaces[idx].description = store.description;
+    if (isInit && sp.storeId) {
+      const selected = stores.find((s) => s.storeId === sp.storeId);
+      if (selected) {
+        sp.rentPrice = selected.rentPrice;
+        sp.areaSize = selected.areaSize;
+        sp.description = selected.description;
       }
     }
   } catch (e) {
+    spaceStoreOptions.value[idx] = [];
     spaceDisabled.value[idx] = true;
-    if (!isInit) showError("매장 정보를 불러오지 못했습니다.");
+    if (!isInit) {
+      showError("매장 정보를 불러오지 못했습니다.");
+    }
   }
 };
 const onStoreChange = (idx) => {
@@ -828,16 +831,21 @@ const loadDetail = async () => {
   form.paymentCondition = data.paymentCondition;
   form.remark = data.remark;
 
-  form.spaces = data.spaces.map((s) => ({
-    storeEstimateMapId: s.storeEstimateMapId,
-    floorId: s.floorId,
-    storeId: s.storeId,
-    rentPrice: s.rentFee,
-    areaSize: s.area,
-    additionalFee: s.additionalFee,
-    discountAmount: s.discountAmount,
-    description: s.remark,
-  }));
+form.spaces = data.spaces.map((s) => ({
+  storeEstimateMapId: s.storeEstimateMapId,
+
+  floorId: s.floorId,
+
+  
+  storeId: s.storeId,
+  storeName: s.storeName,      
+  rentPrice: s.rentFee,
+  areaSize: s.area,
+  description: s.remark,
+
+  additionalFee: s.additionalFee,
+  discountAmount: s.discountAmount,
+}));
 };
 const hasInvalidSpace = computed(() =>
   form.spaces.some((sp, idx) => {
@@ -884,24 +892,21 @@ const saveEstimate = async () => {
 
 /* ===================== 초기 로딩 ===================== */
 onMounted(async () => {
-  await loadDetail();
-  await loadProjects();
-  await loadCompanies();
+  await loadDetail();   
   await loadFloors();
-
+  await loadProjects();   
   spaceStoreOptions.value = Array.from(
     { length: form.spaces.length },
     () => []
   );
-
   spaceDisabled.value = Array.from(
     { length: form.spaces.length },
     () => false
   );
 
   for (let i = 0; i < form.spaces.length; i++) {
-    await onFloorChange(i, true);
-    onStoreChange(i);
+    await onFloorChange(i, true); 
+    onStoreChange(i);             
   }
 });
 </script>
