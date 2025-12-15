@@ -249,17 +249,22 @@ const deleteDialog = ref(false);
 const deleteTargetFileId = ref(null);
 
 // 파일 조회
+// 파일 조회
 const fetchFiles = async () => {
   try {
     const res = await api.get("/api/storages", {
       params: { page: 0, size: 1000 },
     });
     const list = res.data.content ?? [];
-    files.value = list;
+
+    // 🔥 createdAt 기준 최신순 정렬
+    files.value = [...list].sort(
+      (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+    );
 
     // 사번 옵션 채우기 (중복 제거)
     const empSet = new Set();
-    list.forEach((f) => {
+    files.value.forEach((f) => {
       if (f.employeeNo) {
         empSet.add(f.employeeNo);
       }
