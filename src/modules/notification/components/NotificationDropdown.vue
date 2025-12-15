@@ -93,11 +93,6 @@
 
         <v-divider />
 
-        <v-card-actions>
-            <v-btn text block @click="goToAllNotifications">
-                알림 목록
-            </v-btn>
-        </v-card-actions>
     </v-card>
 </template>
 
@@ -233,10 +228,6 @@ const filteredNotifications = computed(() => {
 
     return list
 })
-
-const goToAllNotifications = () => {
-  // 구현 예정: 전체 알림 페이지로 이동
-}
 
 const handleClick = async (notification) => {
     await notificationStore.handleNotificationClick(notification, router)
