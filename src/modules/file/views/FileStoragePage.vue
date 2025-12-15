@@ -295,6 +295,7 @@ const deleteTargetFile = ref(null);
 const deleting = ref(false);
 
 /* 문서 조회 */
+/* 문서 조회 */
 const fetchDocs = async () => {
   loading.value = true;
   try {
@@ -306,7 +307,12 @@ const fetchDocs = async () => {
       params: { page: 0, size: 100 },
     });
 
-    docs.value = res.data.content ?? [];
+    const list = res.data.content ?? [];
+
+    // 🔥 createdAt 기준 최신순 정렬
+    docs.value = [...list].sort(
+      (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+    );
   } catch (e) {
     docs.value = [];
     snackbar.show("문서 목록 조회 실패", "error");
