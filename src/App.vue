@@ -3,7 +3,7 @@
     <HeaderComponent v-if="!hideHeader" />
 
     <v-main>
-      <router-view />
+      <router-view :key="route.fullPath" />
     </v-main>
 
     <FooterComponent v-if="!hideFooter" />
