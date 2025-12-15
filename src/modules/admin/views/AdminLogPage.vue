@@ -331,12 +331,17 @@ const formatDateTime = (iso) => {
 
 const formatDate = (iso) => {
   if (!iso) return "-";
-  return new Date(iso).toLocaleDateString("ko-KR");
+  return new Date(iso).toLocaleDateString("ko-KR", {
+    timeZone: "Asia/Seoul",
+  });
 };
 
 const formatTime = (iso) => {
   if (!iso) return "-";
-  return new Date(iso).toLocaleTimeString("ko-KR");
+  return new Date(iso).toLocaleTimeString("ko-KR", {
+    timeZone: "Asia/Seoul",
+    hour12: false, // 24시간제 원하면
+  });
 };
 
 const formatResource = (resource) => resource?.replace(/\s+/g, " ") ?? "-";
@@ -348,7 +353,12 @@ const fetchLogs = async () => {
       params: { page: 0, size: 1000 },
     });
 
-    logs.value = Array.isArray(res.data.content) ? res.data.content : [];
+    const list = Array.isArray(res.data.content) ? res.data.content : [];
+
+    // 🔥 최신순 정렬 (createdAt 기준 내림차순)
+    logs.value = list.sort(
+      (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+    );
   } catch (err) {
     console.error("로그 조회 실패:", err);
     logs.value = [];
